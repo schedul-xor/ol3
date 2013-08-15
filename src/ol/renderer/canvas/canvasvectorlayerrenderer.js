@@ -107,7 +107,8 @@ ol.renderer.canvas.VectorLayer = function(mapRenderer, layer) {
     ol.geom.GeometryType.LINESTRING,
     ol.geom.GeometryType.MULTILINESTRING,
     ol.geom.GeometryType.POLYGON,
-    ol.geom.GeometryType.MULTIPOLYGON
+    ol.geom.GeometryType.MULTIPOLYGON,
+    ol.geom.GeometryType.CUBICBEZIER
   ];
 
   /**

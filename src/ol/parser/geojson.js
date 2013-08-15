@@ -1,4 +1,5 @@
 goog.provide('ol.parser.GeoJSON');
+goog.provide('ol.parser.GeoJSON.GeometryType');
 
 goog.require('goog.asserts');
 goog.require('goog.object');

@@ -17,6 +17,8 @@ goog.require('ol.geom.MultiPoint');
 goog.require('ol.geom.MultiPolygon');
 goog.require('ol.geom.Point');
 goog.require('ol.geom.Polygon');
+goog.require('ol.geom.CubicBezier');
+
 goog.require('ol.style.IconLiteral');
 goog.require('ol.style.LineLiteral');
 goog.require('ol.style.PointLiteral');
@@ -131,6 +133,12 @@ ol.renderer.canvas.VectorRenderer.prototype.renderFeaturesByGeometryType =
         this.renderPolygonFeatures_(
             features, /** @type {ol.style.PolygonLiteral} */ (symbolizer));
         break;
+      case ol.geom.GeometryType.CUBICBEZIER:
+        goog.asserts.assert(symbolizer instanceof ol.style.LineLiteral,
+            'Expected line symbolizer: ' + symbolizer);
+        this.renderCubicBezierFeatures_(
+            features, /** @type {ol.style.LineLiteral} */ (symbolizer));
+        break;
       default:
         throw new Error('Rendering not implemented for geometry type: ' + type);
     }
@@ -195,6 +203,40 @@ ol.renderer.canvas.VectorRenderer.prototype.renderLineStringFeatures_ =
   context.stroke();
 };
 
+/**
+ * @param {Array.<ol.Feature>} features Array of cubic bezier features.
+ * @param {ol.style.LineLiteral} symbolizer Line symbolizer.
+ * @return {boolean} true if deferred, false if rendered.
+ * @private
+ */
+ol.renderer.canvas.VectorRenderer.prototype.renderCubicBezierFeatures_ = 
+      function(features,symbolizer){
+	var context = this.context_,
+	strokeColor = symbolizer.strokeColor,
+	strokeWidth = symbolizer.strokeWidth,
+	strokeOpacity = symbolizer.strokeOpacity,
+        geometry,vertices,vertex,vecs,vec;
+
+	for(var j = 0;j < features.length;j++){
+	  geometry = features[j].getGeometry();
+	  vertices = geometry.getVertices();
+	  vecs = [];
+	  for(var i = 0;i < 4;i++){
+            vertex =vertices[i];
+	    vec = [vertex[0],vertex[1],0];
+	    goog.vec.Mat4.multVec3(this.transform_,vec,vec);
+	    vecs.push(vec);
+	  }
+	  
+	  context.beginPath();
+	  
+	  context.moveTo(vecs[0][0],vecs[0][1]);
+	  context.bezierCurveTo(vecs[1][0],vecs[1][1],vecs[2][0],vecs[2][1],vecs[3][0],vecs[3][1]);
+	  
+	  context.stroke();
+	}
+        return false;
+      };
 
 /**
  * @param {Array.<ol.Feature>} features Array of point features.

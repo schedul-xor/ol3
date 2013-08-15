@@ -283,6 +283,13 @@ ol.layer.Vector = function(options) {
    */
   this.polygonVertices_ = new ol.geom.SharedVertices();
 
+  /**
+   * True if this is a temporary layer.
+   * @type {boolean}
+   */
+  this.temp = goog.isDef(options.temp) ? options.temp : false;
+
+  this.cubicBeziers_ = new ol.geom.SharedVertices();
 };
 goog.inherits(ol.layer.Vector, ol.layer.Layer);
 
@@ -430,6 +437,7 @@ ol.layer.Vector.prototype.parseFeatures = function(data, parser, projection) {
   lookup[ol.geom.GeometryType.MULTIPOINT] = this.pointVertices_;
   lookup[ol.geom.GeometryType.MULTILINESTRING] = this.lineVertices_;
   lookup[ol.geom.GeometryType.MULTIPOLYGON] = this.polygonVertices_;
+  lookup[ol.geom.GeometryType.CUBICBEZIER] = this.cubicBeziers_;
 
   var callback = function(feature, type) {
     return lookup[type];
