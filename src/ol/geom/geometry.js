@@ -70,5 +70,5 @@ ol.geom.GeometryType = {
   MULTILINESTRING: 'multilinestring',
   MULTIPOLYGON: 'multipolygon',
   GEOMETRYCOLLECTION: 'geometrycollection',
-  CUBICBEZIER:'cubicbezier'
+  CUBICBEZIER: 'cubicbezier'
 };
