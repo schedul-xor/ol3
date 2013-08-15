@@ -1,5 +1,4 @@
 goog.provide('ol.parser.GeoJSONCubicBezierExtended');
-goog.provide('ol.parser.GeoJSONCubicBezierExtended.GeometryType');
 
 goog.require('ol.parser.GeoJSON');
 goog.require('ol.parser.GeoJSON.GeometryType');
