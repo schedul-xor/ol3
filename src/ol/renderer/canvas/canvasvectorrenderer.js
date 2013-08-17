@@ -17,6 +17,7 @@ goog.require('ol.geom.MultiPoint');
 goog.require('ol.geom.MultiPolygon');
 goog.require('ol.geom.Point');
 goog.require('ol.geom.Polygon');
+goog.require('ol.style.BearingArrowLiteral');
 goog.require('ol.style.IconLiteral');
 goog.require('ol.style.LineLiteral');
 goog.require('ol.style.PointLiteral');
@@ -216,6 +217,9 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
     content = ol.renderer.canvas.VectorRenderer.renderIcon(
         symbolizer, this.iconLoadedCallback_);
     alpha = symbolizer.opacity;
+  }else if (symbolizer instanceof ol.style.BearingArrowLiteral){
+    content = ol.renderer.canvas.VectorRenderer.renderArrow(symbolizer);
+    alpha = 1;
   } else {
     throw new Error('Unsupported symbolizer: ' + symbolizer);
   }
@@ -448,6 +452,63 @@ ol.renderer.canvas.VectorRenderer.renderCircle_ = function(circle) {
   return canvas;
 };
 
+/**
+ * @param {ol.style.BearingArrowLiteral} bearingArrowLiteral Bearing arrow literal symbolizer.
+ * @return {!HTMLCanvasElement} Canvas element.
+ * @private
+ */
+ol.renderer.canvas.VectorRenderer.renderArrow_ = function(bearingArrowLiteral) {
+  var arrowLength = bearingArrowLiteral.arrowLength;
+  var strokeWidth = bearingArrowLiteral.strokeWidth || 0,
+  size = arrowLength*2 + (2 * strokeWidth) + 1,
+      mid = size / 2,
+      canvas = /** @type {HTMLCanvasElement} */
+          (goog.dom.createElement(goog.dom.TagName.CANVAS)),
+      context = /** @type {CanvasRenderingContext2D} */
+          (canvas.getContext('2d')),
+      fillColor = bearingArrowLiteral.fillColor,
+      strokeColor = bearingArrowLiteral.strokeColor,
+      twoPi = Math.PI * 2;
+  
+  canvas.height = size;
+  canvas.width = size;
+
+  if (fillColor) {
+    context.fillStyle = fillColor;
+  }
+  if (strokeColor) {
+    context.lineWidth = strokeWidth;
+    context.strokeStyle = strokeColor;
+    context.lineCap = 'round'; // TODO: accept this as a symbolizer property
+    context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
+  }
+
+  context.beginPath();
+  
+  context.translate(size/2,size/2);
+  context.rotate(-bearingArrowLiteral.bearing);
+  
+  context.moveTo(0,1);
+  context.lineTo(arrowLength-4,1);
+  context.lineTo(arrowLength-9,4);
+  context.lineTo(arrowLength,0);
+  context.lineTo(arrowLength-9,-4);
+  context.lineTo(arrowLength-4,-1);
+  context.lineTo(0,-1);
+
+  if (fillColor) {
+    goog.asserts.assertNumber(bearingArrowLiteral.fillOpacity);
+    context.globalAlpha = bearingArrowLiteral.fillOpacity;
+    context.fill();
+  }
+  if (strokeColor) {
+    goog.asserts.assertNumber(bearingArrowLiteral.strokeOpacity);
+    context.globalAlpha = bearingArrowLiteral.strokeOpacity;
+    context.stroke();
+  }
+  return canvas;
+};
+
 
 /**
  * @param {ol.geom.Geometry} geometry Geometry.
@@ -488,6 +549,12 @@ ol.renderer.canvas.VectorRenderer.renderShape = function(shape) {
   } else {
     throw new Error('Unsupported shape type: ' + shape);
   }
+  return canvas;
+};
+
+ol.renderer.canvas.VectorRenderer.renderArrow = function(symbolizer){
+  var canvas;
+  canvas = ol.renderer.canvas.VectorRenderer.renderArrow_(symbolizer);
   return canvas;
 };
 
