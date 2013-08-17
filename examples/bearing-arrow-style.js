@@ -20,7 +20,8 @@ var style = new ol.style.Style({rules: [
       new ol.style.BearingArrow({
         bearing: ol.expr.parse('bearing'),
         arrowLength: 40,
-        fillColor: '#013'
+        fillColor: '#000',
+        fillOpacity: 1
       }),
       new ol.style.Text({
         color: '#bada55',
