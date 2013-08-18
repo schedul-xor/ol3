@@ -1,3 +1,4 @@
+goog.require('goog.dom');
 goog.require('ol.Map');
 goog.require('ol.RendererHints');
 goog.require('ol.View2D');
@@ -5,6 +6,7 @@ goog.require('ol.control.MousePosition');
 goog.require('ol.control.defaults');
 goog.require('ol.coordinate');
 goog.require('ol.dom.Input');
+goog.require('ol.ellipsoid.WGS84');
 goog.require('ol.layer.TileLayer');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.GeoJSON');
@@ -157,18 +159,27 @@ var map = new ol.Map({
 });
 
 var transformFrom3857to4326 = ol.proj.getTransform('EPSG:3857','EPSG:4326');
+var landmarkPlaceholder = goog.dom.$('nearest-landmark');
 
 var handleMouseMove = function(browserEvent){
   var eventPosition = goog.style.getRelativePosition(
       browserEvent, map.getViewport());
-  var coordinate = map.getCoordinateFromPixel([eventPosition.x, eventPosition.y]);
-  var nearestPoints = landmarksLayer.featureCache_.rTree_.getNearestKPointsFrom(coordinate,function(x1,y1,x2,y2){
+  var b3857 = map.getCoordinateFromPixel([eventPosition.x, eventPosition.y]);
+  var nearestPoints = landmarksLayer.featureCache_.rTree_.getNearestKPointsFrom(b3857,function(x1,y1,x2,y2){
     var dx = x1-x2;
     var dy = y1-y2;
     return dx*dx+dy*dy;
   },1);
-//  coordinate = transformFrom3857to4326(coordinate);
-  console.log(nearestPoints[0].leaf.values_.name);
+  var nearestPoint = nearestPoints[0].leaf;
+  var nearestGeometry = nearestPoint.values_.geometry;
+  var tlng3857 = nearestGeometry.getBounds()[0];
+  var tlat3857 = nearestGeometry.getBounds()[2];
+  var t3857 = [tlng3857,tlat3857];
+  var t4326 = transformFrom3857to4326(t3857);
+  var b4326 = transformFrom3857to4326(b3857);
+  var vin = ol.ellipsoid.WGS84.vincenty(t4326,b4326);
+  
+  landmarkPlaceholder.innerHTML = 'Nearest landmark : '+nearestPoint.values_.name + ' ('+Math.floor(vin.distance/1000)+' km)';
 };
 var viewport = map.getViewport();
 goog.events.listen(viewport, goog.events.EventType.MOUSEMOVE,
