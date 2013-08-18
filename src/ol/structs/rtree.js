@@ -663,13 +663,13 @@ ol.structs.RTree.prototype.distanceFromExtent_ = function(p,extent,distanceFunct
   }else if(x <= xmax && x >= xmin && y <= ymax && y >= ymin){
     return 0;
   }else if(x > xmax){
-    return distanceFunction(x,0,xmax,0);
+    return distanceFunction(x,y,xmax,y);
   }else if(x < xmin){
-    return distanceFunction(x,0,xmin,0);
+    return distanceFunction(x,y,xmin,y);
   }else if(y > ymax){
-    return distanceFunction(0,y,0,ymax);
+    return distanceFunction(x,y,x,ymax);
   }else{
-    return distanceFunction(0,y,0,ymin);
+    return distanceFunction(x,y,x,ymin);
   }
   return 0;
 };

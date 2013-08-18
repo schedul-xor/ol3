@@ -166,9 +166,10 @@ var handleMouseMove = function(browserEvent){
       browserEvent, map.getViewport());
   var b3857 = map.getCoordinateFromPixel([eventPosition.x, eventPosition.y]);
   var nearestPoints = landmarksLayer.featureCache_.rTree_.getNearestKPointsFrom(b3857,function(x1,y1,x2,y2){
-    var dx = x1-x2;
-    var dy = y1-y2;
-    return dx*dx+dy*dy;
+    var l4326 = transformFrom3857to4326([x1,y1]);
+    var m4326 = transformFrom3857to4326([x2,y2]);
+    var v = ol.ellipsoid.WGS84.vincenty(l4326,m4326);
+    return v.distance;
   },1);
   var nearestPoint = nearestPoints[0].leaf;
   var nearestGeometry = nearestPoint.values_.geometry;
