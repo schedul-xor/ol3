@@ -706,4 +706,3 @@ ol.structs.RTree.prototype.getNearestKPointsFrom = function(p,distanceFunction,c
   }
   return foundPoints.splice(0,count);
 };
-
