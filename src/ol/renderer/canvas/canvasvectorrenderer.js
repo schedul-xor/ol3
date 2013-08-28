@@ -224,31 +224,32 @@ ol.renderer.canvas.VectorRenderer.prototype.renderLineStringFeatures_ =
  * @private
  */
 ol.renderer.canvas.VectorRenderer.prototype.renderCubicBezierFeatures_ =
-    function(features,symbolizer) {
-	var context = this.context_,
-	strokeColor = symbolizer.strokeColor,
-	strokeWidth = symbolizer.strokeWidth,
-	strokeOpacity = symbolizer.strokeOpacity,
+    function(features, symbolizer) {
+  var context = this.context_,
+      strokeColor = symbolizer.strokeColor,
+      strokeWidth = symbolizer.strokeWidth,
+      strokeOpacity = symbolizer.strokeOpacity,
       geometry, vertices, vertex, vecs, vec;
 
-	for (var j = 0; j < features.length; j++) {
-	  geometry = features[j].getGeometry();
-	  vertices = geometry.getVertices();
-	  vecs = [];
-	  for (var i = 0; i < 4; i++) {
+  for (var j = 0; j < features.length; j++) {
+    geometry = features[j].getGeometry();
+    vertices = geometry.getVertices();
+    vecs = [];
+    for (var i = 0; i < 4; i++) {
       vertex = vertices[i];
-	    vec = [vertex[0], vertex[1], 0];
-	    goog.vec.Mat4.multVec3(this.transform_, vec, vec);
-	    vecs.push(vec);
-	  }
+      vec = [vertex[0], vertex[1], 0];
+      goog.vec.Mat4.multVec3(this.transform_, vec, vec);
+      vecs.push(vec);
+    }
 
-	  context.beginPath();
+    context.beginPath();
 
-	  context.moveTo(vecs[0][0], vecs[0][1]);
-	  context.bezierCurveTo(vecs[1][0], vecs[1][1], vecs[2][0], vecs[2][1], vecs[3][0], vecs[3][1]);
+    context.moveTo(vecs[0][0], vecs[0][1]);
+    context.bezierCurveTo(vecs[1][0],
+        vecs[1][1], vecs[2][0], vecs[2][1], vecs[3][0], vecs[3][1]);
 
-	  context.stroke();
-	}
+    context.stroke();
+  }
   return false;
 };
 

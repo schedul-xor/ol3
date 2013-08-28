@@ -52,7 +52,8 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
       c.push(this.vertices_[i]);
     }
     for (d = 0; d < this.dimension; d++) {
-      var roots = ol.geom.CubicBezier.dRoots(c[0][d], c[1][d], c[2][d], c[3][d]);
+      var roots = ol.geom.CubicBezier.dRoots(
+          c[0][d], c[1][d], c[2][d], c[3][d]);
       for (i = 0; i < roots.length; i++) {
         if (roots[i] <= 0 || roots[i] >= 1) {continue;}
         foundRoots.push(roots[i]);
@@ -61,7 +62,8 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
     for (i = 0; i < foundRoots.length; i++) {
       var newp = [];
       for (d = 0; d < this.dimension; d++) {
-        newp.push(ol.geom.CubicBezier.posAt(c[0][d], c[1][d], c[2][d], c[3][d], foundRoots[i]));
+        newp.push(ol.geom.CubicBezier.posAt(
+            c[0][d], c[1][d], c[2][d], c[3][d], foundRoots[i]));
       }
       c.push(newp);
     }
@@ -101,7 +103,7 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
  * @param {number} t
  * @return {number}
  */
-ol.geom.CubicBezier.posAt = function(a,b,c,d,t) {
+ol.geom.CubicBezier.posAt = function(a, b, c, d, t) {
   t = 1 - t;
   var u = 1 - t;
   var ab = a * t + b * u;
@@ -120,7 +122,7 @@ ol.geom.CubicBezier.posAt = function(a,b,c,d,t) {
  * @param {number} d
  * @return {number}
  */
-ol.geom.CubicBezier.dRootN = function(a,b,c,d) {
+ol.geom.CubicBezier.dRootN = function(a, b, c, d) {
   return -a + b - c + d;
 };
 
@@ -131,7 +133,7 @@ ol.geom.CubicBezier.dRootN = function(a,b,c,d) {
  * @param {number} c
  * @return {number}
  */
-ol.geom.CubicBezier.dRootM = function(a,b,c) {
+ol.geom.CubicBezier.dRootM = function(a, b, c) {
   return 3 * a - 2 * b + c;
 };
 
@@ -141,7 +143,7 @@ ol.geom.CubicBezier.dRootM = function(a,b,c) {
  * @param {number} b
  * @return {number}
  */
-ol.geom.CubicBezier.dRootQ = function(a,b) {
+ol.geom.CubicBezier.dRootQ = function(a, b) {
   return -3 * a + b;
 };
 
@@ -152,7 +154,7 @@ ol.geom.CubicBezier.dRootQ = function(a,b) {
  * @param {number} Q
  * @return {number}
  */
-ol.geom.CubicBezier.dRootR = function(M,N,Q) {
+ol.geom.CubicBezier.dRootR = function(M, N, Q) {
   return M * M - 3 * N * Q;
 };
 
@@ -164,7 +166,7 @@ ol.geom.CubicBezier.dRootR = function(M,N,Q) {
  * @param {number} d
  * @return {Array.<number>}
  */
-ol.geom.CubicBezier.dRoots = function(a,b,c,d) {
+ol.geom.CubicBezier.dRoots = function(a, b, c, d) {
   var N = ol.geom.CubicBezier.dRootN(a, b, c, d);
   if (N == 0) {
     return [];
