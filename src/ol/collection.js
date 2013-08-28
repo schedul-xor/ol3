@@ -35,12 +35,21 @@ ol.CollectionEvent = function(type, opt_elem, opt_target) {
   goog.base(this, type, opt_target);
 
   /**
+   * @private
    * @type {*}
    */
-  this.elem = opt_elem;
+  this.elem_ = opt_elem;
 
 };
 goog.inherits(ol.CollectionEvent, goog.events.Event);
+
+
+/**
+ * @return {*} The element to which this event pertains.
+ */
+ol.CollectionEvent.prototype.getElement = function() {
+  return this.elem_;
+};
 
 
 /**
@@ -86,12 +95,14 @@ ol.Collection.prototype.clear = function() {
 
 /**
  * @param {Array} arr Array.
+ * @return {ol.Collection} This collection.
  */
 ol.Collection.prototype.extend = function(arr) {
   var i, ii;
   for (i = 0, ii = arr.length; i < ii; ++i) {
     this.push(arr[i]);
   }
+  return this;
 };
 
 
