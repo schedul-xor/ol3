@@ -20,6 +20,7 @@ goog.require('ol.geom.Polygon');
 goog.require('ol.style.BearingArrowLiteral');
 goog.require('ol.style.IconLiteral');
 goog.require('ol.style.LineLiteral');
+goog.require('ol.style.Literal');
 goog.require('ol.style.PointLiteral');
 goog.require('ol.style.PolygonLiteral');
 goog.require('ol.style.ShapeLiteral');
@@ -75,6 +76,12 @@ ol.renderer.canvas.VectorRenderer =
   this.symbolSizes_ = {};
 
   /**
+   * @type {Object.<number, Array.<number>>}
+   * @private
+   */
+  this.symbolOffsets_ = {};
+
+  /**
    * @type {Array.<number>}
    * @private
    */
@@ -92,6 +99,14 @@ ol.renderer.canvas.VectorRenderer.prototype.getSymbolSizes = function() {
 
 
 /**
+ * @return {Object.<number, Array.<number>>} Symbolizer offsets.
+ */
+ol.renderer.canvas.VectorRenderer.prototype.getSymbolOffsets = function() {
+  return this.symbolOffsets_;
+};
+
+
+/**
  * @return {Array.<number>} Maximum symbolizer size.
  */
 ol.renderer.canvas.VectorRenderer.prototype.getMaxSymbolSize = function() {
@@ -102,7 +117,7 @@ ol.renderer.canvas.VectorRenderer.prototype.getMaxSymbolSize = function() {
 /**
  * @param {ol.geom.GeometryType} type Geometry type.
  * @param {Array.<ol.Feature>} features Array of features.
- * @param {ol.style.SymbolizerLiteral} symbolizer Symbolizer.
+ * @param {ol.style.Literal} symbolizer Symbolizer.
  * @param {Array} data Additional data.
  * @return {boolean} true if deferred, false if rendered.
  */
@@ -154,9 +169,9 @@ ol.renderer.canvas.VectorRenderer.prototype.renderLineStringFeatures_ =
       i, ii, feature, id, currentSize, geometry, components, j, jj, line, dim,
       k, kk, vec, strokeSize;
 
-  context.globalAlpha = symbolizer.strokeOpacity;
-  context.strokeStyle = symbolizer.strokeColor;
-  context.lineWidth = symbolizer.strokeWidth;
+  context.globalAlpha = symbolizer.opacity;
+  context.strokeStyle = symbolizer.color;
+  context.lineWidth = symbolizer.width;
   context.lineCap = 'round'; // TODO: accept this as a symbolizer property
   context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
   strokeSize = context.lineWidth * this.inverseScale_;
@@ -210,6 +225,8 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
       content, alpha, i, ii, feature, id, size, geometry, components, j, jj,
       point, vec;
 
+  var xOffset = 0;
+  var yOffset = 0;
   if (symbolizer instanceof ol.style.ShapeLiteral) {
     content = ol.renderer.canvas.VectorRenderer.renderShape(symbolizer);
     alpha = 1;
@@ -217,6 +234,8 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
     content = ol.renderer.canvas.VectorRenderer.renderIcon(
         symbolizer, this.iconLoadedCallback_);
     alpha = symbolizer.opacity;
+    xOffset = symbolizer.xOffset;
+    yOffset = symbolizer.yOffset;
   }else if (symbolizer instanceof ol.style.BearingArrowLiteral) {
     content = ol.renderer.canvas.VectorRenderer.renderArrow(symbolizer);
     alpha = 1;
@@ -232,6 +251,8 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
   var midHeight = content.height / 2;
   var contentWidth = content.width * this.inverseScale_;
   var contentHeight = content.height * this.inverseScale_;
+  var contentXOffset = xOffset * this.inverseScale_;
+  var contentYOffset = yOffset * this.inverseScale_;
   context.save();
   context.setTransform(1, 0, 0, 1, -midWidth, -midHeight);
   context.globalAlpha = alpha;
@@ -454,65 +475,6 @@ ol.renderer.canvas.VectorRenderer.renderCircle_ = function(circle) {
 
 
 /**
- * @param {ol.style.BearingArrowLiteral} bearingArrowLiteral
- * Bearing arrow literal symbolizer.
- * @return {!HTMLCanvasElement} Canvas element.
- * @private
- */
-ol.renderer.canvas.VectorRenderer.renderArrow_ = function(bearingArrowLiteral) {
-  var arrowLength = bearingArrowLiteral.arrowLength;
-  var strokeWidth = bearingArrowLiteral.strokeWidth || 0,
-      size = arrowLength * 2 + (2 * strokeWidth) + 1,
-      mid = size / 2,
-      canvas = /** @type {HTMLCanvasElement} */
-          (goog.dom.createElement(goog.dom.TagName.CANVAS)),
-      context = /** @type {CanvasRenderingContext2D} */
-          (canvas.getContext('2d')),
-      fillColor = bearingArrowLiteral.fillColor,
-      strokeColor = bearingArrowLiteral.strokeColor,
-      twoPi = Math.PI * 2;
-
-  canvas.height = size;
-  canvas.width = size;
-
-  if (fillColor) {
-    context.fillStyle = fillColor;
-  }
-  if (strokeColor) {
-    context.lineWidth = strokeWidth;
-    context.strokeStyle = strokeColor;
-    context.lineCap = 'round'; // TODO: accept this as a symbolizer property
-    context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
-  }
-
-  context.beginPath();
-
-  context.translate(size / 2, size / 2);
-  context.rotate(-bearingArrowLiteral.bearing);
-
-  context.moveTo(0, 1);
-  context.lineTo(arrowLength - 4, 1);
-  context.lineTo(arrowLength - 9, 4);
-  context.lineTo(arrowLength, 0);
-  context.lineTo(arrowLength - 9, -4);
-  context.lineTo(arrowLength - 4, -1);
-  context.lineTo(0, -1);
-
-  if (fillColor) {
-    goog.asserts.assertNumber(bearingArrowLiteral.fillOpacity);
-    context.globalAlpha = bearingArrowLiteral.fillOpacity;
-    context.fill();
-  }
-  if (strokeColor) {
-    goog.asserts.assertNumber(bearingArrowLiteral.strokeOpacity);
-    context.globalAlpha = bearingArrowLiteral.strokeOpacity;
-    context.stroke();
-  }
-  return canvas;
-};
-
-
-/**
  * @param {ol.geom.Geometry} geometry Geometry.
  * @return {Array.<goog.vec.Vec3.AnyType>} Renderable geometry vectors.
  */
@@ -551,17 +513,6 @@ ol.renderer.canvas.VectorRenderer.renderShape = function(shape) {
   } else {
     throw new Error('Unsupported shape type: ' + shape);
   }
-  return canvas;
-};
-
-
-/**
- * @param {ol.style.BearingArrowLiteral} symbolizer
- * @return {!HTMLCanvasElement} Canvas element.
- */
-ol.renderer.canvas.VectorRenderer.renderArrow = function(symbolizer) {
-  var canvas;
-  canvas = ol.renderer.canvas.VectorRenderer.renderArrow_(symbolizer);
   return canvas;
 };
 
