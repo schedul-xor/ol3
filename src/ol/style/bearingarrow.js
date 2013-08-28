@@ -27,7 +27,8 @@ ol.style.BearingArrowLiteralOptions;
 /**
  * @constructor
  * @extends {ol.style.PointLiteral}
- * @param {ol.style.BearingArrowLiteralOptions} options BearingArrow literal options.
+ * @param {ol.style.BearingArrowLiteralOptions} options
+ * BearingArrow literal options.
  */
 ol.style.BearingArrowLiteral = function(options) {
 
@@ -101,13 +102,13 @@ goog.inherits(ol.style.BearingArrowLiteral, ol.style.PointLiteral);
  */
 ol.style.BearingArrowLiteral.prototype.equals = function(bearingArrowLiteral) {
   return this.size == bearingArrowLiteral.size &&
-        this.fillColor == bearingArrowLiteral.fillColor &&
-        this.fillOpacity == bearingArrowLiteral.fillOpacity &&
-        this.strokeColor == bearingArrowLiteral.strokeColor &&
-        this.strokeOpacity == bearingArrowLiteral.strokeOpacity &&
-        this.strokeWidth == bearingArrowLiteral.strokeWidth &&
-        this.bearing == bearingArrowLiteral.bearing &&
-        this.arrowLength == bearingArrowLiteral.arrowLength;
+      this.fillColor == bearingArrowLiteral.fillColor &&
+      this.fillOpacity == bearingArrowLiteral.fillOpacity &&
+      this.strokeColor == bearingArrowLiteral.strokeColor &&
+      this.strokeOpacity == bearingArrowLiteral.strokeOpacity &&
+      this.strokeWidth == bearingArrowLiteral.strokeWidth &&
+      this.bearing == bearingArrowLiteral.bearing &&
+      this.arrowLength == bearingArrowLiteral.arrowLength;
 };
 
 
@@ -205,27 +206,27 @@ ol.style.BearingArrow = function(options) {
     }
 
   }
-  
+
   var bearing;
   if (goog.isDefAndNotNull(options.bearing)) {
     bearing = (options.bearing instanceof ol.expr.Expression) ?
-          options.bearing :
-          new ol.expr.Literal(options.bearing);
+        options.bearing :
+        new ol.expr.Literal(options.bearing);
   } else {
-      bearing = new ol.expr.Literal(
+    bearing = new ol.expr.Literal(
         /** @type {number} */ (ol.style.BearingArrowDefaults.bearing));
   }
-  
+
   var arrowLength;
   if (goog.isDefAndNotNull(options.arrowLength)) {
     arrowLength = (options.arrowLength instanceof ol.expr.Expression) ?
-          options.arrowLength :
-          new ol.expr.Literal(options.arrowLength);
+        options.arrowLength :
+        new ol.expr.Literal(options.arrowLength);
   } else {
-      arrowLength = new ol.expr.Literal(
+    arrowLength = new ol.expr.Literal(
         /** @type {number} */ (ol.style.BearingArrowDefaults.arrowLength));
   }
-  
+
 
   /**
    * @type {ol.expr.Expression}
@@ -244,13 +245,13 @@ ol.style.BearingArrow = function(options) {
    * @private
    */
   this.strokeWidth_ = strokeWidth;
-  
+
   /**
    * @type {ol.expr.Expression}
    * @private
    */
   this.bearing_ = bearing;
-  
+
   /**
    * @type {ol.expr.Expression}
    * @private
@@ -396,14 +397,15 @@ ol.style.BearingArrow.prototype.getStrokeWidth = function() {
 /**
  * @return {ol.expr.Expression} Bearing.
  */
-ol.style.BearingArrow.prototype.getBearing = function(){
+ol.style.BearingArrow.prototype.getBearing = function() {
   return this.bearing_;
 };
+
 
 /**
  * @return {ol.expr.Expression} ArrowLength.
  */
-ol.style.BearingArrow.prototype.getArrowLength = function(){
+ol.style.BearingArrow.prototype.getArrowLength = function() {
   return this.arrowLength_;
 };
 
@@ -471,14 +473,15 @@ ol.style.BearingArrow.prototype.setStrokeWidth = function(strokeWidth) {
 /**
  * @param {ol.expr.Expression} bearing Bearing.
  */
-ol.style.BearingArrow.prototype.setBearing = function(bearing){
+ol.style.BearingArrow.prototype.setBearing = function(bearing) {
   this.bearing_ = bearing;
 };
+
 
 /**
  * @param {ol.expr.Expression} arrowLength ArrowLength.
  */
-ol.style.BearingArrow.prototype.setArrowLength = function(arrowLength){
+ol.style.BearingArrow.prototype.setArrowLength = function(arrowLength) {
   this.arrowLength_ = arrowLength;
 };
 

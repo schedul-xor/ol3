@@ -217,7 +217,7 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
     content = ol.renderer.canvas.VectorRenderer.renderIcon(
         symbolizer, this.iconLoadedCallback_);
     alpha = symbolizer.opacity;
-  }else if (symbolizer instanceof ol.style.BearingArrowLiteral){
+  }else if (symbolizer instanceof ol.style.BearingArrowLiteral) {
     content = ol.renderer.canvas.VectorRenderer.renderArrow(symbolizer);
     alpha = 1;
   } else {
@@ -452,15 +452,17 @@ ol.renderer.canvas.VectorRenderer.renderCircle_ = function(circle) {
   return canvas;
 };
 
+
 /**
- * @param {ol.style.BearingArrowLiteral} bearingArrowLiteral Bearing arrow literal symbolizer.
+ * @param {ol.style.BearingArrowLiteral} bearingArrowLiteral
+ * Bearing arrow literal symbolizer.
  * @return {!HTMLCanvasElement} Canvas element.
  * @private
  */
 ol.renderer.canvas.VectorRenderer.renderArrow_ = function(bearingArrowLiteral) {
   var arrowLength = bearingArrowLiteral.arrowLength;
   var strokeWidth = bearingArrowLiteral.strokeWidth || 0,
-  size = arrowLength*2 + (2 * strokeWidth) + 1,
+      size = arrowLength * 2 + (2 * strokeWidth) + 1,
       mid = size / 2,
       canvas = /** @type {HTMLCanvasElement} */
           (goog.dom.createElement(goog.dom.TagName.CANVAS)),
@@ -469,7 +471,7 @@ ol.renderer.canvas.VectorRenderer.renderArrow_ = function(bearingArrowLiteral) {
       fillColor = bearingArrowLiteral.fillColor,
       strokeColor = bearingArrowLiteral.strokeColor,
       twoPi = Math.PI * 2;
-  
+
   canvas.height = size;
   canvas.width = size;
 
@@ -484,17 +486,17 @@ ol.renderer.canvas.VectorRenderer.renderArrow_ = function(bearingArrowLiteral) {
   }
 
   context.beginPath();
-  
-  context.translate(size/2,size/2);
+
+  context.translate(size / 2, size / 2);
   context.rotate(-bearingArrowLiteral.bearing);
-  
-  context.moveTo(0,1);
-  context.lineTo(arrowLength-4,1);
-  context.lineTo(arrowLength-9,4);
-  context.lineTo(arrowLength,0);
-  context.lineTo(arrowLength-9,-4);
-  context.lineTo(arrowLength-4,-1);
-  context.lineTo(0,-1);
+
+  context.moveTo(0, 1);
+  context.lineTo(arrowLength - 4, 1);
+  context.lineTo(arrowLength - 9, 4);
+  context.lineTo(arrowLength, 0);
+  context.lineTo(arrowLength - 9, -4);
+  context.lineTo(arrowLength - 4, -1);
+  context.lineTo(0, -1);
 
   if (fillColor) {
     goog.asserts.assertNumber(bearingArrowLiteral.fillOpacity);
@@ -552,7 +554,12 @@ ol.renderer.canvas.VectorRenderer.renderShape = function(shape) {
   return canvas;
 };
 
-ol.renderer.canvas.VectorRenderer.renderArrow = function(symbolizer){
+
+/**
+ * @param {ol.style.BearingArrowLiteral} symbolizer
+ * @return {!HTMLCanvasElement} Canvas element.
+ */
+ol.renderer.canvas.VectorRenderer.renderArrow = function(symbolizer) {
   var canvas;
   canvas = ol.renderer.canvas.VectorRenderer.renderArrow_(symbolizer);
   return canvas;
