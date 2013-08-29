@@ -8,7 +8,6 @@ goog.require('ol.parser.GeoJSON');
 goog.require('ol.proj');
 goog.require('ol.source.Vector');
 goog.require('ol.style.BearingArrow');
-goog.require('ol.style.Line');
 goog.require('ol.style.Rule');
 goog.require('ol.style.Text');
 

@@ -10,6 +10,7 @@ goog.require('ol.style.Point');
 goog.require('ol.style.PointLiteral');
 
 
+
 /**
  * @typedef {{size: (number),
  *            fillColor: (string|undefined),

@@ -25,7 +25,6 @@ goog.require('ol.style.PointLiteral');
 goog.require('ol.style.PolygonLiteral');
 goog.require('ol.style.ShapeLiteral');
 goog.require('ol.style.ShapeType');
-goog.require('ol.style.SymbolizerLiteral');
 goog.require('ol.style.TextLiteral');
 
 
