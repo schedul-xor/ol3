@@ -202,6 +202,16 @@ ol.layer.FeatureCache.prototype.getFeaturesByIds_ = function(ids) {
 
 
 /**
+ * @param {string} uid Feature uid.
+ * @return {ol.Feature|undefined} The feature with the provided uid if it is in
+ *     the cache, otherwise undefined.
+ */
+ol.layer.FeatureCache.prototype.getFeatureWithUid = function(uid) {
+  return this.idLookup_[uid];
+};
+
+
+/**
  * Remove a feature from the cache.
  * @param {ol.Feature} feature Feature.
  */
@@ -225,7 +235,9 @@ ol.layer.FeatureCache.prototype.remove = function(feature) {
  */
 ol.layer.VectorLayerEventType = {
   ADD: 'add',
-  REMOVE: 'remove'
+  CHANGE: goog.events.EventType.CHANGE,
+  REMOVE: 'remove',
+  INTENTCHANGE: 'intentchange'
 };
 
 
@@ -294,8 +306,9 @@ ol.layer.Vector = function(options) {
   /**
    * True if this is a temporary layer.
    * @type {boolean}
+   * @private
    */
-  this.temp = goog.isDef(options.temp) ? options.temp : false;
+  this.temp_ = false;
 
   this.cubicBeziers_ = new ol.geom.SharedVertices();
 };
@@ -325,10 +338,37 @@ ol.layer.Vector.prototype.addFeatures = function(features) {
 
 
 /**
+ * Remove all features from the layer.
+ */
+ol.layer.Vector.prototype.clear = function() {
+  this.featureCache_.clear();
+  this.dispatchEvent(/** @type {ol.layer.VectorLayerEventObject} */ ({
+    type: ol.layer.VectorLayerEventType.CHANGE
+  }));
+};
+
+
+/**
+ * @return {boolean} Whether this layer is temporary.
+ */
+ol.layer.Vector.prototype.getTemporary = function() {
+  return this.temp_;
+};
+
+
+/**
  * @return {ol.source.Vector} Source.
  */
 ol.layer.Vector.prototype.getVectorSource = function() {
   return /** @type {ol.source.Vector} */ (this.getSource());
+};
+
+
+/**
+ * @return {ol.style.Style} This layer's style.
+ */
+ol.layer.Vector.prototype.getStyle = function() {
+  return this.style_;
 };
 
 
@@ -438,6 +478,16 @@ ol.layer.Vector.prototype.groupFeaturesBySymbolizerLiteral =
 
 
 /**
+ * @param {string|number} uid Feature uid.
+ * @return {ol.Feature|undefined} The feature with the provided uid if it is on
+ *     the layer, otherwise undefined.
+ */
+ol.layer.Vector.prototype.getFeatureWithUid = function(uid) {
+  return this.featureCache_.getFeatureWithUid(/** @type {string} */ (uid));
+};
+
+
+/**
  * @param {Object|Element|Document|string} data Feature data.
  * @param {ol.parser.Parser} parser Feature parser.
  * @param {ol.Projection} projection This sucks.  The layer should be a view in
@@ -451,7 +501,6 @@ ol.layer.Vector.prototype.parseFeatures = function(data, parser, projection) {
   lookup[ol.geom.GeometryType.MULTIPOINT] = this.pointVertices_;
   lookup[ol.geom.GeometryType.MULTILINESTRING] = this.lineVertices_;
   lookup[ol.geom.GeometryType.MULTIPOLYGON] = this.polygonVertices_;
-  lookup[ol.geom.GeometryType.CUBICBEZIER] = this.cubicBeziers_;
 
   var callback = function(feature, type) {
     return lookup[type];
@@ -545,11 +594,47 @@ ol.layer.Vector.prototype.removeFeatures = function(features) {
 
 
 /**
+ * Changes the renderIntent for an array of features.
+ * @param {string} renderIntent Render intent.
+ * @param {Array.<ol.Feature>=} opt_features Features to change the renderIntent
+ *     for. If not provided, all features will be changed.
+ */
+ol.layer.Vector.prototype.setRenderIntent =
+    function(renderIntent, opt_features) {
+  var features = goog.isDef(opt_features) ? opt_features :
+      goog.object.getValues(this.featureCache_.getFeaturesObject());
+  var extent = ol.extent.createEmpty(),
+      feature, geometry;
+  for (var i = features.length - 1; i >= 0; --i) {
+    feature = features[i];
+    feature.renderIntent = renderIntent;
+    geometry = feature.getGeometry();
+    if (!goog.isNull(geometry)) {
+      ol.extent.extend(extent, geometry.getBounds());
+    }
+  }
+  this.dispatchEvent(/** @type {ol.layer.VectorLayerEventObject} */ ({
+    extent: extent,
+    features: features,
+    type: ol.layer.VectorLayerEventType.INTENTCHANGE
+  }));
+};
+
+
+/**
+ * @param {boolean} temp Whether this layer is temporary.
+ */
+ol.layer.Vector.prototype.setTemporary = function(temp) {
+  this.temp_ = temp;
+};
+
+
+/**
  * @param {Array.<ol.Feature>} features Features.
  * @return {string} Feature info.
  */
 ol.layer.Vector.uidTransformFeatureInfo = function(features) {
-  var featureIds = goog.array.map(features,
+  var uids = goog.array.map(features,
       function(feature) { return goog.getUid(feature); });
-  return featureIds.join(', ');
+  return uids.join(', ');
 };

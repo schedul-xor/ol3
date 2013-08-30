@@ -4,7 +4,7 @@ goog.require('ol.View2D');
 goog.require('ol.control.defaults');
 goog.require('ol.expr');
 goog.require('ol.layer.Vector');
-goog.require('ol.parser.GeoJSONCubicBezierExtended');
+goog.require('ol.parser.GeoJSON');
 goog.require('ol.proj');
 goog.require('ol.source.Vector');
 goog.require('ol.style.Line');
@@ -170,7 +170,7 @@ var vector = new ol.layer.Vector({
         }
       }]
     },
-    parser: new ol.parser.GeoJSONCubicBezierExtended(),
+    parser: new ol.parser.GeoJSON(),
     projection: ol.proj.get('EPSG:3857')
   })
 });
