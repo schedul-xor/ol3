@@ -13,6 +13,8 @@ goog.require('ol.parser.GeoJSON');
 goog.require('ol.proj');
 goog.require('ol.source.OSM');
 goog.require('ol.source.Vector');
+goog.require('ol.structs.RTree');
+goog.require('ol.style.Fill');
 goog.require('ol.style.Rule');
 goog.require('ol.style.Shape');
 goog.require('ol.style.Style');
@@ -34,7 +36,7 @@ var style = new ol.style.Style({
     symbolizers: [
       new ol.style.Shape({
         size: 40,
-        fillColor: '#ffffff'
+        fill: new ol.style.Fill({color:'#ffffff'})
       }),
       new ol.style.Text({
         color: '#333333',
@@ -137,13 +139,15 @@ var landmarksSource = new ol.source.Vector({
     }
                ]
   }
-});
+                                           });
+var rtree = new ol.structs.RTree();
 var landmarksLayer = new ol.layer.Vector({
   style: style,
   source: landmarksSource
 });
+landmarksLayer.setRtreeCache(rtree);
 var map = new ol.Map({
-  controls: ol.control.defaults({}, [mousePositionControl]),
+  controls: ol.control.defaults(),
   layers: [
     new ol.layer.TileLayer({
       source: new ol.source.OSM()
@@ -159,13 +163,13 @@ var map = new ol.Map({
 });
 
 var transformFrom3857to4326 = ol.proj.getTransform('EPSG:3857','EPSG:4326');
-var landmarkPlaceholder = goog.dom.$('nearest-landmark');
+var landmarkPlaceholder = goog.dom.getElement('nearest-landmark');
 
 var handleMouseMove = function(browserEvent){
   var eventPosition = goog.style.getRelativePosition(
-      browserEvent, map.getViewport());
+    browserEvent, map.getViewport());
   var b3857 = map.getCoordinateFromPixel([eventPosition.x, eventPosition.y]);
-  var nearestPoints = landmarksLayer.featureCache_.rTree_.getNearestKPointsFrom(b3857,function(x1,y1,x2,y2){
+  var nearestPoints = rtree.getNearestKPointsFrom(b3857,function(x1,y1,x2,y2){
     var l4326 = transformFrom3857to4326([x1,y1]);
     var m4326 = transformFrom3857to4326([x2,y2]);
     var v = ol.ellipsoid.WGS84.vincenty(l4326,m4326);

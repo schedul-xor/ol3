@@ -675,13 +675,12 @@ ol.structs.RTree.prototype.distanceFromExtent_ =
   }else {
     return distanceFunction(x, y, x, ymin);
   }
-  return 0;
 };
 
 
 /**
  * @param {ol.Coordinate} p
- * @param {function} distanceFunction
+ * @param {function(number,number,number,number):number} distanceFunction
  * @param {number} count
  * @return {Array.<ol.Coordinate>}
  */
