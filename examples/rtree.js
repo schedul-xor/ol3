@@ -1,12 +1,15 @@
 goog.require('goog.dom');
+goog.require('goog.events');
+goog.require('goog.events.EventType');
+goog.require('goog.style');
 goog.require('ol.Map');
-goog.require('ol.RendererHints');
+goog.require('ol.RendererHint');
 goog.require('ol.View2D');
 goog.require('ol.control.MousePosition');
 goog.require('ol.control.defaults');
 goog.require('ol.coordinate');
-goog.require('ol.dom.Input');
 goog.require('ol.ellipsoid.WGS84');
+goog.require('ol.expr');
 goog.require('ol.layer.TileLayer');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.GeoJSON');
@@ -192,4 +195,3 @@ var handleMouseMove = function(browserEvent) {
 var viewport = map.getViewport();
 goog.events.listen(viewport, goog.events.EventType.MOUSEMOVE,
                    handleMouseMove, false, this);
-
