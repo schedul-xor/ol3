@@ -6,6 +6,7 @@
 @exportProperty ol.geom.GeometryType.MULTIPOINT
 @exportProperty ol.geom.GeometryType.MULTILINESTRING
 @exportProperty ol.geom.GeometryType.MULTIPOLYGON
+@exportProperty ol.geom.GeometryType.CUBICBEZIER
 @exportProperty ol.geom.GeometryType.GEOMETRYCOLLECTION
 
 @exportSymbol ol.geom.Geometry
@@ -27,3 +28,6 @@
 
 @exportSymbol ol.geom.MultiPolygon
 @exportProperty ol.geom.MultiPolygon.prototype.getCoordinates
+
+@exportSymbol ol.geom.CubicBezier
+@exportProperty ol.geom.CubicBezier.prototype.getCoordinates

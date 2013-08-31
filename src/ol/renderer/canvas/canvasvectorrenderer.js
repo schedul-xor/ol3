@@ -149,7 +149,7 @@ ol.renderer.canvas.VectorRenderer.prototype.renderFeaturesByGeometryType =
         break;
       case ol.geom.GeometryType.CUBICBEZIER:
         goog.asserts.assert(symbolizer instanceof ol.style.LineLiteral,
-            'Expected line symbolizer: ' + symbolizer);
+                            'Expected line symbolizer: ' + symbolizer);
         this.renderCubicBezierFeatures_(
             features, /** @type {ol.style.LineLiteral} */ (symbolizer));
         break;
@@ -230,18 +230,21 @@ ol.renderer.canvas.VectorRenderer.prototype.renderLineStringFeatures_ =
 ol.renderer.canvas.VectorRenderer.prototype.renderCubicBezierFeatures_ =
     function(features, symbolizer) {
   var context = this.context_,
-      strokeColor = symbolizer.strokeColor,
-      strokeWidth = symbolizer.strokeWidth,
-      strokeOpacity = symbolizer.strokeOpacity,
-      geometry, vertices, vertex, vecs, vec;
+      geometry, coordinates, coordinate, vecs, vec;
+
+  context.globalAlpha = symbolizer.opacity;
+  context.strokeStyle = symbolizer.color;
+  context.lineWidth = symbolizer.width;
+  context.lineCap = 'round'; // TODO: accept this as a symbolizer property
+  context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
 
   for (var j = 0; j < features.length; j++) {
     geometry = features[j].getGeometry();
-    vertices = geometry.getVertices();
+    coordinates = geometry.getCoordinates();
     vecs = [];
     for (var i = 0; i < 4; i++) {
-      vertex = vertices[i];
-      vec = [vertex[0], vertex[1], 0];
+      coordinate = coordinates[i];
+      vec = [coordinate[0], coordinate[1], 0];
       goog.vec.Mat4.multVec3(this.transform_, vec, vec);
       vecs.push(vec);
     }

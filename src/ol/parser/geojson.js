@@ -332,7 +332,7 @@ ol.parser.GeoJSON.prototype.parsePolygon_ = function(json, opt_vertices) {
  * @param {ol.geom.SharedVertices=} opt_vertices
  * @return {ol.geom.CubicBezier}
  */
-ol.parser.GeoJSONCubicBezierExtended.prototype.parseCubicBezier_ =
+ol.parser.GeoJSON.prototype.parseCubicBezier_ =
     function(json, opt_vertices) {
   return new ol.geom.CubicBezier(json.coordinates, opt_vertices);
 };
