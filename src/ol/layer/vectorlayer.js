@@ -323,7 +323,7 @@ goog.inherits(ol.layer.Vector, ol.layer.Layer);
 /**
  * @param {ol.structs.RTree} rtree
  */
-ol.layer.Vector.prototype.setRtreeCache = function(rtree) {
+ol.layer.Vector.prototype.setRTreeCache = function(rtree) {
   this.featureCache_.setRTreeCache(rtree);
 };
 

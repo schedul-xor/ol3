@@ -148,7 +148,7 @@ var landmarksLayer = new ol.layer.Vector({
   style: style,
   source: landmarksSource
 });
-landmarksLayer.setRtreeCache(rtree);
+landmarksLayer.setRTreeCache(rtree);
 var map = new ol.Map({
   controls: ol.control.defaults(),
   layers: [
