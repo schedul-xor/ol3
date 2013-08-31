@@ -8,6 +8,7 @@ goog.require('ol.parser.GeoJSON');
 goog.require('ol.proj');
 goog.require('ol.source.Vector');
 goog.require('ol.style.BearingArrow');
+goog.require('ol.style.Fill');
 goog.require('ol.style.Rule');
 goog.require('ol.style.Text');
 
@@ -18,9 +19,8 @@ var style = new ol.style.Style({rules: [
     symbolizers: [
       new ol.style.BearingArrow({
         bearing: ol.expr.parse('bearing'),
-        arrowLength: 40,
-        fillColor: '#000',
-        fillOpacity: 1
+        arrowLength: 60,
+        fill: new ol.style.Fill({color: '#666666',opacity:1})
       }),
       new ol.style.Text({
         color: '#bada55',

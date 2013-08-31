@@ -1,6 +1,5 @@
 goog.provide('ol.renderer.canvas.VectorRenderer');
 
-
 goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
@@ -224,8 +223,6 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
       content, alpha, i, ii, feature, id, size, geometry, components, j, jj,
       point, vec;
 
-  var xOffset = 0;
-  var yOffset = 0;
   if (symbolizer instanceof ol.style.ShapeLiteral) {
     content = ol.renderer.canvas.VectorRenderer.renderShape(symbolizer);
     alpha = 1;
@@ -236,7 +233,7 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
     xOffset = symbolizer.xOffset;
     yOffset = symbolizer.yOffset;
   }else if (symbolizer instanceof ol.style.BearingArrowLiteral) {
-    content = ol.renderer.canvas.VectorRenderer.renderArrow(symbolizer);
+    content = ol.renderer.canvas.VectorRenderer.renderArrow_(symbolizer);
     alpha = 1;
   } else {
     throw new Error('Unsupported symbolizer: ' + symbolizer);
@@ -250,8 +247,6 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
   var midHeight = content.height / 2;
   var contentWidth = content.width * this.inverseScale_;
   var contentHeight = content.height * this.inverseScale_;
-  var contentXOffset = xOffset * this.inverseScale_;
-  var contentYOffset = yOffset * this.inverseScale_;
   context.save();
   context.setTransform(1, 0, 0, 1, -midWidth, -midHeight);
   context.globalAlpha = alpha;
@@ -469,6 +464,64 @@ ol.renderer.canvas.VectorRenderer.renderCircle_ = function(circle) {
     context.globalAlpha = circle.strokeOpacity;
     context.stroke();
   }
+  return canvas;
+};
+
+
+/**
+ * @param {ol.style.BearingArrowLiteral} arrow Arrow.
+ * @return {!HTMLCanvasElement} Canvas element.
+ * @private
+ */
+ol.renderer.canvas.VectorRenderer.renderArrow_ = function(arrow) {
+  var arrowLength = arrow.arrowLength;
+  var strokeWidth = arrow.strokeWidth || 2,
+      size = arrowLength * 2 + (2 * strokeWidth) + 1,
+      mid = size / 2,
+      canvas = /** @type {HTMLCanvasElement} */
+          (goog.dom.createElement(goog.dom.TagName.CANVAS)),
+      context = /** @type {CanvasRenderingContext2D} */
+          (canvas.getContext('2d')),
+      fillColor = arrow.fillColor,
+      strokeColor = arrow.strokeColor;
+
+  canvas.height = size;
+  canvas.width = size;
+
+  if (fillColor) {
+    context.fillStyle = fillColor;
+  }
+  if (strokeColor) {
+    context.lineWidth = strokeWidth;
+    context.strokeStyle = strokeColor;
+    context.lineCap = 'round'; // TODO: accept this as a symbolizer property
+    context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
+  }
+
+  context.beginPath();
+
+  context.translate(size / 2, size / 2);
+  context.rotate(-arrow.bearing);
+
+  context.moveTo(0, 1);
+  context.lineTo(arrowLength - 4, 1);
+  context.lineTo(arrowLength - 9, 4);
+  context.lineTo(arrowLength, 0);
+  context.lineTo(arrowLength - 9, -4);
+  context.lineTo(arrowLength - 4, -1);
+  context.lineTo(0, -1);
+
+  if (fillColor) {
+    goog.asserts.assertNumber(arrow.fillOpacity);
+    context.globalAlpha = arrow.fillOpacity;
+    context.fill();
+  }
+  if (strokeColor) {
+    goog.asserts.assertNumber(arrow.strokeOpacity);
+    context.globalAlpha = arrow.strokeOpacity;
+    context.stroke();
+  }
+
   return canvas;
 };
 
