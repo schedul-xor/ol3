@@ -1,8 +1,9 @@
 goog.provide('ol.geom.CubicBezier');
 
+goog.require('goog.asserts');
 goog.require('ol.Extent');
 goog.require('ol.geom.AbstractCollection');
-goog.require('ol.geom.Point');
+goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.SharedVertices');
 goog.require('ol.geom.Vertex');
 goog.require('ol.geom.VertexArray');

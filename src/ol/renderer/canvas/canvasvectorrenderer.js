@@ -1,6 +1,5 @@
 goog.provide('ol.renderer.canvas.VectorRenderer');
 
-
 goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
@@ -9,7 +8,6 @@ goog.require('goog.events.EventType');
 goog.require('goog.vec.Mat4');
 goog.require('ol.Feature');
 goog.require('ol.geom.AbstractCollection');
-goog.require('ol.geom.CubicBezier');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.LineString');
@@ -18,8 +16,8 @@ goog.require('ol.geom.MultiPoint');
 goog.require('ol.geom.MultiPolygon');
 goog.require('ol.geom.Point');
 goog.require('ol.geom.Polygon');
-goog.require('ol.style.BearingArrowLiteral');
 goog.require('ol.layer.VectorLayerRenderIntent');
+goog.require('ol.style.BearingArrowLiteral');
 goog.require('ol.style.IconLiteral');
 goog.require('ol.style.LineLiteral');
 goog.require('ol.style.Literal');
@@ -354,7 +352,7 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
 ol.renderer.canvas.VectorRenderer.prototype.renderText_ =
     function(features, text, texts) {
   var context = this.context_,
-      vecs, vec;
+      vecs, vec, feature;
 
   if (context.fillStyle !== text.color) {
     context.fillStyle = text.color;
