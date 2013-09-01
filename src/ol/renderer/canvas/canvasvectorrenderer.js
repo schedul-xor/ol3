@@ -230,8 +230,6 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
     content = ol.renderer.canvas.VectorRenderer.renderIcon(
         symbolizer, this.iconLoadedCallback_);
     alpha = symbolizer.opacity;
-    xOffset = symbolizer.xOffset;
-    yOffset = symbolizer.yOffset;
   }else if (symbolizer instanceof ol.style.BearingArrowLiteral) {
     content = ol.renderer.canvas.VectorRenderer.renderArrow_(symbolizer);
     alpha = 1;

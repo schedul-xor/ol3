@@ -1,3 +1,4 @@
+goog.require('ol.Feature');
 goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
@@ -10,6 +11,7 @@ goog.require('ol.source.Vector');
 goog.require('ol.style.BearingArrow');
 goog.require('ol.style.Fill');
 goog.require('ol.style.Rule');
+goog.require('ol.style.Style');
 goog.require('ol.style.Text');
 
 
@@ -19,8 +21,9 @@ var style = new ol.style.Style({rules: [
     symbolizers: [
       new ol.style.BearingArrow({
         bearing: ol.expr.parse('bearing'),
+        size: 5,
         arrowLength: 60,
-        fill: new ol.style.Fill({color: '#666666',opacity:1})
+        fill: new ol.style.Fill({color: '#666666', opacity: 1})
       }),
       new ol.style.Text({
         color: '#bada55',
@@ -41,7 +44,7 @@ var vector = new ol.layer.Vector({
         'type': 'Feature',
         'properties': {
           'label': 'FromHere',
-          'bearing': 40*Math.PI/180
+          'bearing': 40 * Math.PI / 180
         },
         'geometry': {
           'type': 'Point',

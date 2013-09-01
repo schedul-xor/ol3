@@ -1,6 +1,7 @@
 goog.provide('ol.style.BearingArrow');
 
 goog.require('goog.asserts');
+goog.require('ol.Feature');
 goog.require('ol.expr');
 goog.require('ol.expr.Expression');
 goog.require('ol.expr.Literal');
@@ -23,9 +24,27 @@ ol.style.BearingArrow = function(options) {
    * @private
    */
   this.size_ = !goog.isDefAndNotNull(options.size) ?
-      new ol.expr.Literal(ol.style.ShapeDefaults.size) :
+      new ol.expr.Literal(ol.style.BearingArrowDefaults.size) :
       (options.size instanceof ol.expr.Expression) ?
           options.size : new ol.expr.Literal(options.size);
+
+  /**
+   * @type {ol.expr.Expression}
+   * @private
+   */
+  this.bearing_ = !goog.isDefAndNotNull(options.bearing) ?
+      new ol.expr.Literal(ol.style.BearingArrowDefaults.bearing) :
+      (options.bearing instanceof ol.expr.Expression) ?
+          options.bearing : new ol.expr.Literal(options.bearing);
+
+  /**
+   * @type {ol.expr.Expression}
+   * @private
+   */
+  this.arrowLength_ = !goog.isDefAndNotNull(options.arrowLength) ?
+      new ol.expr.Literal(ol.style.BearingArrowDefaults.arrowLength) :
+      (options.arrowLength instanceof ol.expr.Expression) ?
+          options.arrowLength : new ol.expr.Literal(options.arrowLength);
 
   /**
    * @type {ol.style.Fill}
@@ -42,24 +61,6 @@ ol.style.BearingArrow = function(options) {
   // one of stroke or fill can be null, both null is user error
   goog.asserts.assert(this.fill_ || this.stroke_,
       'Stroke or fill must be provided');
-
-  /**
-   * @type {ol.expr.Expression}
-   * @private
-   */
-  this.bearing_ = !goog.isDefAndNotNull(options.bearing) ?
-      new ol.expr.Literal(ol.style.ShapeDefaults.bearing) :
-      (options.bearing instanceof ol.expr.Expression) ?
-          options.bearing : new ol.expr.Literal(options.bearing);
-
-  /**
-   * @type {ol.expr.Expression}
-   * @private
-   */
-  this.arrowLength_ = !goog.isDefAndNotNull(options.arrowLength) ?
-      new ol.expr.Literal(ol.style.ShapeDefaults.arrowLength) :
-      (options.arrowLength instanceof ol.expr.Expression) ?
-          options.arrowLength : new ol.expr.Literal(options.arrowLength);
 };
 
 
@@ -67,10 +68,24 @@ ol.style.BearingArrow = function(options) {
  * @inheritDoc
  * @return {ol.style.BearingArrowLiteral} Literal bearingArrow symbolizer.
  */
-ol.style.BearingArrow.prototype.createLiteral = function(feature) {
+ol.style.BearingArrow.prototype.createLiteral = function(featureOrType) {
+  var feature, type;
+  if (featureOrType instanceof ol.Feature) {
+    feature = featureOrType;
+    var geometry = feature.getGeometry();
+    type = geometry ? geometry.getType() : null;
+  } else {
+    type = featureOrType;
+  }
 
-  var size = ol.expr.evaluateFeature(this.size_, feature);
-  goog.asserts.assertNumber(size, 'size must be a number');
+  var size = Number(ol.expr.evaluateFeature(this.size_, feature));
+  goog.asserts.assert(!isNaN(size), 'size must be a number');
+
+  var bearing = Number(ol.expr.evaluateFeature(this.bearing_, feature));
+  goog.asserts.assert(!isNaN(bearing), 'bearing must be a number');
+
+  var arrowLength = Number(ol.expr.evaluateFeature(this.arrowLength_, feature));
+  goog.asserts.assert(!isNaN(arrowLength), 'arrowLength must be a number');
 
   var fillColor, fillOpacity;
   if (!goog.isNull(this.fill_)) {
@@ -96,18 +111,6 @@ ol.style.BearingArrow.prototype.createLiteral = function(feature) {
     goog.asserts.assert(!isNaN(strokeWidth), 'strokeWidth must be a number');
   }
 
-  var bearing;
-  if (!goog.isNull(this.bearing_)) {
-    bearing = ol.expr.evaluateFeature(this.bearing_, feature);
-    goog.asserts.assertNumber(bearing, 'bearing must be a number');
-  }
-
-  var arrowLength;
-  if (!goog.isNull(this.arrowLength_)) {
-    arrowLength = ol.expr.evaluateFeature(this.arrowLength_, feature);
-    goog.asserts.assertNumber(arrowLength, 'arrowLength must be a number');
-  }
-
   return new ol.style.BearingArrowLiteral({
     size: size,
     fillColor: fillColor,
@@ -125,7 +128,7 @@ ol.style.BearingArrow.prototype.createLiteral = function(feature) {
  * Get the fill.
  * @return {ol.style.Fill} Shape fill.
  */
-ol.style.Shape.prototype.getFill = function() {
+ol.style.BearingArrow.prototype.getFill = function() {
   return this.fill_;
 };
 
@@ -143,7 +146,7 @@ ol.style.BearingArrow.prototype.getSize = function() {
  * Get the stroke.
  * @return {ol.style.Stroke} Shape stroke.
  */
-ol.style.Shape.prototype.getStroke = function() {
+ol.style.BearingArrow.prototype.getStroke = function() {
   return this.stroke_;
 };
 
@@ -168,7 +171,7 @@ ol.style.BearingArrow.prototype.getArrowLength = function() {
  * Set the fill.
  * @param {ol.style.Fill} fill Shape fill.
  */
-ol.style.Shape.prototype.setFill = function(fill) {
+ol.style.BearingArrow.prototype.setFill = function(fill) {
   if (!goog.isNull(fill)) {
     goog.asserts.assertInstanceof(fill, ol.style.Fill);
   }
@@ -190,7 +193,7 @@ ol.style.BearingArrow.prototype.setSize = function(size) {
  * Set the stroke.
  * @param {ol.style.Stroke} stroke Shape stroke.
  */
-ol.style.Shape.prototype.setStroke = function(stroke) {
+ol.style.BearingArrow.prototype.setStroke = function(stroke) {
   if (!goog.isNull(stroke)) {
     goog.asserts.assertInstanceof(stroke, ol.style.Stroke);
   }
