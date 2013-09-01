@@ -3,7 +3,6 @@ goog.provide('ol.layer.VectorLayerEventType');
 
 goog.require('goog.array');
 goog.require('goog.asserts');
-goog.require('goog.events.EventType');
 goog.require('goog.object');
 goog.require('ol.Feature');
 goog.require('ol.expr');
@@ -267,7 +266,11 @@ ol.layer.VectorLayerEventObject;
  */
 ol.layer.Vector = function(options) {
 
-  goog.base(this, /** @type {ol.layer.LayerOptions} */ (options));
+  goog.base(this, {
+    opacity: options.opacity,
+    source: options.source,
+    visible: options.visible
+  });
 
   /**
    * @private
@@ -310,12 +313,17 @@ ol.layer.Vector = function(options) {
   this.polygonVertices_ = new ol.geom.SharedVertices();
 
   /**
+   * @type {ol.geom.SharedVertices}
+   * @private
+   */
+  this.cubicBezierVertices_ = new ol.geom.SharedVertices();
+
+  /**
    * True if this is a temporary layer.
    * @type {boolean}
    * @private
    */
   this.temp_ = false;
-
 };
 goog.inherits(ol.layer.Vector, ol.layer.Layer);
 
@@ -434,6 +442,14 @@ ol.layer.Vector.prototype.getPolygonVertices = function() {
 
 
 /**
+ * @return {ol.geom.SharedVertices} Shared cubic bezier vertices.
+ */
+ol.layer.Vector.prototype.getCubicBezierVertices = function() {
+  return this.cubicBezierVertices_;
+};
+
+
+/**
  * @param {Object.<string, ol.Feature>} features Features.
  * @return {Array.<Array>} symbolizers for features. Each array in this array
  *     contains 3 items: an array of features, the symbolizer literal, and
@@ -514,6 +530,7 @@ ol.layer.Vector.prototype.parseFeatures = function(data, parser, projection) {
   lookup[ol.geom.GeometryType.MULTIPOINT] = this.pointVertices_;
   lookup[ol.geom.GeometryType.MULTILINESTRING] = this.lineVertices_;
   lookup[ol.geom.GeometryType.MULTIPOLYGON] = this.polygonVertices_;
+  lookup[ol.geom.GeometryType.CUBICBEZIER] = this.cubicBezierVertices_;
 
   var callback = function(feature, type) {
     return lookup[type];

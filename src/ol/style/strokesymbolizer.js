@@ -81,7 +81,8 @@ ol.style.Stroke.prototype.createLiteral = function(featureOrType) {
 
   var literal = null;
   if (type === ol.geom.GeometryType.LINESTRING ||
-      type === ol.geom.GeometryType.MULTILINESTRING) {
+      type === ol.geom.GeometryType.MULTILINESTRING ||
+      type === ol.geom.GeometryType.CUBICBEZIER) {
     literal = new ol.style.LineLiteral({
       color: color,
       opacity: opacity,

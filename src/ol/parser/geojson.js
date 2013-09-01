@@ -1,8 +1,10 @@
 goog.provide('ol.parser.GeoJSON');
+goog.provide('ol.parser.GeoJSON.GeometryType');
 
 goog.require('goog.asserts');
 goog.require('goog.object');
 goog.require('ol.Feature');
+goog.require('ol.geom.CubicBezier');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryCollection');
 goog.require('ol.geom.GeometryType');
@@ -202,6 +204,9 @@ ol.parser.GeoJSON.prototype.parseFeature_ = function(json, opt_options) {
       case 'MultiPolygon':
         geometry = this.parseMultiPolygon_(geomJson, sharedVertices);
         break;
+      case 'CubicBezier':
+        geometry = this.parseCubicBezier_(geomJson, sharedVertices);
+        break;
       default:
         throw new Error('Bad geometry type: ' + type);
     }
@@ -317,6 +322,19 @@ ol.parser.GeoJSON.prototype.parsePoint_ = function(json, opt_vertices) {
  */
 ol.parser.GeoJSON.prototype.parsePolygon_ = function(json, opt_vertices) {
   return new ol.geom.Polygon(json.coordinates, opt_vertices);
+};
+
+
+/**
+ * @private
+ * @param {GeoJSONGeometry} json Fake GeoJSON string
+ *  (GeoJSON doesn't define Bezier curves)
+ * @param {ol.geom.SharedVertices=} opt_vertices
+ * @return {ol.geom.CubicBezier}
+ */
+ol.parser.GeoJSON.prototype.parseCubicBezier_ =
+    function(json, opt_vertices) {
+  return new ol.geom.CubicBezier(json.coordinates, opt_vertices);
 };
 
 
@@ -448,5 +466,6 @@ ol.parser.GeoJSON.GeometryType = {
   'MultiPoint': ol.geom.GeometryType.MULTIPOINT,
   'MultiLineString': ol.geom.GeometryType.MULTILINESTRING,
   'MultiPolygon': ol.geom.GeometryType.MULTIPOLYGON,
-  'GeometryCollection': ol.geom.GeometryType.GEOMETRYCOLLECTION
+  'GeometryCollection': ol.geom.GeometryType.GEOMETRYCOLLECTION,
+  'CubicBezier': ol.geom.GeometryType.CUBICBEZIER
 };

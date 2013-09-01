@@ -9,6 +9,7 @@ goog.require('goog.events.EventType');
 goog.require('goog.vec.Mat4');
 goog.require('ol.Feature');
 goog.require('ol.geom.AbstractCollection');
+goog.require('ol.geom.CubicBezier');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.LineString');
@@ -147,6 +148,12 @@ ol.renderer.canvas.VectorRenderer.prototype.renderFeaturesByGeometryType =
         this.renderPolygonFeatures_(
             features, /** @type {ol.style.PolygonLiteral} */ (symbolizer));
         break;
+      case ol.geom.GeometryType.CUBICBEZIER:
+        goog.asserts.assert(symbolizer instanceof ol.style.LineLiteral,
+                            'Expected line symbolizer: ' + symbolizer);
+        this.renderCubicBezierFeatures_(
+            features, /** @type {ol.style.LineLiteral} */ (symbolizer));
+        break;
       default:
         throw new Error('Rendering not implemented for geometry type: ' + type);
     }
@@ -212,6 +219,46 @@ ol.renderer.canvas.VectorRenderer.prototype.renderLineStringFeatures_ =
   }
 
   context.stroke();
+};
+
+
+/**
+ * @param {Array.<ol.Feature>} features Array of cubic bezier features.
+ * @param {ol.style.LineLiteral} symbolizer Line symbolizer.
+ * @return {boolean} true if deferred, false if rendered.
+ * @private
+ */
+ol.renderer.canvas.VectorRenderer.prototype.renderCubicBezierFeatures_ =
+    function(features, symbolizer) {
+  var context = this.context_,
+      geometry, coordinates, coordinate, vecs, vec;
+
+  context.globalAlpha = symbolizer.opacity;
+  context.strokeStyle = symbolizer.color;
+  context.lineWidth = symbolizer.width;
+  context.lineCap = 'round'; // TODO: accept this as a symbolizer property
+  context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
+
+  for (var j = 0; j < features.length; j++) {
+    geometry = features[j].getGeometry();
+    coordinates = geometry.getCoordinates();
+    vecs = [];
+    for (var i = 0; i < 4; i++) {
+      coordinate = coordinates[i];
+      vec = [coordinate[0], coordinate[1], 0];
+      goog.vec.Mat4.multVec3(this.transform_, vec, vec);
+      vecs.push(vec);
+    }
+
+    context.beginPath();
+
+    context.moveTo(vecs[0][0], vecs[0][1]);
+    context.bezierCurveTo(vecs[1][0],
+        vecs[1][1], vecs[2][0], vecs[2][1], vecs[3][0], vecs[3][1]);
+
+    context.stroke();
+  }
+  return false;
 };
 
 
