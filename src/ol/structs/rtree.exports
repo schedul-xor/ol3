@@ -1,0 +1,2 @@
+@exportSymbol ol.structs.RTree
+@exportProperty ol.structs.RTree.prototype.getNearestKPointsFrom

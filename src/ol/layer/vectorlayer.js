@@ -52,6 +52,15 @@ ol.layer.FeatureCache = function() {
 
 
 /**
+ * @param {ol.structs.RTree} rtree
+ */
+ol.layer.FeatureCache.prototype.setRTreeCache = function(rtree) {
+  this.clear();
+  this.rTree_ = rtree;
+};
+
+
+/**
  * Clear the cache.
  */
 ol.layer.FeatureCache.prototype.clear = function() {
@@ -309,6 +318,14 @@ ol.layer.Vector = function(options) {
 
 };
 goog.inherits(ol.layer.Vector, ol.layer.Layer);
+
+
+/**
+ * @param {ol.structs.RTree} rtree
+ */
+ol.layer.Vector.prototype.setRTreeCache = function(rtree) {
+  this.featureCache_.setRTreeCache(rtree);
+};
 
 
 /**

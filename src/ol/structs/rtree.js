@@ -28,6 +28,7 @@
 goog.provide('ol.structs.RTree');
 
 goog.require('goog.array');
+goog.require('goog.structs.Heap');
 goog.require('ol.extent');
 
 
@@ -637,4 +638,77 @@ ol.structs.RTree.prototype.searchSubtree_ = function(
   } else {
     return result;
   }
+};
+
+
+/**
+ * @private
+ * @param {ol.Coordinate} p
+ * @param {ol.Extent} extent
+ * @param {function(number,number,number,number):number} distanceFunction
+ * @return {number}
+ */
+ol.structs.RTree.prototype.distanceFromExtent_ =
+    function(p, extent, distanceFunction) {
+  var x = p[0];
+  var y = p[1];
+  var xmin = extent[0];
+  var xmax = extent[1];
+  var ymin = extent[2];
+  var ymax = extent[3];
+  if (x > xmax && y > ymax) {
+    return distanceFunction(x, y, xmax, ymax);
+  }else if (x > xmax && y < ymin) {
+    return distanceFunction(x, y, xmax, ymin);
+  }else if (x < xmin && y > ymax) {
+    return distanceFunction(x, y, xmin, ymax);
+  }else if (x < xmin && y < ymin) {
+    return distanceFunction(x, y, xmin, ymin);
+  }else if (x <= xmax && x >= xmin && y <= ymax && y >= ymin) {
+    return 0;
+  }else if (x > xmax) {
+    return distanceFunction(x, y, xmax, y);
+  }else if (x < xmin) {
+    return distanceFunction(x, y, xmin, y);
+  }else if (y > ymax) {
+    return distanceFunction(x, y, x, ymax);
+  }else {
+    return distanceFunction(x, y, x, ymin);
+  }
+};
+
+
+/**
+ * @param {ol.Coordinate} p
+ * @param {function(number,number,number,number):number} distanceFunction
+ * @param {number} count
+ * @return {Array.<ol.Coordinate>}
+ */
+ol.structs.RTree.prototype.getNearestKPointsFrom =
+    function(p, distanceFunction, count) {
+  var heap = new goog.structs.Heap();
+  var distance = this.distanceFromExtent_(
+      p, this.rootTree_.extent, distanceFunction);
+  var foundPoints = [];
+  heap.insert(distance, this.rootTree_);
+  while (true) {
+    while (true) {
+      var nearestNode = heap.peek();
+      if (nearestNode !== undefined && nearestNode['nodes'] === undefined) {
+        heap.remove();
+        foundPoints.push(nearestNode);
+        continue;
+      }
+      break;
+    }
+    if (foundPoints.length > count) {
+      break;
+    }
+    var shortestNode = heap.remove();
+    goog.array.forEach(shortestNode.nodes, function(v, k) {
+      distance = this.distanceFromExtent_(p, v.extent, distanceFunction);
+      heap.insert(distance, v);
+    },this);
+  }
+  return foundPoints.splice(0, count);
 };
