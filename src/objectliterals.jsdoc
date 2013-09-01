@@ -606,6 +606,15 @@
  */
 
 /**
+ * @typedef {Object} ol.style.BearingArrowOptions
+ * @property {number|ol.expr.Expression|undefined} size Size in pixels.
+ * @property {number|ol.expr.Expression|undefined} bearing Bearing in radian
+ * @property {number|ol.expr.Expression|undefined} arrowLength Arrow length in pixels.
+ * @property {ol.style.Fill|undefined} fill Fill symbolizer for shape.
+ * @property {ol.style.Stroke|undefined} stroke Stroke symbolizer for shape.
+ */
+
+/**
  * @typedef {Object} ol.style.IconOptions
  * @property {string|ol.expr.Expression} url Icon image url.
  * @property {number|ol.expr.Expression|undefined} width Width of the icon
