@@ -1,5 +1,6 @@
 goog.provide('ol.renderer.canvas.VectorRenderer');
 
+
 goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
