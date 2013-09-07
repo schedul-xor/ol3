@@ -1,19 +1,18 @@
 goog.provide('ol.geom.CubicBezier');
 
 goog.require('goog.asserts');
+goog.require('ol.CoordinateArray');
 goog.require('ol.Extent');
 goog.require('ol.geom.AbstractCollection');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.SharedVertices');
-goog.require('ol.geom.Vertex');
-goog.require('ol.geom.VertexArray');
 
 
 
 /**
  * @constructor
  * @extends {ol.geom.AbstractCollection}
- * @param {ol.geom.VertexArray} coordinates Vertex array
+ * @param {ol.CoordinateArray} coordinates Vertex array
  * (e.g. [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]).
  * @param {ol.geom.SharedVertices=} opt_shared Shared vertices.
  */
@@ -67,7 +66,7 @@ ol.geom.CubicBezier.prototype.get = function(index, dim) {
 
 /**
  * @inheritDoc
- * @return {ol.geom.VertexArray} Coordinates array.
+ * @return {ol.CoordinateArray} Coordinates array.
  */
 ol.geom.CubicBezier.prototype.getCoordinates = function() {
   var coordinates = new Array(4);
