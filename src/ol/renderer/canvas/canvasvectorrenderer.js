@@ -1,5 +1,6 @@
 goog.provide('ol.renderer.canvas.VectorRenderer');
 
+
 goog.require('goog.asserts');
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
@@ -17,6 +18,7 @@ goog.require('ol.geom.MultiPolygon');
 goog.require('ol.geom.Point');
 goog.require('ol.geom.Polygon');
 goog.require('ol.style.BearingArrowLiteral');
+goog.require('ol.layer.VectorLayerRenderIntent');
 goog.require('ol.style.IconLiteral');
 goog.require('ol.style.LineLiteral');
 goog.require('ol.style.Literal');
@@ -176,6 +178,9 @@ ol.renderer.canvas.VectorRenderer.prototype.renderLineStringFeatures_ =
   context.beginPath();
   for (i = 0, ii = features.length; i < ii; ++i) {
     feature = features[i];
+    if (feature.renderIntent === ol.layer.VectorLayerRenderIntent.HIDDEN) {
+      continue;
+    }
     id = goog.getUid(feature);
     currentSize = goog.isDef(this.symbolSizes_[id]) ?
         this.symbolSizes_[id] : [0];
@@ -223,6 +228,8 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
       content, alpha, i, ii, feature, id, size, geometry, components, j, jj,
       point, vec;
 
+  var xOffset = 0;
+  var yOffset = 0;
   if (symbolizer instanceof ol.style.ShapeLiteral) {
     content = ol.renderer.canvas.VectorRenderer.renderShape(symbolizer);
     alpha = 1;
@@ -230,6 +237,8 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
     content = ol.renderer.canvas.VectorRenderer.renderIcon(
         symbolizer, this.iconLoadedCallback_);
     alpha = symbolizer.opacity;
+    xOffset = symbolizer.xOffset;
+    yOffset = symbolizer.yOffset;
   }else if (symbolizer instanceof ol.style.BearingArrowLiteral) {
     content = ol.renderer.canvas.VectorRenderer.renderArrow_(symbolizer);
     alpha = 1;
@@ -245,19 +254,28 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
   var midHeight = content.height / 2;
   var contentWidth = content.width * this.inverseScale_;
   var contentHeight = content.height * this.inverseScale_;
+  var contentXOffset = xOffset * this.inverseScale_;
+  var contentYOffset = yOffset * this.inverseScale_;
   context.save();
   context.setTransform(1, 0, 0, 1, -midWidth, -midHeight);
   context.globalAlpha = alpha;
   for (i = 0, ii = features.length; i < ii; ++i) {
     feature = features[i];
+    if (feature.renderIntent === ol.layer.VectorLayerRenderIntent.HIDDEN) {
+      continue;
+    }
     id = goog.getUid(feature);
     size = this.symbolSizes_[id];
     this.symbolSizes_[id] = goog.isDef(size) ?
         [Math.max(size[0], contentWidth), Math.max(size[1], contentHeight)] :
         [contentWidth, contentHeight];
+    this.symbolOffsets_[id] =
+        [xOffset * this.inverseScale_, yOffset * this.inverseScale_];
     this.maxSymbolSize_ =
-        [Math.max(this.maxSymbolSize_[0], this.symbolSizes_[id][0]),
-          Math.max(this.maxSymbolSize_[1], this.symbolSizes_[id][1])];
+        [Math.max(this.maxSymbolSize_[0],
+            this.symbolSizes_[id][0] + 2 * Math.abs(contentXOffset)),
+          Math.max(this.maxSymbolSize_[1],
+              this.symbolSizes_[id][1] + 2 * Math.abs(contentYOffset))];
     geometry = feature.getGeometry();
     if (geometry instanceof ol.geom.Point) {
       components = [geometry];
@@ -270,7 +288,8 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
       point = components[j];
       vec = [point.get(0), point.get(1), 0];
       goog.vec.Mat4.multVec3(this.transform_, vec, vec);
-      context.drawImage(content, vec[0], vec[1], content.width, content.height);
+      context.drawImage(content, vec[0] + xOffset, vec[1] + yOffset,
+          content.width, content.height);
     }
   }
   context.restore();
@@ -288,7 +307,7 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPointFeatures_ =
 ol.renderer.canvas.VectorRenderer.prototype.renderText_ =
     function(features, text, texts) {
   var context = this.context_,
-      vecs, vec;
+      feature, vecs, vec;
 
   if (context.fillStyle !== text.color) {
     context.fillStyle = text.color;
@@ -301,8 +320,12 @@ ol.renderer.canvas.VectorRenderer.prototype.renderText_ =
   context.textBaseline = 'middle';
 
   for (var i = 0, ii = features.length; i < ii; ++i) {
+    feature = features[i];
+    if (feature.renderIntent === ol.layer.VectorLayerRenderIntent.HIDDEN) {
+      continue;
+    }
     vecs = ol.renderer.canvas.VectorRenderer.getLabelVectors(
-        features[i].getGeometry());
+        feature.getGeometry());
     for (var j = 0, jj = vecs.length; j < jj; ++j) {
       vec = vecs[j];
       goog.vec.Mat4.multVec3(this.transform_, vec, vec);
@@ -328,7 +351,7 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPolygonFeatures_ =
       fillOpacity = symbolizer.fillOpacity,
       globalAlpha,
       i, ii, geometry, components, j, jj, poly,
-      rings, numRings, ring, dim, k, kk, vec;
+      rings, numRings, ring, dim, k, kk, vec, feature;
 
   if (strokeColor) {
     context.strokeStyle = strokeColor;
@@ -351,7 +374,11 @@ ol.renderer.canvas.VectorRenderer.prototype.renderPolygonFeatures_ =
    */
   context.beginPath();
   for (i = 0, ii = features.length; i < ii; ++i) {
-    geometry = features[i].getGeometry();
+    feature = features[i];
+    if (feature.renderIntent === ol.layer.VectorLayerRenderIntent.HIDDEN) {
+      continue;
+    }
+    geometry = feature.getGeometry();
     if (geometry instanceof ol.geom.Polygon) {
       components = [geometry];
     } else {
@@ -462,64 +489,6 @@ ol.renderer.canvas.VectorRenderer.renderCircle_ = function(circle) {
     context.globalAlpha = circle.strokeOpacity;
     context.stroke();
   }
-  return canvas;
-};
-
-
-/**
- * @param {ol.style.BearingArrowLiteral} arrow Arrow.
- * @return {!HTMLCanvasElement} Canvas element.
- * @private
- */
-ol.renderer.canvas.VectorRenderer.renderArrow_ = function(arrow) {
-  var arrowLength = arrow.arrowLength;
-  var strokeWidth = arrow.strokeWidth || 2,
-      size = arrowLength * 2 + (2 * strokeWidth) + 1,
-      mid = size / 2,
-      canvas = /** @type {HTMLCanvasElement} */
-          (goog.dom.createElement(goog.dom.TagName.CANVAS)),
-      context = /** @type {CanvasRenderingContext2D} */
-          (canvas.getContext('2d')),
-      fillColor = arrow.fillColor,
-      strokeColor = arrow.strokeColor;
-
-  canvas.height = size;
-  canvas.width = size;
-
-  if (fillColor) {
-    context.fillStyle = fillColor;
-  }
-  if (strokeColor) {
-    context.lineWidth = strokeWidth;
-    context.strokeStyle = strokeColor;
-    context.lineCap = 'round'; // TODO: accept this as a symbolizer property
-    context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
-  }
-
-  context.beginPath();
-
-  context.translate(size / 2, size / 2);
-  context.rotate(-arrow.bearing);
-
-  context.moveTo(0, 1);
-  context.lineTo(arrowLength - 4, 1);
-  context.lineTo(arrowLength - 9, 4);
-  context.lineTo(arrowLength, 0);
-  context.lineTo(arrowLength - 9, -4);
-  context.lineTo(arrowLength - 4, -1);
-  context.lineTo(0, -1);
-
-  if (fillColor) {
-    goog.asserts.assertNumber(arrow.fillOpacity);
-    context.globalAlpha = arrow.fillOpacity;
-    context.fill();
-  }
-  if (strokeColor) {
-    goog.asserts.assertNumber(arrow.strokeOpacity);
-    context.globalAlpha = arrow.strokeOpacity;
-    context.stroke();
-  }
-
   return canvas;
 };
 
