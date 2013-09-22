@@ -139,40 +139,37 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
 
 
 /**
- * @private
  * @param {number} a
  * @param {number} b
  * @param {number} t
  * @param {number} u
  * @return {number}
  */
-ol.geom.CubicBezier.posABAt_ = function(a, b, t, u) {
+ol.geom.CubicBezier.posABAt = function(a, b, t, u) {
   return a * u + b * t;
 };
 
 
 /**
- * @private
  * @param {number} b
  * @param {number} c
  * @param {number} t
  * @param {number} u
  * @return {number}
  */
-ol.geom.CubicBezier.posBCAt_ = function(b, c, t, u) {
+ol.geom.CubicBezier.posBCAt = function(b, c, t, u) {
   return b * u + c * t;
 };
 
 
 /**
- * @private
  * @param {number} c
  * @param {number} d
  * @param {number} t
  * @param {number} u
  * @return {number}
  */
-ol.geom.CubicBezier.posCDAt_ = function(c, d, t, u) {
+ol.geom.CubicBezier.posCDAt = function(c, d, t, u) {
   return c * u + d * t;
 };
 
@@ -185,8 +182,9 @@ ol.geom.CubicBezier.posCDAt_ = function(c, d, t, u) {
  * @param {number} u
  * @return {number}
  */
-ol.geom.CubicBezier.prototype.posABCAt = function(a, b, c, t, u) {
-  return this.posABAt_(a, b, t, u) * u + this.posBCAt_(b, c, t, u) * t;
+ol.geom.CubicBezier.posABCAt = function(a, b, c, t, u) {
+  return ol.geom.CubicBezier.posABAt(a, b, t, u) * u +
+      ol.geom.CubicBezier.posBCAt(b, c, t, u) * t;
 };
 
 
@@ -198,8 +196,9 @@ ol.geom.CubicBezier.prototype.posABCAt = function(a, b, c, t, u) {
  * @param {number} u
  * @return {number}
  */
-ol.geom.CubicBezier.prototype.posBCDAt = function(b, c, d, t, u) {
-  return this.posBCAt_(b, c, t, u) * u + this.posCDAt_(c, d, t, u) * t;
+ol.geom.CubicBezier.posBCDAt = function(b, c, d, t, u) {
+  return ol.geom.CubicBezier.posBCAt(b, c, t, u) * u +
+      ol.geom.CubicBezier.posCDAt(c, d, t, u) * t;
 };
 
 
@@ -211,14 +210,15 @@ ol.geom.CubicBezier.prototype.posBCDAt = function(b, c, d, t, u) {
  * @param {number} t
  * @return {number}
  */
-ol.geom.CubicBezier.prototype.posAt = function(a, b, c, d, t) {
+ol.geom.CubicBezier.posAt = function(a, b, c, d, t) {
   goog.asserts.assert(goog.isNumber(a));
   goog.asserts.assert(goog.isNumber(b));
   goog.asserts.assert(goog.isNumber(c));
   goog.asserts.assert(goog.isNumber(d));
   goog.asserts.assert(goog.isNumber(t));
   var u = 1 - t;
-  return this.posABCAt(a, b, c, t, u) * u + this.posBCDAt(b, c, d, t, u) * t;
+  return ol.geom.CubicBezier.posABCAt(a, b, c, t, u) * u +
+      ol.geom.CubicBezier.posBCDAt(b, c, d, t, u) * t;
 };
 
 
