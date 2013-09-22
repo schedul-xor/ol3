@@ -139,6 +139,71 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
 
 
 /**
+ * @private
+ * @param {number} a
+ * @param {number} b
+ * @param {number} t
+ * @param {number} u
+ * @return {number}
+ */
+ol.geom.CubicBezier.posABAt_ = function(a, b, t, u) {
+  return a * u + b * t;
+};
+
+
+/**
+ * @private
+ * @param {number} b
+ * @param {number} c
+ * @param {number} t
+ * @param {number} u
+ * @return {number}
+ */
+ol.geom.CubicBezier.posBCAt_ = function(b, c, t, u) {
+  return b * u + c * t;
+};
+
+
+/**
+ * @private
+ * @param {number} c
+ * @param {number} d
+ * @param {number} t
+ * @param {number} u
+ * @return {number}
+ */
+ol.geom.CubicBezier.posCDAt_ = function(c, d, t, u) {
+  return c * u + d * t;
+};
+
+
+/**
+ * @param {number} a
+ * @param {number} b
+ * @param {number} c
+ * @param {number} t
+ * @param {number} u
+ * @return {number}
+ */
+ol.geom.CubicBezier.prototype.posABCAt = function(a, b, c, t, u) {
+  return this.posABAt_(a, b, t, u) * u + this.posBCAt_(b, c, t, u) * t;
+};
+
+
+/**
+ * @param {number} b
+ * @param {number} c
+ * @param {number} d
+ * @param {number} t
+ * @param {number} u
+ * @return {number}
+ */
+ol.geom.CubicBezier.prototype.posBCDAt = function(b, c, d, t, u) {
+  return this.posBCAt_(b, c, t, u) * u + this.posCDAt_(c, d, t, u) * t;
+};
+
+
+/**
  * @param {number} a
  * @param {number} b
  * @param {number} c
@@ -146,20 +211,14 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
  * @param {number} t
  * @return {number}
  */
-ol.geom.CubicBezier.posAt = function(a, b, c, d, t) {
+ol.geom.CubicBezier.prototype.posAt = function(a, b, c, d, t) {
   goog.asserts.assert(goog.isNumber(a));
   goog.asserts.assert(goog.isNumber(b));
   goog.asserts.assert(goog.isNumber(c));
   goog.asserts.assert(goog.isNumber(d));
   goog.asserts.assert(goog.isNumber(t));
-  t = 1 - t;
   var u = 1 - t;
-  var ab = a * t + b * u;
-  var bc = b * t + c * u;
-  var cd = c * t + d * u;
-  var abc = ab * t + bc * u;
-  var bcd = bc * t + cd * u;
-  return abc * t + bcd * u;
+  return this.posABCAt(a, b, c, t, u) * u + this.posBCDAt(b, c, d, t, u) * t;
 };
 
 
