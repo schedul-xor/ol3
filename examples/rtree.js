@@ -6,11 +6,10 @@ goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
 goog.require('ol.control.MousePosition');
-goog.require('ol.control.defaults');
 goog.require('ol.coordinate');
 goog.require('ol.ellipsoid.WGS84');
 goog.require('ol.expr');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.GeoJSON');
 goog.require('ol.proj');
@@ -150,9 +149,8 @@ var landmarksLayer = new ol.layer.Vector({
 });
 landmarksLayer.setRTreeCache(rtree);
 var map = new ol.Map({
-  controls: ol.control.defaults(),
   layers: [
-    new ol.layer.TileLayer({
+    new ol.layer.Tile({
       source: new ol.source.OSM()
     }),
     landmarksLayer
