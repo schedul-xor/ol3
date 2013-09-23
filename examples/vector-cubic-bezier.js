@@ -1,7 +1,6 @@
 goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
-goog.require('ol.control.defaults');
 goog.require('ol.expr');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.GeoJSON');
@@ -178,9 +177,6 @@ var vector = new ol.layer.Vector({
 
 var map = new ol.Map({
   layers: [vector],
-  controls: ol.control.defaults({
-    attribution: false
-  }),
   renderer: ol.RendererHint.CANVAS,
   target: 'map',
   view: new ol.View2D({
