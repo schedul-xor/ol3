@@ -132,7 +132,7 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
       result.push(mines[d]);
       result.push(maxes[d]);
     }
-    this.bounds_ = [mines[0], maxes[0], mines[1], maxes[1]];
+    this.bounds_ = [mines[0], mines[1], maxes[0], maxes[1]];
   }
   return this.bounds_;
 };
