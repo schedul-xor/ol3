@@ -232,7 +232,7 @@ ol.renderer.canvas.Vector.prototype.renderPointFeatures_ =
     xOffset = symbolizer.xOffset;
     yOffset = symbolizer.yOffset;
   }else if (symbolizer instanceof ol.style.BearingArrowLiteral) {
-    content = ol.renderer.canvas.VectorRenderer.renderArrow_(symbolizer);
+    content = ol.renderer.canvas.Vector.renderArrow_(symbolizer);
     alpha = 1;
   } else {
     throw new Error('Unsupported symbolizer: ' + symbolizer);
@@ -529,7 +529,7 @@ ol.renderer.canvas.Vector.renderCircle_ = function(circle) {
  * @return {!HTMLCanvasElement} Canvas element.
  * @private
  */
-ol.renderer.canvas.VectorRenderer.renderArrow_ = function(arrow) {
+ol.renderer.canvas.Vector.renderArrow_ = function(arrow) {
   var arrowLength = arrow.arrowLength;
   var strokeWidth = arrow.strokeWidth || 2,
       size = arrowLength * 2 + (2 * strokeWidth) + 1,
