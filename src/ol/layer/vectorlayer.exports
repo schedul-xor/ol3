@@ -1,2 +1,1 @@
 @exportClass ol.layer.Vector ol.layer.VectorLayerOptions
-@exportProperty ol.layer.Vector.prototype.setRTreeCache
