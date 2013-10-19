@@ -12,6 +12,7 @@ goog.require('ol.interaction.Interaction');
 
 
 /**
+ * Base class for interactions that drag the map.
  * @constructor
  * @extends {ol.interaction.Interaction}
  */
@@ -38,12 +39,12 @@ ol.interaction.Drag = function() {
   /**
    * @type {number}
    */
-  this.offsetX = 0;
+  this.deltaX = 0;
 
   /**
    * @type {number}
    */
-  this.offsetY = 0;
+  this.deltaY = 0;
 
   /**
    * @type {ol.Coordinate}

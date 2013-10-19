@@ -2,7 +2,7 @@ goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
 goog.require('ol.expr');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.KML');
 goog.require('ol.source.Stamen');
@@ -32,13 +32,13 @@ var style = new ol.style.Style({
 
 var vector = new ol.layer.Vector({
   source: new ol.source.Vector({
-    parser: new ol.parser.KML({dimension: 2}),
+    parser: new ol.parser.KML(),
     url: 'data/kml/2012_Earthquakes_Mag5.kml'
   }),
   style: style
 });
 
-var raster = new ol.layer.TileLayer({
+var raster = new ol.layer.Tile({
   source: new ol.source.Stamen({
     layer: 'toner'
   })
@@ -59,8 +59,8 @@ info.tooltip({
   animation: false,
   trigger: 'manual'
 });
-map.on(['click', 'mousemove'], function(evt) {
-  var pixel = evt.getPixel();
+
+var displayFeatureInfo = function(pixel) {
   info.css({
     left: pixel[0] + 'px',
     top: (pixel[1] - 15) + 'px'
@@ -80,4 +80,14 @@ map.on(['click', 'mousemove'], function(evt) {
       }
     }
   });
+};
+
+$(map.getViewport()).on('mousemove', function(evt) {
+  var pixel = map.getEventPixel(evt.originalEvent);
+  displayFeatureInfo(pixel);
+});
+
+map.on('click', function(evt) {
+  var pixel = evt.getPixel();
+  displayFeatureInfo(pixel);
 });

@@ -4,11 +4,10 @@ goog.provide('ol.View2D');
 goog.provide('ol.View2DProperty');
 
 goog.require('goog.asserts');
+goog.require('ol.CenterConstraint');
 goog.require('ol.Constraints');
 goog.require('ol.IView2D');
 goog.require('ol.IView3D');
-goog.require('ol.Projection');
-goog.require('ol.ProjectionUnits');
 goog.require('ol.ResolutionConstraint');
 goog.require('ol.RotationConstraint');
 goog.require('ol.RotationConstraintType');
@@ -17,6 +16,8 @@ goog.require('ol.View');
 goog.require('ol.coordinate');
 goog.require('ol.extent');
 goog.require('ol.proj');
+goog.require('ol.proj.Projection');
+goog.require('ol.proj.Units');
 
 
 /**
@@ -112,6 +113,7 @@ ol.View2D = function(opt_options) {
    */
   this.minResolution_ = resolutionConstraintInfo.minResolution;
 
+  var centerConstraint = ol.View2D.createCenterConstraint_(options);
   var resolutionConstraint = resolutionConstraintInfo.constraint;
   var rotationConstraint = ol.View2D.createRotationConstraint_(options);
 
@@ -119,8 +121,8 @@ ol.View2D = function(opt_options) {
    * @private
    * @type {ol.Constraints}
    */
-  this.constraints_ = new ol.Constraints(resolutionConstraint,
-      rotationConstraint);
+  this.constraints_ = new ol.Constraints(
+      centerConstraint, resolutionConstraint, rotationConstraint);
 
   if (goog.isDef(options.resolution)) {
     values[ol.View2DProperty.RESOLUTION] = options.resolution;
@@ -169,6 +171,15 @@ ol.View2D.prototype.calculateCenterZoom = function(resolution, anchor) {
     center = [x, y];
   }
   return center;
+};
+
+
+/**
+ * @param {ol.Coordinate|undefined} center Center.
+ * @return {ol.Coordinate|undefined} Constrained center.
+ */
+ol.View2D.prototype.constrainCenter = function(center) {
+  return this.constraints_.center(center);
 };
 
 
@@ -226,7 +237,7 @@ ol.View2D.prototype.calculateExtent = function(size) {
   var maxX = center[0] + resolution * size[0] / 2;
   var minY = center[1] - resolution * size[1] / 2;
   var maxY = center[1] + resolution * size[1] / 2;
-  return [minX, maxX, minY, maxY];
+  return [minX, minY, maxX, maxY];
 };
 
 
@@ -234,7 +245,7 @@ ol.View2D.prototype.calculateExtent = function(size) {
  * @inheritDoc
  */
 ol.View2D.prototype.getProjection = function() {
-  return /** @type {ol.Projection|undefined} */ (
+  return /** @type {ol.proj.Projection|undefined} */ (
       this.get(ol.View2DProperty.PROJECTION));
 };
 goog.exportProperty(
@@ -262,8 +273,8 @@ goog.exportProperty(
  * @return {number} Resolution.
  */
 ol.View2D.prototype.getResolutionForExtent = function(extent, size) {
-  var xResolution = (extent[1] - extent[0]) / size[0];
-  var yResolution = (extent[3] - extent[2]) / size[1];
+  var xResolution = (extent[2] - extent[0]) / size[0];
+  var yResolution = (extent[3] - extent[1]) / size[1];
   return Math.max(xResolution, yResolution);
 };
 
@@ -425,7 +436,7 @@ goog.exportProperty(
 
 /**
  * Set the projection of this view.
- * @param {ol.Projection|undefined} projection Projection.
+ * @param {ol.proj.Projection|undefined} projection Projection.
  */
 ol.View2D.prototype.setProjection = function(projection) {
   this.set(ol.View2DProperty.PROJECTION, projection);
@@ -473,6 +484,20 @@ ol.View2D.prototype.setZoom = function(zoom) {
 
 
 /**
+ * @param {ol.View2DOptions} options View2D options.
+ * @private
+ * @return {ol.CenterConstraintType}
+ */
+ol.View2D.createCenterConstraint_ = function(options) {
+  if (goog.isDef(options.extent)) {
+    return ol.CenterConstraint.createExtent(options.extent);
+  } else {
+    return ol.CenterConstraint.none;
+  }
+};
+
+
+/**
  * @private
  * @param {ol.View2DOptions} options View2D options.
  * @return {{constraint: ol.ResolutionConstraintType, maxResolution: number,
@@ -496,10 +521,10 @@ ol.View2D.createResolutionConstraint_ = function(options) {
           .getExtent();
       var size = goog.isNull(projectionExtent) ?
           // use an extent that can fit the whole world if need be
-          360 * ol.METERS_PER_UNIT[ol.ProjectionUnits.DEGREES] /
+          360 * ol.METERS_PER_UNIT[ol.proj.Units.DEGREES] /
               ol.METERS_PER_UNIT[projection.getUnits()] :
-          Math.max(projectionExtent[1] - projectionExtent[0],
-              projectionExtent[3] - projectionExtent[2]);
+          Math.max(projectionExtent[2] - projectionExtent[0],
+              projectionExtent[3] - projectionExtent[1]);
       maxResolution = size / ol.DEFAULT_TILE_SIZE;
     }
     var maxZoom = options.maxZoom;

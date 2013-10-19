@@ -11,9 +11,8 @@ goog.require('goog.Uri.QueryData');
 goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('goog.async.AnimationDelay');
-goog.require('goog.async.Delay');
+goog.require('goog.async.nextTick');
 goog.require('goog.debug.Console');
-goog.require('goog.dispose');
 goog.require('goog.dom');
 goog.require('goog.dom.TagName');
 goog.require('goog.dom.ViewportSizeMonitor');
@@ -50,20 +49,20 @@ goog.require('ol.TileQueue');
 goog.require('ol.View');
 goog.require('ol.View2D');
 goog.require('ol.ViewHint');
-goog.require('ol.control.defaults');
+goog.require('ol.control');
 goog.require('ol.extent');
-goog.require('ol.interaction.defaults');
-goog.require('ol.layer.LayerBase');
-goog.require('ol.layer.LayerGroup');
+goog.require('ol.interaction');
+goog.require('ol.layer.Base');
+goog.require('ol.layer.Group');
 goog.require('ol.proj');
-goog.require('ol.proj.addCommonProjections');
+goog.require('ol.proj.common');
 goog.require('ol.renderer.Map');
+goog.require('ol.renderer.canvas');
 goog.require('ol.renderer.canvas.Map');
-goog.require('ol.renderer.canvas.SUPPORTED');
+goog.require('ol.renderer.dom');
 goog.require('ol.renderer.dom.Map');
-goog.require('ol.renderer.dom.SUPPORTED');
+goog.require('ol.renderer.webgl');
 goog.require('ol.renderer.webgl.Map');
-goog.require('ol.renderer.webgl.SUPPORTED');
 goog.require('ol.structs.PriorityQueue');
 goog.require('ol.vec.Mat4');
 
@@ -129,7 +128,7 @@ ol.MapProperty = {
  *         zoom: 1
  *       }),
  *       layers: [
- *         new ol.layer.TileLayer({
+ *         new ol.layer.Tile({
  *           source: new ol.source.MapQuestOSM()
  *         })
  *       ],
@@ -137,7 +136,7 @@ ol.MapProperty = {
  *     });
  *
  * The above snippet creates a map with a MapQuest OSM layer on a 2D view and
- * renders it to a DOM element with the id 'map'.
+ * renders it to a DOM element with the id `map`.
  *
  * @constructor
  * @extends {ol.Object}
@@ -226,13 +225,23 @@ ol.Map = function(options) {
    */
   this.overlayContainer_ = goog.dom.createDom(goog.dom.TagName.DIV,
       'ol-overlaycontainer');
-  goog.events.listen(this.overlayContainer_, [
+  goog.dom.appendChild(this.viewport_, this.overlayContainer_);
+
+  /**
+   * @private
+   * @type {Element}
+   */
+  this.overlayContainerStopEvent_ = goog.dom.createDom(goog.dom.TagName.DIV,
+      'ol-overlaycontainer-stopevent');
+  goog.events.listen(this.overlayContainerStopEvent_, [
     goog.events.EventType.CLICK,
     goog.events.EventType.DBLCLICK,
     ol.BrowserFeature.HAS_TOUCH ?
-        goog.events.EventType.TOUCHSTART : goog.events.EventType.MOUSEDOWN
+        goog.events.EventType.TOUCHSTART : goog.events.EventType.MOUSEDOWN,
+    ol.BrowserFeature.HAS_TOUCH ?
+        goog.events.EventType.TOUCHEND : goog.events.EventType.MOUSEUP
   ], goog.events.Event.stopPropagation);
-  goog.dom.appendChild(this.viewport_, this.overlayContainer_);
+  goog.dom.appendChild(this.viewport_, this.overlayContainerStopEvent_);
 
   var mapBrowserEventHandler = new ol.MapBrowserEventHandler(this);
   goog.events.listen(mapBrowserEventHandler,
@@ -240,11 +249,14 @@ ol.Map = function(options) {
       this.handleMapBrowserEvent, false, this);
   this.registerDisposable(mapBrowserEventHandler);
 
-  // FIXME we probably shouldn't listen on document...
-  var keyHandler = new goog.events.KeyHandler(goog.global.document);
-  goog.events.listen(keyHandler, goog.events.KeyHandler.EventType.KEY,
+  /**
+   * @private
+   * @type {goog.events.KeyHandler}
+   */
+  this.keyHandler_ = new goog.events.KeyHandler();
+  goog.events.listen(this.keyHandler_, goog.events.KeyHandler.EventType.KEY,
       this.handleBrowserEvent, false, this);
-  this.registerDisposable(keyHandler);
+  this.registerDisposable(this.keyHandler_);
 
   var mouseWheelHandler = new goog.events.MouseWheelHandler(this.viewport_);
   goog.events.listen(mouseWheelHandler,
@@ -306,12 +318,6 @@ ol.Map = function(options) {
 
   /**
    * @private
-   * @type {goog.async.Delay}
-   */
-  this.postRenderDelay_ = new goog.async.Delay(this.handlePostRender, 0, this);
-
-  /**
-   * @private
    * @type {ol.TileQueue}
    */
   this.tileQueue_ = new ol.TileQueue(
@@ -366,7 +372,7 @@ ol.Map.prototype.addControl = function(control) {
 
 /**
  * Adds the given layer to the top of this map.
- * @param {ol.layer.LayerBase} layer Layer.
+ * @param {ol.layer.Base} layer Layer.
  */
 ol.Map.prototype.addLayer = function(layer) {
   var layers = this.getLayerGroup().getLayers();
@@ -414,7 +420,6 @@ ol.Map.prototype.removePreRenderFunction = function(preRenderFunction) {
  */
 ol.Map.prototype.disposeInternal = function() {
   goog.dom.removeNode(this.viewport_);
-  goog.dispose(this.postRenderDelay_);
   goog.base(this, 'disposeInternal');
 };
 
@@ -424,6 +429,41 @@ ol.Map.prototype.disposeInternal = function() {
  */
 ol.Map.prototype.freezeRendering = function() {
   ++this.freezeRenderingCount_;
+};
+
+
+/**
+ * Returns the map pixel position for a a browser event.
+ * @param {Event} event Event.
+ * @return {ol.Coordinate} Coordinate.
+ */
+ol.Map.prototype.getEventCoordinate = function(event) {
+  return this.getCoordinateFromPixel(this.getEventPixel(event));
+};
+
+
+/**
+ * Returns the geographical coordinate for a browser event.
+ * @param {Event} event Event.
+ * @return {ol.Pixel} Pixel.
+ */
+ol.Map.prototype.getEventPixel = function(event) {
+  // goog.style.getRelativePosition is based on event.targetTouches,
+  // but touchend and touchcancel events have no targetTouches when
+  // the last finger is removed from the screen.
+  // So we ourselves compute the position of touch events.
+  // See https://code.google.com/p/closure-library/issues/detail?id=588
+  if (goog.isDef(event.changedTouches)) {
+    var touch = event.changedTouches.item(0);
+    var viewportPosition = goog.style.getClientPosition(this.viewport_);
+    return [
+      touch.clientX - viewportPosition.x,
+      touch.clientY - viewportPosition.y
+    ];
+  } else {
+    var eventPosition = goog.style.getRelativePosition(event, this.viewport_);
+    return [eventPosition.x, eventPosition.y];
+  }
 };
 
 
@@ -508,7 +548,11 @@ ol.Map.prototype.getFeatures = function(options) {
 
 
 /**
- * Gets the collection on interactions associated with this map.
+ * Gets the collection of
+ * {@link ol.interaction|ol.interaction.Interaction} instances
+ * associated with this map.  Modifying this collection
+ * changes the interactions associated with the map.
+ *
  * Interactions are used for e.g. pan, zoom and rotate.
  * @return {ol.Collection} Interactions.
  */
@@ -519,10 +563,10 @@ ol.Map.prototype.getInteractions = function() {
 
 /**
  * Get the layergroup associated with this map.
- * @return {ol.layer.LayerGroup} LayerGroup.
+ * @return {ol.layer.Group} LayerGroup.
  */
 ol.Map.prototype.getLayerGroup = function() {
-  return /** @type {ol.layer.LayerGroup} */ (
+  return /** @type {ol.layer.Group} */ (
       this.get(ol.MapProperty.LAYERGROUP));
 };
 goog.exportProperty(
@@ -592,11 +636,21 @@ ol.Map.prototype.getViewport = function() {
 
 /**
  * @return {Element} The map's overlay container. Elements added to this
- * container won't let mousedown and touchstart events through to the map, so
- * clicks and gestures on an overlay don't trigger any MapBrowserEvent.
+ * container will let mousedown and touchstart events through to the map, so
+ * clicks and gestures on an overlay will trigger MapBrowserEvent events.
  */
 ol.Map.prototype.getOverlayContainer = function() {
   return this.overlayContainer_;
+};
+
+
+/**
+ * @return {Element} The map's overlay container. Elements added to this
+ * container won't let mousedown and touchstart events through to the map, so
+ * clicks and gestures on an overlay don't trigger any MapBrowserEvent.
+ */
+ol.Map.prototype.getOverlayContainerStopEvent = function() {
+  return this.overlayContainerStopEvent_;
 };
 
 
@@ -652,12 +706,7 @@ ol.Map.prototype.handleMapBrowserEvent = function(mapBrowserEvent) {
     // coordinates so interactions cannot be used.
     return;
   }
-  if (mapBrowserEvent.type == goog.events.EventType.MOUSEOUT ||
-      mapBrowserEvent.type == goog.events.EventType.TOUCHEND) {
-    this.focus_ = null;
-  } else {
-    this.focus_ = mapBrowserEvent.getCoordinate();
-  }
+  this.focus_ = mapBrowserEvent.getCoordinate();
   mapBrowserEvent.frameState = this.frameState_;
   var interactions = this.getInteractions();
   var interactionsArray = /** @type {Array.<ol.interaction.Interaction>} */
@@ -695,14 +744,15 @@ ol.Map.prototype.handlePostRender = function() {
   if (!tileQueue.isEmpty()) {
     var maxTotalLoading = 16;
     var maxNewLoads = maxTotalLoading;
+    var tileSourceCount = 0;
     if (!goog.isNull(frameState)) {
       var hints = frameState.viewHints;
       if (hints[ol.ViewHint.ANIMATING] || hints[ol.ViewHint.INTERACTING]) {
         maxTotalLoading = 8;
         maxNewLoads = 2;
       }
+      tileSourceCount = goog.object.getCount(frameState.wantedTiles);
     }
-    var tileSourceCount = goog.object.getCount(frameState.wantedTiles);
     maxTotalLoading *= tileSourceCount;
     maxNewLoads *= tileSourceCount;
     if (tileQueue.getTilesLoading() < maxTotalLoading) {
@@ -745,11 +795,19 @@ ol.Map.prototype.handleTargetChanged_ = function() {
   var targetElement = goog.isDef(target) ?
       goog.dom.getElement(target) : null;
 
+  this.keyHandler_.detach();
+
   if (goog.isNull(targetElement)) {
     goog.dom.removeNode(this.viewport_);
   } else {
     goog.dom.appendChild(targetElement, this.viewport_);
+
+    // The key handler is attached to the user-provided target. So the key
+    // handler will only trigger events when the target element is focused
+    // (requiring that the target element has a tabindex attribute).
+    this.keyHandler_.attach(targetElement);
   }
+
   this.updateSize();
   // updateSize calls setSize, so no need to call this.render
   // ourselves here.
@@ -874,14 +932,14 @@ ol.Map.prototype.removeControl = function(control) {
 
 /**
  * Removes the given layer from the map.
- * @param {ol.layer.LayerBase} layer Layer.
- * @return {ol.layer.LayerBase|undefined} The removed layer or undefined if the
+ * @param {ol.layer.Base} layer Layer.
+ * @return {ol.layer.Base|undefined} The removed layer or undefined if the
  *     layer was not found.
  */
 ol.Map.prototype.removeLayer = function(layer) {
   var layers = this.getLayerGroup().getLayers();
   goog.asserts.assert(goog.isDef(layers));
-  return /** @type {ol.layer.LayerBase|undefined} */ (layers.remove(layer));
+  return /** @type {ol.layer.Base|undefined} */ (layers.remove(layer));
 };
 
 
@@ -979,21 +1037,28 @@ ol.Map.prototype.renderFrame_ = function(time) {
     }
     Array.prototype.push.apply(
         this.postRenderFunctions_, frameState.postRenderFunctions);
+
+    var idle = this.preRenderFunctions_.length == 0 &&
+        !frameState.animate &&
+        !frameState.viewHints[ol.ViewHint.ANIMATING] &&
+        !frameState.viewHints[ol.ViewHint.INTERACTING];
+
+    if (idle) {
+      this.dispatchEvent(new ol.MapEvent(ol.MapEventType.MOVEEND, this));
+    }
   }
 
   this.dispatchEvent(
       new ol.MapEvent(ol.MapEventType.POSTRENDER, this, frameState));
 
-  if (!this.postRenderDelay_.isActive()) {
-    this.postRenderDelay_.start();
-  }
+  goog.async.nextTick(this.handlePostRender, this);
 
 };
 
 
 /**
  * Sets the layergroup of this map.
- * @param {ol.layer.LayerGroup} layerGroup Layergroup.
+ * @param {ol.layer.Group} layerGroup Layergroup.
  */
 ol.Map.prototype.setLayerGroup = function(layerGroup) {
   this.set(ol.MapProperty.LAYERGROUP, layerGroup);
@@ -1113,8 +1178,8 @@ ol.Map.createOptionsInternal = function(options) {
    */
   var values = {};
 
-  var layerGroup = (options.layers instanceof ol.layer.LayerGroup) ?
-      options.layers : new ol.layer.LayerGroup({layers: options.layers});
+  var layerGroup = (options.layers instanceof ol.layer.Group) ?
+      options.layers : new ol.layer.Group({layers: options.layers});
   values[ol.MapProperty.LAYERGROUP] = layerGroup;
 
   values[ol.MapProperty.TARGET] = options.target;
@@ -1217,7 +1282,7 @@ ol.RendererHints.createFromQueryData = function(opt_queryData) {
 };
 
 
-ol.proj.addCommonProjections();
+ol.proj.common.add();
 
 
 if (goog.DEBUG) {

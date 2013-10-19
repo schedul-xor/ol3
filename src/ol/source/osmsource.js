@@ -17,13 +17,9 @@ ol.source.OSM = function(opt_options) {
   var attributions;
   if (goog.isDef(options.attributions)) {
     attributions = options.attributions;
-  } else if (goog.isDef(options.attribution)) {
-    attributions = [options.attribution];
   } else {
     attributions = ol.source.OSM.ATTRIBUTIONS;
   }
-
-  var maxZoom = goog.isDef(options.maxZoom) ? options.maxZoom : 18;
 
   var url = goog.isDef(options.url) ?
       options.url : 'http://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png';
@@ -32,7 +28,8 @@ ol.source.OSM = function(opt_options) {
     attributions: attributions,
     crossOrigin: 'anonymous',
     opaque: true,
-    maxZoom: maxZoom,
+    maxZoom: options.maxZoom,
+    tileLoadFunction: options.tileLoadFunction,
     url: url
   });
 

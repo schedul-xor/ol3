@@ -18,6 +18,11 @@ ol.interaction.DRAGROTATEANDZOOM_ANIMATION_DURATION = 400;
 
 
 /**
+ * Allows the user to zoom and rotate the map by clicking and dragging
+ * on the map.  By default, this interaction is limited to when the shift
+ * key is held down.
+ *
+ * This interaction is not included in the default interactions.
  * @constructor
  * @extends {ol.interaction.Drag}
  * @param {ol.interaction.DragRotateAndZoomOptions=} opt_options Options.
@@ -62,12 +67,12 @@ goog.inherits(ol.interaction.DragRotateAndZoom, ol.interaction.Drag);
  */
 ol.interaction.DragRotateAndZoom.prototype.handleDrag =
     function(mapBrowserEvent) {
-  var browserEvent = mapBrowserEvent.browserEvent;
   var map = mapBrowserEvent.map;
   var size = map.getSize();
+  var offset = mapBrowserEvent.getPixel();
   var delta = new goog.math.Vec2(
-      browserEvent.offsetX - size[0] / 2,
-      size[1] / 2 - browserEvent.offsetY);
+      offset[0] - size[0] / 2,
+      size[1] / 2 - offset[1]);
   var theta = Math.atan2(delta.y, delta.x);
   var magnitude = delta.magnitude();
   // FIXME works for View2D only
@@ -117,8 +122,7 @@ ol.interaction.DragRotateAndZoom.prototype.handleDragEnd =
  */
 ol.interaction.DragRotateAndZoom.prototype.handleDragStart =
     function(mapBrowserEvent) {
-  var browserEvent = mapBrowserEvent.browserEvent;
-  if (this.condition_(browserEvent)) {
+  if (this.condition_(mapBrowserEvent)) {
     this.lastAngle_ = undefined;
     this.lastMagnitude_ = undefined;
     return true;

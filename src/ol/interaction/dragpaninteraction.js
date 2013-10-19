@@ -14,6 +14,7 @@ goog.require('ol.interaction.condition');
 
 
 /**
+ * Allows the user to pan the map by clickng and dragging.
  * @constructor
  * @extends {ol.interaction.Drag}
  * @param {ol.interaction.DragPanOptions=} opt_options Options.
@@ -67,6 +68,7 @@ ol.interaction.DragPan.prototype.handleDrag = function(mapBrowserEvent) {
   ];
   ol.coordinate.rotate(newCenter, view2DState.rotation);
   ol.coordinate.add(newCenter, this.startCenter);
+  newCenter = view.constrainCenter(newCenter);
   map.requestRenderFrame();
   view.setCenter(newCenter);
 };
@@ -94,6 +96,7 @@ ol.interaction.DragPan.prototype.handleDragEnd = function(mapBrowserEvent) {
       centerpx[0] - distance * Math.cos(angle),
       centerpx[1] - distance * Math.sin(angle)
     ]);
+    dest = view.constrainCenter(dest);
     view.setCenter(dest);
   }
   map.requestRenderFrame();
@@ -105,7 +108,7 @@ ol.interaction.DragPan.prototype.handleDragEnd = function(mapBrowserEvent) {
  */
 ol.interaction.DragPan.prototype.handleDragStart = function(mapBrowserEvent) {
   var browserEvent = mapBrowserEvent.browserEvent;
-  if (browserEvent.isMouseActionButton() && this.condition_(browserEvent)) {
+  if (browserEvent.isMouseActionButton() && this.condition_(mapBrowserEvent)) {
     if (this.kinetic_) {
       this.kinetic_.begin();
       this.kinetic_.update(browserEvent.clientX, browserEvent.clientY);

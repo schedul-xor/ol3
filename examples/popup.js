@@ -1,8 +1,9 @@
 goog.require('ol.Map');
 goog.require('ol.Overlay');
+goog.require('ol.RendererHints');
 goog.require('ol.View2D');
 goog.require('ol.coordinate');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.proj');
 goog.require('ol.source.TileJSON');
 
@@ -30,7 +31,8 @@ closer.onclick = function() {
  * Create an overlay to anchor the popup to the map.
  */
 var overlay = new ol.Overlay({
-  element: container
+  element: container,
+  stopEvent: true
 });
 
 
@@ -39,7 +41,7 @@ var overlay = new ol.Overlay({
  */
 var map = new ol.Map({
   layers: [
-    new ol.layer.TileLayer({
+    new ol.layer.Tile({
       source: new ol.source.TileJSON({
         url: 'http://api.tiles.mapbox.com/v3/' +
             'mapbox.natural-earth-hypso-bathy.jsonp',
@@ -47,6 +49,7 @@ var map = new ol.Map({
       })
     })
   ],
+  renderers: ol.RendererHints.createFromQueryData(),
   overlays: [overlay],
   target: 'map',
   view: new ol.View2D({

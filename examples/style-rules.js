@@ -1,7 +1,7 @@
 goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
-goog.require('ol.control.defaults');
+goog.require('ol.control');
 goog.require('ol.expr');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.GeoJSON');
@@ -22,7 +22,8 @@ var style = new ol.style.Style({rules: [
       new ol.style.Stroke({
         color: ol.expr.parse('color'),
         width: 4,
-        opacity: 1
+        opacity: 1,
+        zIndex: 1
       })
     ]
   }),

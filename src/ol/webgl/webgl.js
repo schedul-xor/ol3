@@ -1,5 +1,4 @@
 goog.provide('ol.webgl');
-goog.provide('ol.webgl.SUPPORTED');
 goog.provide('ol.webgl.WebGLContextEventType');
 
 goog.require('goog.dom');
@@ -12,8 +11,8 @@ goog.require('goog.dom.TagName');
  * @type {Array.<string>}
  */
 ol.webgl.CONTEXT_IDS_ = [
+  'experimental-webgl',
   'webgl',
-  'webgl-experimental',
   'webkit-3d',
   'moz-webgl'
 ];

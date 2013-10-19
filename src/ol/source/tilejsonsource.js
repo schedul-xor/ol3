@@ -15,7 +15,8 @@ goog.require('ol.TileRange');
 goog.require('ol.TileUrlFunction');
 goog.require('ol.extent');
 goog.require('ol.proj');
-goog.require('ol.source.ImageTileSource');
+goog.require('ol.source.State');
+goog.require('ol.source.TileImage');
 goog.require('ol.tilegrid.XYZ');
 
 
@@ -38,21 +39,17 @@ goog.exportSymbol('grid', grid);
 
 /**
  * @constructor
- * @extends {ol.source.ImageTileSource}
+ * @extends {ol.source.TileImage}
  * @param {ol.source.TileJSONOptions} options TileJSON options.
  */
 ol.source.TileJSON = function(options) {
 
   goog.base(this, {
     crossOrigin: options.crossOrigin,
-    projection: ol.proj.get('EPSG:3857')
+    projection: ol.proj.get('EPSG:3857'),
+    state: ol.source.State.LOADING,
+    tileLoadFunction: options.tileLoadFunction
   });
-
-  /**
-   * @private
-   * @type {boolean}
-   */
-  this.ready_ = false;
 
   /**
    * @private
@@ -62,25 +59,22 @@ ol.source.TileJSON = function(options) {
   this.deferred_.addCallback(this.handleTileJSONResponse, this);
 
 };
-goog.inherits(ol.source.TileJSON, ol.source.ImageTileSource);
+goog.inherits(ol.source.TileJSON, ol.source.TileImage);
 
 
 /**
  * @protected
  */
 ol.source.TileJSON.prototype.handleTileJSONResponse = function() {
-
   var tileJSON = ol.tilejson.grids_.pop();
 
   var epsg4326Projection = ol.proj.get('EPSG:4326');
 
   var extent;
   if (goog.isDef(tileJSON.bounds)) {
-    var bounds = tileJSON.bounds;
-    var epsg4326Extent = [bounds[0], bounds[2], bounds[1], bounds[3]];
     var transform = ol.proj.getTransformFromProjections(
         epsg4326Projection, this.getProjection());
-    extent = ol.extent.transform(epsg4326Extent, transform);
+    extent = ol.extent.transform(tileJSON.bounds, transform);
     this.setExtent(extent);
   }
 
@@ -120,16 +114,6 @@ ol.source.TileJSON.prototype.handleTileJSONResponse = function() {
     ]);
   }
 
-  this.ready_ = true;
+  this.setState(ol.source.State.READY);
 
-  this.dispatchLoadEvent();
-
-};
-
-
-/**
- * @inheritDoc
- */
-ol.source.TileJSON.prototype.isReady = function() {
-  return this.ready_;
 };

@@ -1,6 +1,7 @@
 goog.require('ol.Map');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
+goog.require('ol.control');
 goog.require('ol.expr');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.GeoJSON');
@@ -13,6 +14,7 @@ goog.require('ol.style.Stroke');
 goog.require('ol.style.Style');
 goog.require('ol.style.Text');
 
+
 var style = new ol.style.Style({rules: [
   new ol.style.Rule({
     filter: 'where == "outer"',
@@ -20,7 +22,8 @@ var style = new ol.style.Style({rules: [
       new ol.style.Stroke({
         color: ol.expr.parse('color'),
         width: 4,
-        opacity: 1
+        opacity: 1,
+        zindex: 1
       })
     ]
   }),
@@ -177,6 +180,9 @@ var vector = new ol.layer.Vector({
 
 var map = new ol.Map({
   layers: [vector],
+  controls: ol.control.defaults({
+    attribution: false
+  }),
   renderer: ol.RendererHint.CANVAS,
   target: 'map',
   view: new ol.View2D({

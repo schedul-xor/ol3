@@ -1,7 +1,6 @@
 // FIXME handle geolocation not supported
 
 goog.provide('ol.Geolocation');
-goog.provide('ol.Geolocation.SUPPORTED');
 goog.provide('ol.GeolocationProperty');
 
 goog.require('goog.events');
@@ -9,7 +8,6 @@ goog.require('goog.events.EventType');
 goog.require('goog.math');
 goog.require('ol.Coordinate');
 goog.require('ol.Object');
-goog.require('ol.Projection');
 goog.require('ol.proj');
 
 
@@ -32,7 +30,8 @@ ol.GeolocationProperty = {
 
 /**
  * Helper class for providing HTML5 Geolocation capabilities.
- * HTML5 Geolocation is used to locate a user's position.
+ * The [Geolocation API](http://dev.w3.org/geo/api/spec-source.html)
+ * is used to locate a user's position.
  *
  * Example:
  *
@@ -183,7 +182,7 @@ ol.Geolocation.prototype.positionError_ = function(error) {
 
 /**
  * Get the accuracy of the position in meters.
- * @return {number|undefined} accuracy in meters.
+ * @return {number|undefined} Position accuracy in meters.
  */
 ol.Geolocation.prototype.getAccuracy = function() {
   return /** @type {number|undefined} */ (
@@ -211,7 +210,7 @@ goog.exportProperty(
 
 /**
  * Get the altitude accuracy of the position.
- * @return {number|undefined} Altitude accuracy.
+ * @return {number|undefined} Altitude accuracy in meters.
  */
 ol.Geolocation.prototype.getAltitudeAccuracy = function() {
   return /** @type {number|undefined} */ (
@@ -253,10 +252,10 @@ goog.exportProperty(
 
 /**
  * Get the projection associated with the position.
- * @return {ol.Projection|undefined} projection.
+ * @return {ol.proj.Projection|undefined} projection.
  */
 ol.Geolocation.prototype.getProjection = function() {
-  return /** @type {ol.Projection|undefined} */ (
+  return /** @type {ol.proj.Projection|undefined} */ (
       this.get(ol.GeolocationProperty.PROJECTION));
 };
 goog.exportProperty(
@@ -311,7 +310,7 @@ goog.exportProperty(
 
 /**
  * Set the projection to use for transforming the coordinates.
- * @param {ol.Projection} projection Projection.
+ * @param {ol.proj.Projection} projection Projection.
  */
 ol.Geolocation.prototype.setProjection = function(projection) {
   this.set(ol.GeolocationProperty.PROJECTION, projection);

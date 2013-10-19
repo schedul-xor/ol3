@@ -1,8 +1,9 @@
 goog.require('ol.Map');
 goog.require('ol.Overlay');
+goog.require('ol.OverlayPositioning');
 goog.require('ol.RendererHint');
 goog.require('ol.View2D');
-goog.require('ol.layer.TileLayer');
+goog.require('ol.layer.Tile');
 goog.require('ol.layer.Vector');
 goog.require('ol.parser.GeoJSON');
 goog.require('ol.source.TileJSON');
@@ -11,7 +12,7 @@ goog.require('ol.style.Icon');
 goog.require('ol.style.Style');
 
 
-var raster = new ol.layer.TileLayer({
+var raster = new ol.layer.Tile({
   source: new ol.source.TileJSON({
     url: 'http://api.tiles.mapbox.com/v3/mapbox.geography-class.jsonp'
   })
@@ -63,7 +64,8 @@ var map = new ol.Map({
 var element = document.getElementById('popup');
 
 var popup = new ol.Overlay({
-  element: element
+  element: element,
+  positioning: ol.OverlayPositioning.BOTTOM_CENTER
 });
 map.addOverlay(popup);
 
@@ -85,7 +87,7 @@ map.on('click', function(evt) {
         });
         $(element).popover('show');
       } else {
-        $(element).popover('hide');
+        $(element).popover('destroy');
       }
     }
   });
