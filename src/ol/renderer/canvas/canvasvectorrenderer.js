@@ -251,11 +251,10 @@ ol.renderer.canvas.Vector.prototype.moveContextForCubicBezier_ =
       vecs.push(vec);
     }
 
-    if (j === 0) {
-      lastPixel[0] = NaN;
-      lastPixel[1] = NaN;
-      this.context_.moveTo(vecs[0][0], vecs[0][1]);
-    }
+    lastPixel[0] = NaN;
+    lastPixel[1] = NaN;
+    this.context_.moveTo(vecs[0][0], vecs[0][1]);
+
     this.context_.bezierCurveTo(
         vecs[1][0], vecs[1][1],
         vecs[2][0], vecs[2][1],
