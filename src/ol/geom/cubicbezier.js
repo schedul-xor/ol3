@@ -1,49 +1,41 @@
 goog.provide('ol.geom.CubicBezier');
 
 goog.require('goog.asserts');
+goog.require('goog.events.EventType');
 goog.require('ol.CoordinateArray');
 goog.require('ol.Extent');
-goog.require('ol.geom.AbstractCollection');
+goog.require('ol.geom.Geometry');
+goog.require('ol.geom.GeometryEvent');
 goog.require('ol.geom.GeometryType');
-goog.require('ol.geom.SharedVertices');
 
 
 
 /**
  * @constructor
- * @extends {ol.geom.AbstractCollection}
+ * @extends {ol.geom.Geometry}
  * @param {ol.CoordinateArray} coordinates Vertex array
  * (e.g. [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]).
- * @param {ol.geom.SharedVertices=} opt_shared Shared vertices.
  */
-ol.geom.CubicBezier = function(coordinates, opt_shared) {
+ol.geom.CubicBezier = function(coordinates) {
   goog.base(this);
   goog.asserts.assert(goog.isArray(coordinates[0]));
   goog.asserts.assert(coordinates.length == 4);
 
-  var vertices = opt_shared;
-
-  if (!goog.isDef(vertices)) {
-    var dimension = coordinates[0].length;
-    vertices = new ol.geom.SharedVertices({dimension: dimension});
-  }
-
-  /**
-   * @type {ol.geom.SharedVertices}
-   */
-  this.vertices = vertices;
 
   /**
    * @type {number}
    * @private
    */
-  this.sharedId_ = vertices.add(coordinates);
+  this.dimension_ = coordinates[0].length;
+
 
   /**
-   * @type {number}
+   * Array of coordinates.
+   * @type {ol.CoordinateArray}
+   * @private
    */
-  this.dimension = vertices.getDimension();
-  goog.asserts.assert(this.dimension >= 2);
+  this.coordinates_ = coordinates;
+
 
   /**
    * @type {ol.Extent}
@@ -51,7 +43,7 @@ ol.geom.CubicBezier = function(coordinates, opt_shared) {
    */
   this.bounds_ = null;
 };
-goog.inherits(ol.geom.CubicBezier, ol.geom.AbstractCollection);
+goog.inherits(ol.geom.CubicBezier, ol.geom.Geometry);
 
 
 /**
@@ -60,7 +52,9 @@ goog.inherits(ol.geom.CubicBezier, ol.geom.AbstractCollection);
  * @return {number} The vertex coordinate value.
  */
 ol.geom.CubicBezier.prototype.get = function(index, dim) {
-  return this.vertices.get(this.sharedId_, index, dim);
+  var coordinates = this.getCoordinates();
+  goog.asserts.assert(coordinates.length > index);
+  return coordinates[index][dim];
 };
 
 
@@ -69,16 +63,16 @@ ol.geom.CubicBezier.prototype.get = function(index, dim) {
  * @return {ol.CoordinateArray} Coordinates array.
  */
 ol.geom.CubicBezier.prototype.getCoordinates = function() {
-  var coordinates = new Array(4);
-  var vertex;
-  for (var i = 0; i < 4; ++i) {
-    vertex = new Array(this.dimension);
-    for (var j = 0; j < this.dimension; ++j) {
-      vertex[j] = this.get(i, j);
-    }
-    coordinates[i] = vertex;
-  }
-  return coordinates;
+  return this.coordinates_;
+};
+
+
+/**
+ * Get the count of vertices in this linestring.
+ * @return {number} The vertex count.
+ */
+ol.geom.CubicBezier.prototype.getCount = function() {
+  return this.getCoordinates().length;
 };
 
 
@@ -86,11 +80,11 @@ ol.geom.CubicBezier.prototype.getCoordinates = function() {
  * @return {Array.<number>}
  */
 ol.geom.CubicBezier.prototype.getBounds = function() {
-  var i, d;
-  var cp = this.getCoordinates();
   if (goog.isNull(this.bounds_)) {
+    var i, d;
+    var cp = this.getCoordinates();
     var foundRoots = [];
-    for (d = 0; d < this.dimension; d++) {
+    for (d = 0; d < this.dimension_; d++) {
       var roots = ol.geom.CubicBezier.dRoots(
           cp[0][d], cp[1][d], cp[2][d], cp[3][d]
           );
@@ -102,7 +96,7 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
     var boundPoints = [];
     for (i = 0; i < foundRoots.length; i++) {
       var newp = [];
-      for (d = 0; d < this.dimension; d++) {
+      for (d = 0; d < this.dimension_; d++) {
         newp.push(ol.geom.CubicBezier.posAt(
             cp[0][d], cp[1][d], cp[2][d], cp[3][d],
             foundRoots[i]));
@@ -113,12 +107,12 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
     boundPoints.push(cp[3]);
     var maxes = [];
     var mines = [];
-    for (d = 0; d < this.dimension; d++) {
+    for (d = 0; d < this.dimension_; d++) {
       maxes.push(-9007199254740992);
       mines.push(9007199254740992);
     }
     for (i = 0; i < boundPoints.length; i++) {
-      for (d = 0; d < this.dimension; d++) {
+      for (d = 0; d < this.dimension_; d++) {
         if (maxes[d] < boundPoints[i][d]) {
           maxes[d] = boundPoints[i][d];
         }
@@ -128,7 +122,7 @@ ol.geom.CubicBezier.prototype.getBounds = function() {
       }
     }
     var result = [];
-    for (d = 0; d < this.dimension; d++) {
+    for (d = 0; d < this.dimension_; d++) {
       result.push(mines[d]);
       result.push(maxes[d]);
     }
@@ -309,17 +303,35 @@ ol.geom.CubicBezier.dRoots = function(a, b, c, d) {
 
 
 /**
- * Get the identifier used to mark this line in the shared vertices structure.
- * @return {number} The identifier.
+ * @inheritDoc
  */
-ol.geom.CubicBezier.prototype.getSharedId = function() {
-  return this.sharedId_;
+ol.geom.CubicBezier.prototype.getType = function() {
+  return ol.geom.GeometryType.CUBICBEZIER;
+};
+
+
+/**
+ * Update the linestring coordinates.
+ * @param {ol.CoordinateArray} coordinates Coordinates array.
+ */
+ol.geom.CubicBezier.prototype.setCoordinates = function(coordinates) {
+  var oldBounds = this.bounds_;
+  this.bounds_ = null;
+  this.coordinates_ = coordinates;
+  this.dispatchEvent(new ol.geom.GeometryEvent(goog.events.EventType.CHANGE,
+      this, oldBounds));
 };
 
 
 /**
  * @inheritDoc
  */
-ol.geom.CubicBezier.prototype.getType = function() {
-  return ol.geom.GeometryType.CUBICBEZIER;
+ol.geom.CubicBezier.prototype.transform = function(transform) {
+  var coordinates = this.getCoordinates();
+  var coord;
+  for (var i = 0, ii = coordinates.length; i < ii; ++i) {
+    coord = coordinates[i];
+    transform(coord, coord, coord.length);
+  }
+  this.setCoordinates(coordinates); // for change event
 };

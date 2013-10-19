@@ -3,22 +3,8 @@ goog.provide('ol.test.geom.CubicBezier');
 describe('ol.geom.CubicBezier', function() {
   describe('constructor', function() {
     it('creates an instance', function() {
-      var cb = new ol.geom.CubicBezier(
-          [[1, 1], [0, 2], [2, 1], [3, 4]]);
+      var cb = new ol.geom.CubicBezier([[1, 1], [0, 2], [2, 1], [3, 4]]);
       expect(cb).to.be.a(ol.geom.CubicBezier);
-    });
-  });
-
-  describe('#dimension', function() {
-    it('can be 2', function() {
-      var cb = new ol.geom.CubicBezier(
-          [[1, 1], [0, 2], [2, 1], [3, 4]]);
-      expect(cb.dimension).to.be(2);
-    });
-    it('can be 3', function() {
-      var cb = new ol.geom.CubicBezier(
-          [[1, 1, 1], [0, 2, 2], [2, 1, 4], [3, 4, 1]]);
-      expect(cb.dimension).to.be(3);
     });
   });
 
@@ -66,8 +52,7 @@ describe('ol.geom.CubicBezier', function() {
 
   describe('#getBounds()', function() {
     it('returns the bounding extent', function() {
-      var cb = new ol.geom.CubicBezier(
-          [[1, 1], [0, 2], [2, 1], [3, 4]]);
+      var cb = new ol.geom.CubicBezier([[1, 1], [0, 2], [2, 1], [3, 4]]);
       var bounds = cb.getBounds();
       expect(bounds[0], ol.geom.CubicBezier.
           posAt(1, 2, 1, 4, Math.sqrt(3) / 6));

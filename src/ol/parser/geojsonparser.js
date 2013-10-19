@@ -187,7 +187,7 @@ ol.parser.GeoJSON.prototype.parseFeature_ = function(json) {
         geometry = this.parseMultiPolygon_(geomJson);
         break;
       case 'CubicBezier':
-        geometry = this.parseCubicBezier_(geomJson, sharedVertices);
+        geometry = this.parseCubicBezier_(geomJson);
         break;
       default:
         throw new Error('Bad geometry type: ' + type);
@@ -298,12 +298,11 @@ ol.parser.GeoJSON.prototype.parsePolygon_ = function(json) {
  * @private
  * @param {GeoJSONGeometry} json Fake GeoJSON string
  *  (GeoJSON doesn't define Bezier curves)
- * @param {ol.geom.SharedVertices=} opt_vertices
  * @return {ol.geom.CubicBezier}
  */
 ol.parser.GeoJSON.prototype.parseCubicBezier_ =
-    function(json, opt_vertices) {
-  return new ol.geom.CubicBezier(json.coordinates, opt_vertices);
+    function(json) {
+  return new ol.geom.CubicBezier(json.coordinates);
 };
 
 

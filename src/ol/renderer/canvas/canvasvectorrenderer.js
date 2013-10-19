@@ -9,6 +9,7 @@ goog.require('goog.events.EventType');
 goog.require('goog.vec.Mat4');
 goog.require('ol.Feature');
 goog.require('ol.geom.AbstractCollection');
+goog.require('ol.geom.CubicBezier');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.LineString');
@@ -144,12 +145,10 @@ ol.renderer.canvas.Vector.prototype.renderLineStringFeatures_ =
     function(features, symbolizer) {
 
   var context = this.context_,
-      i, ii, feature, id, currentSize, geometry, components, j, jj,
-      coordinates, coordinate, k, kk, strokeSize;
+      i, ii, feature, id, currentSize, geometry, components,
+      coordinates, strokeSize;
 
-  var vec = [NaN, NaN, 0];
-  var pixel = [NaN, NaN];
-  var lastPixel = [NaN, NaN];
+  var isLine = true;
 
   context.globalAlpha = symbolizer.opacity;
   context.strokeStyle = symbolizer.color;
@@ -173,36 +172,96 @@ ol.renderer.canvas.Vector.prototype.renderLineStringFeatures_ =
     geometry = feature.getGeometry();
     if (geometry instanceof ol.geom.LineString) {
       components = [geometry];
-    } else {
-      goog.asserts.assert(geometry instanceof ol.geom.MultiLineString,
-          'Expected MultiLineString');
+      isLine = true;
+    } else if (geometry instanceof ol.geom.MultiLineString) {
       components = geometry.getComponents();
+      isLine = true;
+    } else if (geometry instanceof ol.geom.CubicBezier) {
+      components = [geometry];
+      isLine = false;
     }
-    for (j = 0, jj = components.length; j < jj; ++j) {
-      coordinates = components[j].getCoordinates();
-      for (k = 0, kk = coordinates.length; k < kk; ++k) {
-        coordinate = coordinates[k];
-        vec[0] = coordinate[0];
-        vec[1] = coordinate[1];
-        goog.vec.Mat4.multVec3(this.transform_, vec, vec);
-        if (k === 0) {
-          lastPixel[0] = NaN;
-          lastPixel[1] = NaN;
-          context.moveTo(vec[0], vec[1]);
-        } else {
-          pixel[0] = Math.round(vec[0]);
-          pixel[1] = Math.round(vec[1]);
-          if (pixel[0] !== lastPixel[0] || pixel[1] !== lastPixel[1]) {
-            context.lineTo(vec[0], vec[1]);
-            lastPixel[0] = pixel[0];
-            lastPixel[1] = pixel[1];
-          }
-        }
+
+    if (goog.isDefAndNotNull(components)) {
+      if (isLine) {
+        this.moveContextForLine_(components);
+      }else {
+        this.moveContextForCubicBezier_(components);
       }
     }
   }
 
   context.stroke();
+};
+
+
+/**
+ * @param {Array} components
+ * @private
+ */
+ol.renderer.canvas.Vector.prototype.moveContextForLine_ =
+    function(components) {
+  var lastPixel = [NaN, NaN];
+  var pixel = [NaN, NaN];
+  var vec = [NaN, NaN, 0];
+  var j, jj, k, kk, coordinates, coordinate;
+
+  for (j = 0, jj = components.length; j < jj; ++j) {
+    coordinates = components[j].getCoordinates();
+    for (k = 0, kk = coordinates.length; k < kk; ++k) {
+      coordinate = coordinates[k];
+      vec[0] = coordinate[0];
+      vec[1] = coordinate[1];
+      goog.vec.Mat4.multVec3(this.transform_, vec, vec);
+      if (k === 0) {
+        lastPixel[0] = NaN;
+        lastPixel[1] = NaN;
+        this.context_.moveTo(vec[0], vec[1]);
+      } else {
+        pixel[0] = Math.round(vec[0]);
+        pixel[1] = Math.round(vec[1]);
+        if (pixel[0] !== lastPixel[0] || pixel[1] !== lastPixel[1]) {
+          this.context_.lineTo(vec[0], vec[1]);
+          lastPixel[0] = pixel[0];
+          lastPixel[1] = pixel[1];
+        }
+      }
+    }
+  }
+};
+
+
+/**
+ * @param {Array} components
+ * @private
+ */
+ol.renderer.canvas.Vector.prototype.moveContextForCubicBezier_ =
+    function(components) {
+  var lastPixel = [NaN, NaN];
+  var vec = [NaN, NaN, 0];
+  var vecs = [];
+  var j, jj, coordinates, coordinate;
+
+  for (j = 0, jj = components.length; j < jj; ++j) {
+    coordinates = components[j].getCoordinates();
+    for (var i = 0; i < 4; i++) {
+      coordinate = coordinates[i];
+      vec = [coordinate[0], coordinate[1], 0];
+      goog.vec.Mat4.multVec3(this.transform_, vec, vec);
+      vecs.push(vec);
+    }
+
+    if (j === 0) {
+      lastPixel[0] = NaN;
+      lastPixel[1] = NaN;
+      this.context_.moveTo(vecs[0][0], vecs[0][1]);
+    }
+    this.context_.bezierCurveTo(
+        vecs[1][0], vecs[1][1],
+        vecs[2][0], vecs[2][1],
+        vecs[3][0], vecs[3][1]);
+    lastPixel[0] = vecs[3][0];
+    lastPixel[1] = vecs[3][1];
+  }
 };
 
 
