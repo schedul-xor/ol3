@@ -8,18 +8,6 @@ describe('ol.geom.CubicBezier', function() {
     });
   });
 
-  describe('#dimension', function() {
-    it('can be 2', function() {
-      var cb = new ol.geom.CubicBezier([[1, 1], [0, 2], [2, 1], [3, 4]]);
-      expect(cb.dimension).to.be(2);
-    });
-    it('can be 3', function() {
-      var cb = new ol.geom.CubicBezier(
-          [[1, 1, 1], [0, 2, 2], [2, 1, 4], [3, 4, 1]]);
-      expect(cb.dimension).to.be(3);
-    });
-  });
-
   describe('#dRootN', function() {
     it('with 2 roots', function() {
       var n = ol.geom.CubicBezier.dRootN(1, 2, 1, 4);
