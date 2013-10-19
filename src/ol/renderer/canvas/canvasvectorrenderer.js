@@ -9,7 +9,6 @@ goog.require('goog.events.EventType');
 goog.require('goog.vec.Mat4');
 goog.require('ol.Feature');
 goog.require('ol.geom.AbstractCollection');
-goog.require('ol.geom.CubicBezier');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.LineString');
@@ -19,6 +18,7 @@ goog.require('ol.geom.MultiPolygon');
 goog.require('ol.geom.Point');
 goog.require('ol.geom.Polygon');
 goog.require('ol.layer.VectorLayerRenderIntent');
+goog.require('ol.style.BearingArrowLiteral');
 goog.require('ol.style.IconLiteral');
 goog.require('ol.style.LineLiteral');
 goog.require('ol.style.Literal');
@@ -145,10 +145,12 @@ ol.renderer.canvas.Vector.prototype.renderLineStringFeatures_ =
     function(features, symbolizer) {
 
   var context = this.context_,
-      i, ii, feature, id, currentSize, geometry, components,
-      coordinates, strokeSize;
+      i, ii, feature, id, currentSize, geometry, components, j, jj,
+      coordinates, coordinate, k, kk, strokeSize;
 
-  var isLine = true;
+  var vec = [NaN, NaN, 0];
+  var pixel = [NaN, NaN];
+  var lastPixel = [NaN, NaN];
 
   context.globalAlpha = symbolizer.opacity;
   context.strokeStyle = symbolizer.color;
@@ -172,96 +174,36 @@ ol.renderer.canvas.Vector.prototype.renderLineStringFeatures_ =
     geometry = feature.getGeometry();
     if (geometry instanceof ol.geom.LineString) {
       components = [geometry];
-      isLine = true;
-    } else if (geometry instanceof ol.geom.MultiLineString) {
+    } else {
+      goog.asserts.assert(geometry instanceof ol.geom.MultiLineString,
+          'Expected MultiLineString');
       components = geometry.getComponents();
-      isLine = true;
-    } else if (geometry instanceof ol.geom.CubicBezier) {
-      components = [geometry];
-      isLine = false;
     }
-
-    if (goog.isDefAndNotNull(components)) {
-      if (isLine) {
-        this.moveContextForLine_(components);
-      }else {
-        this.moveContextForCubicBezier_(components);
+    for (j = 0, jj = components.length; j < jj; ++j) {
+      coordinates = components[j].getCoordinates();
+      for (k = 0, kk = coordinates.length; k < kk; ++k) {
+        coordinate = coordinates[k];
+        vec[0] = coordinate[0];
+        vec[1] = coordinate[1];
+        goog.vec.Mat4.multVec3(this.transform_, vec, vec);
+        if (k === 0) {
+          lastPixel[0] = NaN;
+          lastPixel[1] = NaN;
+          context.moveTo(vec[0], vec[1]);
+        } else {
+          pixel[0] = Math.round(vec[0]);
+          pixel[1] = Math.round(vec[1]);
+          if (pixel[0] !== lastPixel[0] || pixel[1] !== lastPixel[1]) {
+            context.lineTo(vec[0], vec[1]);
+            lastPixel[0] = pixel[0];
+            lastPixel[1] = pixel[1];
+          }
+        }
       }
     }
   }
 
   context.stroke();
-};
-
-
-/**
- * @param {Array} components
- * @private
- */
-ol.renderer.canvas.Vector.prototype.moveContextForLine_ =
-    function(components) {
-  var lastPixel = [NaN, NaN];
-  var pixel = [NaN, NaN];
-  var vec = [NaN, NaN, 0];
-  var j, jj, k, kk, coordinates, coordinate;
-
-  for (j = 0, jj = components.length; j < jj; ++j) {
-    coordinates = components[j].getCoordinates();
-    for (k = 0, kk = coordinates.length; k < kk; ++k) {
-      coordinate = coordinates[k];
-      vec[0] = coordinate[0];
-      vec[1] = coordinate[1];
-      goog.vec.Mat4.multVec3(this.transform_, vec, vec);
-      if (k === 0) {
-        lastPixel[0] = NaN;
-        lastPixel[1] = NaN;
-        this.context_.moveTo(vec[0], vec[1]);
-      } else {
-        pixel[0] = Math.round(vec[0]);
-        pixel[1] = Math.round(vec[1]);
-        if (pixel[0] !== lastPixel[0] || pixel[1] !== lastPixel[1]) {
-          this.context_.lineTo(vec[0], vec[1]);
-          lastPixel[0] = pixel[0];
-          lastPixel[1] = pixel[1];
-        }
-      }
-    }
-  }
-};
-
-
-/**
- * @param {Array} components
- * @private
- */
-ol.renderer.canvas.Vector.prototype.moveContextForCubicBezier_ =
-    function(components) {
-  var lastPixel = [NaN, NaN];
-  var vec = [NaN, NaN, 0];
-  var vecs = [];
-  var j, jj, coordinates, coordinate;
-
-  for (j = 0, jj = components.length; j < jj; ++j) {
-    coordinates = components[j].getCoordinates();
-    for (var i = 0; i < 4; i++) {
-      coordinate = coordinates[i];
-      vec = [coordinate[0], coordinate[1], 0];
-      goog.vec.Mat4.multVec3(this.transform_, vec, vec);
-      vecs.push(vec);
-    }
-
-    if (j === 0) {
-      lastPixel[0] = NaN;
-      lastPixel[1] = NaN;
-      this.context_.moveTo(vecs[0][0], vecs[0][1]);
-    }
-    this.context_.bezierCurveTo(
-        vecs[1][0], vecs[1][1],
-        vecs[2][0], vecs[2][1],
-        vecs[3][0], vecs[3][1]);
-    lastPixel[0] = vecs[3][0];
-    lastPixel[1] = vecs[3][1];
-  }
 };
 
 
@@ -289,6 +231,9 @@ ol.renderer.canvas.Vector.prototype.renderPointFeatures_ =
     alpha = symbolizer.opacity;
     xOffset = symbolizer.xOffset;
     yOffset = symbolizer.yOffset;
+  }else if (symbolizer instanceof ol.style.BearingArrowLiteral) {
+    content = ol.renderer.canvas.Vector.renderArrow_(symbolizer);
+    alpha = 1;
   } else {
     throw new Error('Unsupported symbolizer: ' + symbolizer);
   }
@@ -575,6 +520,64 @@ ol.renderer.canvas.Vector.renderCircle_ = function(circle) {
     context.globalAlpha = circle.strokeOpacity;
     context.stroke();
   }
+  return canvas;
+};
+
+
+/**
+ * @param {ol.style.BearingArrowLiteral} arrow Arrow.
+ * @return {!HTMLCanvasElement} Canvas element.
+ * @private
+ */
+ol.renderer.canvas.Vector.renderArrow_ = function(arrow) {
+  var arrowLength = arrow.arrowLength;
+  var strokeWidth = arrow.strokeWidth || 2,
+      size = arrowLength * 2 + (2 * strokeWidth) + 1,
+      mid = size / 2,
+      canvas = /** @type {HTMLCanvasElement} */
+          (goog.dom.createElement(goog.dom.TagName.CANVAS)),
+      context = /** @type {CanvasRenderingContext2D} */
+          (canvas.getContext('2d')),
+      fillColor = arrow.fillColor,
+      strokeColor = arrow.strokeColor;
+
+  canvas.height = size;
+  canvas.width = size;
+
+  if (fillColor) {
+    context.fillStyle = fillColor;
+  }
+  if (strokeColor) {
+    context.lineWidth = strokeWidth;
+    context.strokeStyle = strokeColor;
+    context.lineCap = 'round'; // TODO: accept this as a symbolizer property
+    context.lineJoin = 'round'; // TODO: accept this as a symbolizer property
+  }
+
+  context.beginPath();
+
+  context.translate(size / 2, size / 2);
+  context.rotate(-arrow.bearing);
+
+  context.moveTo(0, 1);
+  context.lineTo(arrowLength - 4, 1);
+  context.lineTo(arrowLength - 9, 4);
+  context.lineTo(arrowLength, 0);
+  context.lineTo(arrowLength - 9, -4);
+  context.lineTo(arrowLength - 4, -1);
+  context.lineTo(0, -1);
+
+  if (fillColor) {
+    goog.asserts.assertNumber(arrow.fillOpacity);
+    context.globalAlpha = arrow.fillOpacity;
+    context.fill();
+  }
+  if (strokeColor) {
+    goog.asserts.assertNumber(arrow.strokeOpacity);
+    context.globalAlpha = arrow.strokeOpacity;
+    context.stroke();
+  }
+
   return canvas;
 };
 
