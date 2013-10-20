@@ -89,17 +89,17 @@ ol.renderer.canvas.VectorLayer = function(mapRenderer, layer) {
   this.tileCache_ = new ol.TileCache(
       ol.renderer.canvas.VectorLayer.TILECACHE_SIZE);
 
-  var layerChangeEvents = [
+  if (layer.isDirtyOnSourceChangeEvent()) {
+    goog.events.listen(layer, goog.events.EventType.CHANGE,
+                       this.handleDirtySourceChange_, false, this);
+  }
+  goog.events.listen(layer, [
     ol.layer.VectorEventType.ADD,
     ol.layer.VectorEventType.CHANGE,
     ol.layer.VectorEventType.REMOVE,
     ol.layer.VectorEventType.INTENTCHANGE
-  ];
-  if (layer.isDirtyOnSourceChangeEvent()) {
-    layerChangeEvents.push(goog.events.EventType.CHANGE);
-  }
-  goog.events.listen(layer, layerChangeEvents,
-      this.handleLayerChange_, false, this);
+  ],
+  this.handleLayerChange_, false, this);
 
   /**
    * @private
@@ -323,6 +323,16 @@ ol.renderer.canvas.VectorLayer.prototype.getFeaturesForPixel =
 ol.renderer.canvas.VectorLayer.prototype.handleLayerChange_ = function(event) {
   this.expireTiles_(event.extents);
   this.requestMapRenderFrame_();
+};
+
+
+/**
+ * @param {goog.events.Event} event Event.
+ * @private
+ */
+ol.renderer.canvas.VectorLayer.prototype.handleDirtySourceChange_ =
+    function(event) {
+  this.dirty_ = true;
 };
 
 
