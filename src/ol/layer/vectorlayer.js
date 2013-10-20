@@ -168,6 +168,15 @@ ol.layer.Vector = function(options) {
    */
   this.temp_ = false;
 
+
+  /**
+   * @private
+   * @type {boolean}
+   */
+  if (!goog.isDefAndNotNull(options.dirtyOnSourceChangeEvent)) {
+    options.dirtyOnSourceChangeEvent = false;
+  }
+  this.dirtyOnSourceChangeEvent_ = options.dirtyOnSourceChangeEvent;
 };
 goog.inherits(ol.layer.Vector, ol.layer.Layer);
 
@@ -464,6 +473,14 @@ ol.layer.Vector.prototype.setTemporary = function(temp) {
  */
 ol.layer.Vector.prototype.sortByZIndex_ = function(a, b) {
   return a[1].zIndex - b[1].zIndex;
+};
+
+
+/**
+ * @return {boolean}
+ */
+ol.layer.Vector.prototype.isDirtyOnSourceChangeEvent = function() {
+  return this.dirtyOnSourceChangeEvent_;
 };
 
 

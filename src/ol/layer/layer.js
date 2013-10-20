@@ -30,7 +30,6 @@ ol.layer.Layer = function(options) {
 
   goog.events.listen(this.source_, goog.events.EventType.CHANGE,
       this.handleSourceChange_, false, this);
-
 };
 goog.inherits(ol.layer.Layer, ol.layer.Base);
 
