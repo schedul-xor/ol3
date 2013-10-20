@@ -425,6 +425,7 @@
  *      (inclusive) at which this layer will be visible.
  * @property {number|undefined} maxResolution The maximum resolution
  *      (exclusive) below which this layer will be visible.
+ * @property {boolean|undefined} dirtyOnSourceChangeEvent
  */
 
 /**
