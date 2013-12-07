@@ -1,4 +1,5 @@
 goog.provide('ol.source.WMSGetFeatureInfoMethod');
+goog.provide('ol.source.WMSGetFeatureInfoOptions');
 goog.provide('ol.source.wms');
 
 goog.require('goog.Uri');
