@@ -16,7 +16,7 @@ goog.require('ol.style.Symbolizer');
 /**
  * @constructor
  * @extends {ol.style.Symbolizer}
- * @param {ol.style.StrokeOptions=} opt_options Stroke options.
+ * @param {olx.style.StrokeOptions=} opt_options Stroke options.
  * @todo stability experimental
  */
 ol.style.Stroke = function(opt_options) {
@@ -103,7 +103,7 @@ ol.style.Stroke.prototype.createLiteral = function(featureOrType) {
       zIndex: zIndex
     });
   } else if (type === ol.geom.GeometryType.POLYGON ||
-      type === ol.geom.GeometryType.MULTIPOLYGON) {
+      type === ol.geom.GeometryType.MULTI_POLYGON) {
     literal = new ol.style.PolygonLiteral({
       strokeColor: color,
       strokeOpacity: opacity,
