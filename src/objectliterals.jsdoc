@@ -118,7 +118,7 @@
  * @property {ol.Coordinate|undefined} center The initial center for the view.
  *     The coordinate system for the center is specified with the `projection`
  *     option. Default is `undefined`, and layer sources will not be fetched if
- *     this is not set.
+ *       this is not set.
  * @property {ol.Extent|undefined} extent The extent that constrains the center,
  *     in other words, center cannot be set outside this extent.
  *     Default is `undefined`.
@@ -205,12 +205,12 @@
 
 /**
  * @typedef {Object} olx.control.DefaultsOptions
- * @property {boolean|undefined} attribution Attribution. Default is `true`.
+ * @property {boolean|undefined} attribution Attribution.
  * @property {olx.control.AttributionOptions|undefined} attributionOptions
  *     Attribution options.
- * @property {boolean|undefined} logo Logo. Default is `true`.
+ * @property {boolean|undefined} logo Logo.
  * @property {olx.control.LogoOptions|undefined} logoOptions Logo options.
- * @property {boolean|undefined} zoom Zoom. Default is `true`.
+ * @property {boolean|undefined} zoom Zoom.
  * @property {olx.control.ZoomOptions|undefined} zoomOptions Zoom options.
  * @todo stability experimental
  */
@@ -245,10 +245,9 @@
 /**
  * @typedef {Object} olx.control.ScaleLineOptions
  * @property {string|undefined} className CSS Class name. Default is `ol-scale-line`.
- * @property {number|undefined} minWidth Minimum width in pixels. Default is `64`.
+ * @property {number|undefined} minWidth Minimum width in pixels.
  * @property {Element|undefined} target Target.
  * @property {ol.control.ScaleLineUnits|undefined} units Units.
- *     Default is `ol.control.ScaleLineUnits.METRIC`.
  * @todo stability experimental
  */
 
@@ -323,20 +322,20 @@
  * Interactions for the map. Default is `true` for all options.
  * @typedef {Object} olx.interaction.DefaultsOptions
  * @property {boolean|undefined} altShiftDragRotate Whether Alt-Shift-drag
- *     rotate is desired. Default is `true`.
+ *     rotate is desired.
  * @property {boolean|undefined} doubleClickZoom Whether double click zoom is
- *     desired. Default is `true`.
- * @property {boolean|undefined} dragPan Whether drag-pan is desired. Default is `true`.
+ *     desired.
+ * @property {boolean|undefined} dragPan Whether drag-pan is desired.
  * @property {boolean|undefined} keyboard Whether keyboard interaction is
- *     desired. Default is `true`.
+ *     desired.
  * @property {boolean|undefined} mouseWheelZoom Whether mousewheel zoom is
- *     desired. Default is `true`.
+ *     desired.
  * @property {boolean|undefined} shiftDragZoom Whether Shift-drag zoom is
- *     desired. Default is `true`.
+ *     desired.
  * @property {boolean|undefined} touchPan Whether touch pan is
- *     desired. Default is `true`.
- * @property {boolean|undefined} touchRotate Whether touch rotate is desired. Default is `true`.
- * @property {boolean|undefined} touchZoom Whether touch zoom is desired. Default is `true`.
+ *     desired.
+ * @property {boolean|undefined} touchRotate Whether touch rotate is desired.
+ * @property {boolean|undefined} touchZoom Whether touch zoom is desired.
  * @property {number|undefined} zoomDelta Zoom delta.
  * @property {number|undefined} zoomDuration Zoom duration.
  * @todo stability experimental
@@ -347,8 +346,8 @@
  * @property {ol.layer.Vector} layer Destination layer for the features.
  * @property {number|undefined} snapTolerance Pixel distance for snapping to the
  *     drawing finish (default is 12).
- * @property {ol.geom.GeometryType} type Drawing type ('Point', 'LineString',
- *     'Polygon', 'MultiPoint', 'MultiLineString', or 'MultiPolygon').
+ * @property {ol.geom.GeometryType} type Drawing type ('point', 'linestring',
+ *     'polygon', 'multipoint', 'multilinestring', or 'multipolygon').
  * @todo stability experimental
  */
 
@@ -601,9 +600,8 @@
  * @property {string} featureNS The namespace URI used for features.
  * @property {string} featurePrefix The prefix for the feature namespace.
  * @property {Array.<string>} featureTypes The feature type names.
- * @property {string|undefined} srsName SRS name. For WFS 1.1.0, this is
- *     required. In WFS 1.0.0, no srsName attribute will be set on geometries
- *     when this is not provided.
+ * @property {string|undefined} srsName SRS name. No srsName attribute will be
+ *     set on geometries when this is not provided.
  * @property {string|undefined} handle Handle.
  * @property {string|undefined} outputFormat Output format.
  * @property {number} maxFeatures Maximum number of features to fetch.
@@ -635,15 +633,14 @@
 /**
  * @typedef {Object} olx.source.MapGuideOptions
  * @property {string|undefined} url The mapagent url.
- * @property {number|undefined} displayDpi The display resolution. Default is `96`.
- * @property {number|undefined} metersPerUnit The meters-per-unit value. Default is `1`.
- * @property {ol.Extent|undefined} extent Extent.
- * @property {boolean|undefined} useOverlay If `true`, will use
- *     `GETDYNAMICMAPOVERLAYIMAGE`.
+ * @property {number|undefined} metersPerUnit The meters-per-unit value.
+ * @property {ol.Extent|undefined} extent Extent..
+ * @property {boolean|undefined} useOverlay If true, will use
+ *     GETDYNAMICMAPOVERLAYIMAGE.
  * @property {ol.proj.ProjectionLike} projection Projection.
- * @property {number|undefined} ratio Ratio. `1` means image requests are the size
- *     of the map viewport, `2` means twice the size of the map viewport, and so
- *     on. Default is `1`.
+ * @property {number|undefined} ratio Ratio. 1 means image requests are the size
+ *     of the map viewport, 2 means twice the size of the map viewport, and so
+ *     on.
  * @property {Array.<number>|undefined} resolutions Resolutions. If specified,
  *     requests will be made for these resolutions only.
  * @property {Object|undefined} params Additional parameters.
@@ -667,8 +664,6 @@
 /**
  * @typedef {Object} olx.source.OSMOptions
  * @property {Array.<ol.Attribution>|undefined} attributions Attributions.
- * @property {null|string|undefined} crossOrigin crossOrigin setting for image
- *     requests. Default is `anonymous`.
  * @property {number|undefined} maxZoom Max zoom.
  * @property {ol.TileLoadFunctionType|undefined} tileLoadFunction Optional
  *     function to load a tile given a URL.
@@ -691,9 +686,9 @@
  *     `1.3.0` by default. `WIDTH`, `HEIGHT`, `BBOX` and `CRS` (`SRS` for WMS
  *     version < 1.3.0) will be set dynamically.
  * @property {ol.proj.ProjectionLike} projection Projection.
- * @property {number|undefined} ratio Ratio. `1` means image requests are the size
- *     of the map viewport, `2` means twice the size of the map viewport, and so
- *     on. Default is `1.5`.
+ * @property {number|undefined} ratio Ratio. 1 means image requests are the size
+ *     of the map viewport, 2 means twice the size of the map viewport, and so
+ *     on.
  * @property {Array.<number>|undefined} resolutions Resolutions. If specified,
  *     requests will be made for these resolutions only.
  * @property {string|undefined} url WMS service URL.
@@ -748,15 +743,6 @@
  * @property {ol.Extent|undefined} extent Extent.
  * @property {olx.source.WMSGetFeatureInfoOptions|undefined} getFeatureInfoOptions
  *     Options for GetFeatureInfo.
- * @property {number|undefined} gutter The size in pixels of the
- *     gutter around image tiles to ignore.  By setting this property to a
- *     non-zero value, images will be requested that are wider and taller than
- *     the tile size by a value of `2 x gutter`.  Defaults to zero.  Using a
- *     non-zero value allows artifacts of rendering at tile edges to be ignored.  If
- *     you control the WMS service it is recommended to address "artifacts at tile
- *     edges" issues by properly configuring the WMS service. For example, MapServer
- *     has a `tile_map_edge_buffer` configuration parameter for this. See
- *     http://mapserver.org/output/tile_mode.html.
  * @property {string|undefined} logo Logo.
  * @property {ol.tilegrid.TileGrid|undefined} tileGrid Tile grid.
  * @property {number|undefined} maxZoom Maximum zoom.

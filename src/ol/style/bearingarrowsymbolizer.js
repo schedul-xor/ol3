@@ -15,7 +15,7 @@ goog.require('ol.style.Stroke');
 /**
  * @constructor
  * @extends {ol.style.Point}
- * @param {ol.style.BearingArrowOptions} options BearingArrow options.
+ * @param {olx.style.BearingArrowOptions} options BearingArrow options.
  */
 ol.style.BearingArrow = function(options) {
 
