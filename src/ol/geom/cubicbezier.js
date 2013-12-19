@@ -1,11 +1,9 @@
 goog.provide('ol.geom.CubicBezier');
 
 goog.require('goog.asserts');
-goog.require('goog.events.EventType');
 goog.require('ol.CoordinateArray');
 goog.require('ol.Extent');
 goog.require('ol.geom.Geometry');
-goog.require('ol.geom.GeometryEvent');
 goog.require('ol.geom.GeometryType');
 
 
@@ -315,11 +313,9 @@ ol.geom.CubicBezier.prototype.getType = function() {
  * @param {ol.CoordinateArray} coordinates Coordinates array.
  */
 ol.geom.CubicBezier.prototype.setCoordinates = function(coordinates) {
-  var oldBounds = this.bounds_;
   this.bounds_ = null;
   this.coordinates_ = coordinates;
-  this.dispatchEvent(new ol.geom.GeometryEvent(goog.events.EventType.CHANGE,
-      this, oldBounds));
+  this.dispatchChangeEvent();
 };
 
 
