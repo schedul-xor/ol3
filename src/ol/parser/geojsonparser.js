@@ -1,8 +1,10 @@
 goog.provide('ol.parser.GeoJSON');
+goog.provide('ol.parser.GeoJSON.GeometryType');
 
 goog.require('goog.asserts');
 goog.require('goog.object');
 goog.require('ol.Feature');
+goog.require('ol.geom.CubicBezier');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.GeometryCollection');
 goog.require('ol.geom.GeometryType');
@@ -430,6 +432,6 @@ ol.parser.GeoJSON.GeometryType = {
   'MultiPoint': ol.geom.GeometryType.MULTI_POINT,
   'MultiLineString': ol.geom.GeometryType.MULTI_LINE_STRING,
   'MultiPolygon': ol.geom.GeometryType.MULTI_POLYGON,
-  'GeometryCollection': ol.geom.GeometryType.GEOMETRY_COLLECTION
+  'GeometryCollection': ol.geom.GeometryType.GEOMETRY_COLLECTION,
   'CubicBezier': ol.geom.GeometryType.CUBICBEZIER
 };

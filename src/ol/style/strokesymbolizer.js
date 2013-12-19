@@ -93,8 +93,8 @@ ol.style.Stroke.prototype.createLiteral = function(featureOrType) {
   goog.asserts.assert(!isNaN(zIndex), 'zIndex must be a number');
 
   var literal = null;
-  if (type === ol.geom.GeometryType.LINESTRING ||
-      type === ol.geom.GeometryType.MULTILINESTRING ||
+  if (type === ol.geom.GeometryType.LINE_STRING ||
+      type === ol.geom.GeometryType.MULTI_LINE_STRING ||
       type === ol.geom.GeometryType.CUBICBEZIER) {
     literal = new ol.style.LineLiteral({
       color: color,

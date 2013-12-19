@@ -1,4 +1,5 @@
 goog.provide('ol.geom.Geometry');
+goog.provide('ol.geom.GeometryEvent');
 goog.provide('ol.geom.GeometryType');
 
 goog.require('goog.events.EventType');
@@ -22,7 +23,8 @@ ol.geom.GeometryType = {
   MULTI_POINT: 'MultiPoint',
   MULTI_LINE_STRING: 'MultiLineString',
   MULTI_POLYGON: 'MultiPolygon',
-  GEOMETRY_COLLECTION: 'GeometryCollection'
+  GEOMETRY_COLLECTION: 'GeometryCollection',
+  CUBICBEZIER: 'CubicBezier'
 };
 
 

@@ -28,6 +28,3 @@
 
 @exportSymbol ol.geom.MultiPolygon
 @exportProperty ol.geom.MultiPolygon.prototype.getCoordinates
-
-@exportSymbol ol.geom.CubicBezier
-@exportProperty ol.geom.CubicBezier.prototype.getCoordinates
