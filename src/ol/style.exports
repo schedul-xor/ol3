@@ -1,3 +1,4 @@
+@exportSymbol ol.style.BearingArrow
 @exportSymbol ol.style.Fill
 @exportSymbol ol.style.Icon
 @exportSymbol ol.style.Rule
