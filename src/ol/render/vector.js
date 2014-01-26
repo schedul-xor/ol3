@@ -207,6 +207,28 @@ ol.renderer.vector.renderPolygonGeometry_ =
 
 
 /**
+ * @private
+ * @param {ol.render.IReplayGroup} replayGroup Replay group.
+ * @param {ol.geom.Geometry} geometry Geometry.
+ * @param {ol.style.Style} style Style.
+ * @param {Object} data Opaque data object.
+ */
+ol.renderer.vector.renderCubicBezier_ =
+    function(replayGroup, geometry, style, data) {
+  var strokeStyle = style.getStroke();
+  if (goog.isNull(strokeStyle)) {
+    return;
+  }
+  goog.asserts.assertInstanceof(geometry, ol.geom.CubicBezier);
+  var replay = replayGroup.getReplay(
+      style.getZIndex(), ol.render.ReplayType.CUBIC_BEZIER);
+
+  replay.setFillStrokeStyle(null, strokeStyle);
+  replay.drawCubicBezierGeometry(geometry, data);
+};
+
+
+/**
  * @const
  * @private
  * @type {Object.<ol.geom.GeometryType,
@@ -221,5 +243,6 @@ ol.renderer.vector.GEOMETRY_RENDERERS_ = {
   'MultiLineString': ol.renderer.vector.renderMultiLineStringGeometry_,
   'MultiPolygon': ol.renderer.vector.renderMultiPolygonGeometry_,
   'GeometryCollection': ol.renderer.vector.renderGeometryCollectionGeometry_,
-  'Circle': ol.renderer.vector.renderCircleGeometry_
+  'Circle': ol.renderer.vector.renderCircleGeometry_,
+  'CubicBezier': ol.renderer.vector.renderCubicBezier_
 };
