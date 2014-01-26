@@ -94,6 +94,14 @@ ol.render.webgl.Immediate.prototype.drawPolygonGeometry =
 /**
  * @inheritDoc
  */
+ol.render.webgl.Immediate.prototype.drawCubicBezierGeometry =
+    function(cubicBezierGeometry, data) {
+};
+
+
+/**
+ * @inheritDoc
+ */
 ol.render.webgl.Immediate.prototype.setFillStrokeStyle =
     function(fillStyle, strokeStyle) {
 };
