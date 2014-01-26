@@ -2,6 +2,7 @@ goog.provide('ol.renderer.vector');
 
 goog.require('goog.asserts');
 goog.require('ol.geom.Circle');
+goog.require('ol.geom.CubicBezier');
 goog.require('ol.geom.GeometryCollection');
 goog.require('ol.geom.LineString');
 goog.require('ol.geom.MultiLineString');

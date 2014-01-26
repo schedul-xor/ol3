@@ -1,3 +1,4 @@
+goog.require('goog.array');
 goog.require('ol.Feature');
 goog.require('ol.Map');
 goog.require('ol.RendererHint');
@@ -8,6 +9,7 @@ goog.require('ol.geom.LineString');
 goog.require('ol.geom.Point');
 goog.require('ol.layer.Vector');
 goog.require('ol.source.Vector');
+goog.require('ol.style.Fill');
 goog.require('ol.style.Circle');
 goog.require('ol.style.Stroke');
 goog.require('ol.style.Style');
