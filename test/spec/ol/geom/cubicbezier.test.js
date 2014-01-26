@@ -50,17 +50,4 @@ describe('ol.geom.CubicBezier', function() {
     });
   });
 
-  describe('#getBounds()', function() {
-    it('returns the bounding extent', function() {
-      var cb = new ol.geom.CubicBezier([[1, 1], [0, 2], [2, 1], [3, 4]]);
-      var bounds = cb.getBounds();
-      expect(bounds[0], ol.geom.CubicBezier.
-          posAt(1, 2, 1, 4, Math.sqrt(3) / 6));
-      expect(bounds[1], 3);
-      expect(bounds[2], 1);
-      expect(bounds[3], 4);
-    });
-  });
-});
-
 goog.require('ol.geom.CubicBezier');
