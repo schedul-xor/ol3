@@ -392,7 +392,7 @@ ol.render.canvas.Immediate.prototype.drawLineStringGeometry =
 /**
  * @inheritDoc
  */
-ol.render.canvas.CubicBezierReplay.prototype.drawCubicBezierGeometry =
+ol.render.canvas.Immediate.prototype.drawCubicBezierGeometry =
     function(cubicBezierGeometry, data) {
   if (!ol.extent.intersects(this.extent_, cubicBezierGeometry.getExtent()) ||
       !goog.isDef(this.state_.strokeStyle)) {
