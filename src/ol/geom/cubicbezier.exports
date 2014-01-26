@@ -3,8 +3,8 @@
 @exportProperty ol.geom.CubicBezier.prototype.getExtent
 @exportProperty ol.geom.CubicBezier.prototype.getSimplifiedGeometry
 @exportProperty ol.geom.CubicBezier.prototype.getType
-@exportProperty ol.geom.CubicBezier.prototype.setCoodinates
-@exportProperty ol.geom.CubicBezier.prototype.setFlatCoodinates
+@exportProperty ol.geom.CubicBezier.prototype.setCoordinates
+@exportProperty ol.geom.CubicBezier.prototype.setFlatCoordinates
 @exportProperty ol.geom.CubicBezier.prototype.getClosestTFromPoint
 @exportProperty ol.geom.CubicBezier.prototype.getSquaredDistanceFromXYToT
 @exportProperty ol.geom.CubicBezier.posABAt
