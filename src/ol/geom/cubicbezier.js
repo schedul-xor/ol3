@@ -310,7 +310,7 @@ ol.geom.CubicBezier.prototype.getType = function() {
 ol.geom.CubicBezier.prototype.setCoordinates =
     function(coordinates, opt_layout) {
   if (goog.isNull(coordinates)) {
-    this.setFlatCoordinates(this.layout, ol.geom.GeometryLayout.XY);
+    this.setFlatCoordinates(ol.geom.GeometryLayout.XY, null);
   }else {
     this.setLayout(opt_layout, coordinates, 1);
     if (goog.isNull(this.flatCoordinates)) {
