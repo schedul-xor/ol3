@@ -1,6 +1,7 @@
 goog.provide('ol.geom.CubicBezier');
 
 goog.require('goog.asserts');
+goog.require('goog.array');
 goog.require('ol.extent');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.SimpleGeometry');
