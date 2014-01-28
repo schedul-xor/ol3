@@ -7,7 +7,7 @@
 @exportProperty ol.geom.GeometryType.MULTI_LINE_STRING
 @exportProperty ol.geom.GeometryType.MULTI_POLYGON
 @exportProperty ol.geom.GeometryType.GEOMETRY_COLLECTION
-@exportProperty ol.geom.GeometryType.CUBICBEZIER
+@exportProperty ol.geom.GeometryType.CUBIC_BEZIER
 
 @exportSymbol ol.geom.Geometry
 

@@ -95,7 +95,7 @@ ol.style.Stroke.prototype.createLiteral = function(featureOrType) {
   var literal = null;
   if (type === ol.geom.GeometryType.LINE_STRING ||
       type === ol.geom.GeometryType.MULTI_LINE_STRING ||
-      type === ol.geom.GeometryType.CUBICBEZIER) {
+      type === ol.geom.GeometryType.CUBIC_BEZIER) {
     literal = new ol.style.LineLiteral({
       color: color,
       opacity: opacity,

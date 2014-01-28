@@ -20,7 +20,7 @@ ol.geom.GeometryType = {
   MULTI_LINE_STRING: 'MultiLineString',
   MULTI_POLYGON: 'MultiPolygon',
   GEOMETRY_COLLECTION: 'GeometryCollection',
-  CUBICBEZIER: 'CubicBezier'
+  CUBIC_BEZIER: 'CubicBezier',
   CIRCLE: 'Circle'
 };
 

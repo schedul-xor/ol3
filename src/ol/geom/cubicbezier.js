@@ -304,7 +304,7 @@ ol.geom.CubicBezier.dRoots = function(a, b, c, d) {
  * @inheritDoc
  */
 ol.geom.CubicBezier.prototype.getType = function() {
-  return ol.geom.GeometryType.CUBICBEZIER;
+  return ol.geom.GeometryType.CUBIC_BEZIER;
 };
 
 
