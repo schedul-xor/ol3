@@ -101,6 +101,15 @@ ol.render.IRender.prototype.drawPolygonGeometry =
 
 
 /**
+ * @param {ol.geom.CubicBezier} cubicBezierGeometry Cubic bezier geometry.
+ * @param {Object} data Opaque data object.
+ */
+ol.render.IRender.prototype.drawCubicBezierGeometry =
+    function(cubicBezierGeometry, data) {
+};
+
+
+/**
  * @param {ol.style.Fill} fillStyle Fill style.
  * @param {ol.style.Stroke} strokeStyle Stroke style.
  */

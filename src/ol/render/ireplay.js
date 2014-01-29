@@ -10,6 +10,7 @@ goog.require('ol.render.IRender');
 ol.render.ReplayType = {
   IMAGE: 'Image',
   LINE_STRING: 'LineString',
+  CUBIC_BEZIER: 'CubicBezier',
   POLYGON: 'Polygon'
 };
 
@@ -21,6 +22,7 @@ ol.render.ReplayType = {
 ol.render.REPLAY_ORDER = [
   ol.render.ReplayType.POLYGON,
   ol.render.ReplayType.LINE_STRING,
+  ol.render.ReplayType.CUBIC_BEZIER,
   ol.render.ReplayType.IMAGE
 ];
 

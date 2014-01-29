@@ -1,132 +1,118 @@
 goog.provide('ol.geom.CubicBezier');
 
+goog.require('goog.array');
 goog.require('goog.asserts');
-goog.require('ol.CoordinateArray');
-goog.require('ol.Extent');
-goog.require('ol.geom.Geometry');
+goog.require('ol.extent');
 goog.require('ol.geom.GeometryType');
+goog.require('ol.geom.SimpleGeometry');
+goog.require('ol.geom.flat');
 
 
 
 /**
  * @constructor
- * @extends {ol.geom.Geometry}
- * @param {ol.CoordinateArray} coordinates Vertex array
- * (e.g. [[x0, y0], [x1, y1], [x2, y2], [x3, y3]]).
+ * @extends {ol.geom.SimpleGeometry}
+ * @param {ol.geom.RawLinearRing} coordinates
+ * @param {ol.geom.GeometryLayout=} opt_layout Layout.
  */
-ol.geom.CubicBezier = function(coordinates) {
+ol.geom.CubicBezier = function(coordinates, opt_layout) {
   goog.base(this);
-  goog.asserts.assert(goog.isArray(coordinates[0]));
-  goog.asserts.assert(coordinates.length == 4);
-
-
-  /**
-   * @type {number}
-   * @private
-   */
-  this.dimension_ = coordinates[0].length;
-
-
-  /**
-   * Array of coordinates.
-   * @type {ol.CoordinateArray}
-   * @private
-   */
-  this.coordinates_ = coordinates;
-
-
-  /**
-   * @type {ol.Extent}
-   * @private
-   */
-  this.bounds_ = null;
+  this.setCoordinates(coordinates, opt_layout);
 };
-goog.inherits(ol.geom.CubicBezier, ol.geom.Geometry);
+goog.inherits(ol.geom.CubicBezier, ol.geom.SimpleGeometry);
 
 
 /**
- * @param {number} index Vertex index.
- * @param {number} dim Coordinate dimension.
- * @return {number} The vertex coordinate value.
+ * @inheritDoc
  */
-ol.geom.CubicBezier.prototype.get = function(index, dim) {
-  var coordinates = this.getCoordinates();
-  goog.asserts.assert(coordinates.length > index);
-  return coordinates[index][dim];
+ol.geom.CubicBezier.prototype.clone = function() {
+  var cubicBezier = new ol.geom.CubicBezier(null);
+  cubicBezier.setFlatCoordinates(this.layout, this.flatCoordinates.slice());
+  return cubicBezier;
 };
 
 
 /**
  * @inheritDoc
- * @return {ol.CoordinateArray} Coordinates array.
  */
-ol.geom.CubicBezier.prototype.getCoordinates = function() {
-  return this.coordinates_;
+ol.geom.CubicBezier.prototype.closestPointXY =
+    function(x, y, closestPoint, minSquaredDistance) {
+  var nearestT = this.getClosestTFromPoint(x, y);
+  var squaredDistance = this.getSquaredDistanceFromXYToT(x, y, nearestT);
+  if (minSquaredDistance < squaredDistance) {
+    return minSquaredDistance;
+  }
+  var distance = Math.sqrt(squaredDistance);
+  var nearestX = this.getXAtT_(nearestT);
+  var nearestY = this.getYAtT_(nearestT);
+  closestPoint[0] = nearestX;
+  closestPoint[1] = nearestY;
+  return distance;
 };
 
 
 /**
- * Get the count of vertices in this linestring.
- * @return {number} The vertex count.
+ * @private
+ * @param {number} stride Stride.
+ * @param {ol.Extent=} opt_extent Extent.
+ * @return {ol.Extent}
  */
-ol.geom.CubicBezier.prototype.getCount = function() {
-  return this.getCoordinates().length;
+ol.geom.CubicBezier.prototype.createOrUpdateExtent_ =
+    function(stride, opt_extent) {
+  var extent = ol.extent.createOrUpdateEmpty(opt_extent);
+  var totalDimensions = 2;
+  var limitQs = [];
+
+  for (var dimension = 0; dimension < totalDimensions; dimension++) {
+    limitQs.length = 0;
+
+    var q0 = this.flatCoordinates[dimension];
+    var q1 = this.flatCoordinates[totalDimensions + dimension];
+    var q2 = this.flatCoordinates[totalDimensions * 2 + dimension];
+    var q3 = this.flatCoordinates[totalDimensions * 3 + dimension];
+
+    var roots = ol.geom.CubicBezier.dRoots(q0, q1, q2, q3);
+    goog.array.forEach(roots, function(root, index) {
+      if (root > 1 || root < 0) {
+        return;
+      }
+      var q = ol.geom.CubicBezier.posAt(q0, q1, q2, q3, root);
+      limitQs.push(q);
+    },this);
+    limitQs.push(q0);
+    limitQs.push(q3);
+
+    var maxQ = -Infinity;
+    var minQ = Infinity;
+    goog.array.forEach(limitQs, function(limitQ, index) {
+      if (limitQ > maxQ) {
+        maxQ = limitQ;
+      }
+      if (limitQ < minQ) {
+        minQ = limitQ;
+      }
+    },this);
+
+    extent[dimension] = minQ;
+    extent[totalDimensions + dimension] = maxQ;
+  }
+
+  return ol.extent.createOrUpdate(
+      extent[0], extent[1], extent[2], extent[3], opt_extent);
 };
 
 
 /**
+ * @param {ol.Extent=} opt_extent Extent.
  * @return {Array.<number>}
  */
-ol.geom.CubicBezier.prototype.getBounds = function() {
-  if (goog.isNull(this.bounds_)) {
-    var i, d;
-    var cp = this.getCoordinates();
-    var foundRoots = [];
-    for (d = 0; d < this.dimension_; d++) {
-      var roots = ol.geom.CubicBezier.dRoots(
-          cp[0][d], cp[1][d], cp[2][d], cp[3][d]
-          );
-      for (i = 0; i < roots.length; i++) {
-        if (roots[i] <= 0 || roots[i] >= 1) {continue;}
-        foundRoots.push(roots[i]);
-      }
-    }
-    var boundPoints = [];
-    for (i = 0; i < foundRoots.length; i++) {
-      var newp = [];
-      for (d = 0; d < this.dimension_; d++) {
-        newp.push(ol.geom.CubicBezier.posAt(
-            cp[0][d], cp[1][d], cp[2][d], cp[3][d],
-            foundRoots[i]));
-      }
-      boundPoints.push(newp);
-    }
-    boundPoints.push(cp[0]);
-    boundPoints.push(cp[3]);
-    var maxes = [];
-    var mines = [];
-    for (d = 0; d < this.dimension_; d++) {
-      maxes.push(-9007199254740992);
-      mines.push(9007199254740992);
-    }
-    for (i = 0; i < boundPoints.length; i++) {
-      for (d = 0; d < this.dimension_; d++) {
-        if (maxes[d] < boundPoints[i][d]) {
-          maxes[d] = boundPoints[i][d];
-        }
-        if (mines[d] > boundPoints[i][d]) {
-          mines[d] = boundPoints[i][d];
-        }
-      }
-    }
-    var result = [];
-    for (d = 0; d < this.dimension_; d++) {
-      result.push(mines[d]);
-      result.push(maxes[d]);
-    }
-    this.bounds_ = [mines[0], mines[1], maxes[0], maxes[1]];
+ol.geom.CubicBezier.prototype.getExtent = function(opt_extent) {
+  if (this.extentRevision != this.revision) {
+    this.extent = this.createOrUpdateExtent_(this.stride, opt_extent);
+    this.extentRevision = this.revision;
   }
-  return this.bounds_;
+  goog.asserts.assert(goog.isDef(this.extent));
+  return ol.extent.returnOrUpdate(this.extent, opt_extent);
 };
 
 
@@ -303,31 +289,146 @@ ol.geom.CubicBezier.dRoots = function(a, b, c, d) {
 /**
  * @inheritDoc
  */
-ol.geom.CubicBezier.prototype.getType = function() {
-  return ol.geom.GeometryType.CUBIC_BEZIER;
-};
-
-
-/**
- * Update the linestring coordinates.
- * @param {ol.CoordinateArray} coordinates Coordinates array.
- */
-ol.geom.CubicBezier.prototype.setCoordinates = function(coordinates) {
-  this.bounds_ = null;
-  this.coordinates_ = coordinates;
-  this.dispatchChangeEvent();
+ol.geom.CubicBezier.prototype.getSimplifiedGeometry =
+    function(squaredTolarence) {
+  return this;
 };
 
 
 /**
  * @inheritDoc
  */
-ol.geom.CubicBezier.prototype.transform = function(transform) {
-  var coordinates = this.getCoordinates();
-  var coord;
-  for (var i = 0, ii = coordinates.length; i < ii; ++i) {
-    coord = coordinates[i];
-    transform(coord, coord, coord.length);
+ol.geom.CubicBezier.prototype.getType = function() {
+  return ol.geom.GeometryType.CUBIC_BEZIER;
+};
+
+
+/**
+ * @param {ol.geom.RawLinearRing} coordinates Coordinates
+ * @param {ol.geom.GeometryLayout=} opt_layout Layout.
+ */
+ol.geom.CubicBezier.prototype.setCoordinates =
+    function(coordinates, opt_layout) {
+  if (goog.isNull(coordinates)) {
+    this.setFlatCoordinates(ol.geom.GeometryLayout.XY, null);
+  }else {
+    this.setLayout(opt_layout, coordinates, 1);
+    if (goog.isNull(this.flatCoordinates)) {
+      this.flatCoordinates = [];
+    }
+    this.flatCoordinates.length = ol.geom.flat.deflateCoordinates(
+        this.flatCoordinates, 0, coordinates, this.stride);
+    this.dispatchChangeEvent();
   }
-  this.setCoordinates(coordinates); // for change event
+};
+
+
+/**
+ * @param {ol.geom.GeometryLayout} layout
+ * @param {Array.<number>} flatCoordinates
+ */
+ol.geom.CubicBezier.prototype.setFlatCoordinates =
+    function(layout, flatCoordinates) {
+  this.setFlatCoordinatesInternal(layout, flatCoordinates);
+  this.dispatchChangeEvent();
+};
+
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @return {number} Closest T from given point.
+ */
+ol.geom.CubicBezier.prototype.getClosestTFromPoint = function(x, y) {
+  var currentT = 0.5;
+  var currentStep = 0;
+  var deltaT = 0.25;
+  var minDeltaT = 1e-13;
+  var maxSteps = 100;
+  var lastSquaredDistance = 0;
+  while (currentStep < maxSteps) {
+    if (minDeltaT > deltaT) {
+      break;
+    }
+
+    var plusT = currentT + deltaT;
+    var plusSquaredDistance = this.getSquaredDistanceFromXYToT(x, y, plusT);
+
+    var minusT = currentT - deltaT;
+    var minusSquaredDistance = this.getSquaredDistanceFromXYToT(x, y, minusT);
+
+    if (plusSquaredDistance < minusSquaredDistance) {
+      currentT = plusT;
+      lastSquaredDistance = plusSquaredDistance;
+    }else {
+      currentT = minusT;
+      lastSquaredDistance = minusSquaredDistance;
+    }
+
+    deltaT /= 2;
+    currentStep++;
+  }
+
+  var squaredDistanceAt0 = this.getSquaredDistanceFromXYToT(x, y, 0);
+  if (lastSquaredDistance > squaredDistanceAt0) {
+    currentT = 0;
+    lastSquaredDistance = squaredDistanceAt0;
+  }
+  var squaredDistanceAt1 = this.getSquaredDistanceFromXYToT(x, y, 1);
+  if (lastSquaredDistance > squaredDistanceAt1) {
+    currentT = 1;
+  }
+
+  return currentT;
+};
+
+
+/**
+ * @param {number} x
+ * @param {number} y
+ * @param {number} t
+ * @return {number}
+ */
+ol.geom.CubicBezier.prototype.getSquaredDistanceFromXYToT = function(x, y, t) {
+  var xOnB = this.getXAtT_(t);
+  var yOnB = this.getYAtT_(t);
+  var dx = x - xOnB;
+  var dy = y - yOnB;
+  return dx * dx + dy * dy;
+};
+
+
+/**
+ * @private
+ * @param {number} t
+ * @return {number}
+ */
+ol.geom.CubicBezier.prototype.getXAtT_ = function(t) {
+  return this.getVAtTAndDimension_(t, 0);
+};
+
+
+/**
+ * @private
+ * @param {number} t
+ * @return {number}
+ */
+ol.geom.CubicBezier.prototype.getYAtT_ = function(t) {
+  return this.getVAtTAndDimension_(t, 1);
+};
+
+
+/**
+ * @private
+ * @param {number} t
+ * @param {number} dimension
+ * @return {number}
+ */
+ol.geom.CubicBezier.prototype.getVAtTAndDimension_ =
+    function(t, dimension) {
+  return ol.geom.CubicBezier.posAt(
+      this.flatCoordinates[dimension],
+      this.flatCoordinates[dimension + 2],
+      this.flatCoordinates[dimension + 4],
+      this.flatCoordinates[dimension + 6], t);
 };

@@ -231,6 +231,21 @@ ol.render.canvas.Immediate.prototype.moveToLineTo_ =
 
 
 /**
+ * @private
+ * @param {Array.<number>} pixelCoordinates Pixel coordinates.
+ */
+ol.render.canvas.Immediate.prototype.cubicBezierTo_ =
+    function(pixelCoordinates) {
+  var context = this.context_;
+  var d = 0;
+  context.moveTo(pixelCoordinates[d], pixelCoordinates[d + 1]);
+  context.bezierCurveTo(pixelCoordinates[d + 2], pixelCoordinates[d + 3],
+      pixelCoordinates[d + 4], pixelCoordinates[d + 5],
+      pixelCoordinates[d + 6], pixelCoordinates[d + 7]);
+};
+
+
+/**
  * @param {Array.<number>} pixelCoordinates Pixel coordinates.
  * @param {number} offset Offset.
  * @param {Array.<number>} ends Ends.
@@ -370,6 +385,25 @@ ol.render.canvas.Immediate.prototype.drawLineStringGeometry =
       lineStringGeometry, this.transform_, this.pixelCoordinates_);
   context.beginPath();
   this.moveToLineTo_(pixelCoordinates, 0, pixelCoordinates.length, false);
+  context.stroke();
+};
+
+
+/**
+ * @inheritDoc
+ */
+ol.render.canvas.Immediate.prototype.drawCubicBezierGeometry =
+    function(cubicBezierGeometry, data) {
+  if (!ol.extent.intersects(this.extent_, cubicBezierGeometry.getExtent()) ||
+      !goog.isDef(this.state_.strokeStyle)) {
+    return;
+  }
+  this.setFillStrokeStyles_();
+  var context = this.context_;
+  var pixelCoordinates = ol.geom.transformSimpleGeometry2D(
+      cubicBezierGeometry, this.transform_, this.pixelCoordinates_);
+  context.beginPath();
+  this.cubicBezierTo_(pixelCoordinates);
   context.stroke();
 };
 
