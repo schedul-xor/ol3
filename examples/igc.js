@@ -85,7 +85,6 @@ var displaySnap = function(coordinate) {
     line = null;
     info.innerHTML = '&nbsp;';
   } else {
-    info.innerHTML = closestFeature.get('PLT');
     var geometry = closestFeature.getGeometry();
     var closestPoint = geometry.getClosestPoint(coordinate);
     if (point === null) {
@@ -93,10 +92,14 @@ var displaySnap = function(coordinate) {
     } else {
       point.setCoordinates(closestPoint);
     }
+    var date = new Date(closestPoint[2] * 1000);
+    info.innerHTML =
+        closestFeature.get('PLT') + ' (' + date.toUTCString() + ')';
+    var coordinates = [coordinate, [closestPoint[0], closestPoint[1]]];
     if (line === null) {
-      line = new ol.geom.LineString([coordinate, closestPoint]);
+      line = new ol.geom.LineString(coordinates);
     } else {
-      line.setCoordinates([coordinate, closestPoint]);
+      line.setCoordinates(coordinates);
     }
   }
   map.requestRenderFrame();
@@ -108,8 +111,7 @@ $(map.getViewport()).on('mousemove', function(evt) {
 });
 
 map.on('singleclick', function(evt) {
-  var coordinate = evt.getCoordinate();
-  displaySnap(coordinate);
+  displaySnap(evt.coordinate);
 });
 
 var imageStyle = new ol.style.Circle({
@@ -125,7 +127,7 @@ var strokeStyle = new ol.style.Stroke({
   width: 1
 });
 map.on('postcompose', function(evt) {
-  var render = evt.getRender();
+  var render = evt.render;
   if (point !== null) {
     render.setImageStyle(imageStyle);
     render.drawPointGeometry(point);
