@@ -5,7 +5,7 @@ goog.require('goog.asserts');
 goog.require('ol.extent');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.SimpleGeometry');
-goog.require('ol.geom.flat');
+goog.require('ol.geom.flat.deflate');
 
 
 
@@ -14,9 +14,16 @@ goog.require('ol.geom.flat');
  * @extends {ol.geom.SimpleGeometry}
  * @param {ol.geom.RawLinearRing} coordinates
  * @param {ol.geom.GeometryLayout=} opt_layout Layout.
+ * @todo api
  */
 ol.geom.CubicBezier = function(coordinates, opt_layout) {
   goog.base(this);
+
+  /**
+   * @type {Array.<number>}
+   * @private
+   */
+  this.ends_ = [];
   this.setCoordinates(coordinates, opt_layout);
 };
 goog.inherits(ol.geom.CubicBezier, ol.geom.SimpleGeometry);
@@ -24,16 +31,19 @@ goog.inherits(ol.geom.CubicBezier, ol.geom.SimpleGeometry);
 
 /**
  * @inheritDoc
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.clone = function() {
   var cubicBezier = new ol.geom.CubicBezier(null);
-  cubicBezier.setFlatCoordinates(this.layout, this.flatCoordinates.slice());
+  cubicBezier.setFlatCoordinates(
+      this.layout, this.flatCoordinates.slice(), this.ends_.slice());
   return cubicBezier;
 };
 
 
 /**
  * @inheritDoc
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.closestPointXY =
     function(x, y, closestPoint, minSquaredDistance) {
@@ -105,6 +115,7 @@ ol.geom.CubicBezier.prototype.createOrUpdateExtent_ =
 /**
  * @param {ol.Extent=} opt_extent Extent.
  * @return {Array.<number>}
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.getExtent = function(opt_extent) {
   if (this.extentRevision != this.getRevision()) {
@@ -122,6 +133,7 @@ ol.geom.CubicBezier.prototype.getExtent = function(opt_extent) {
  * @param {number} t
  * @param {number} u
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.posABAt = function(a, b, t, u) {
   return a * u + b * t;
@@ -134,6 +146,7 @@ ol.geom.CubicBezier.posABAt = function(a, b, t, u) {
  * @param {number} t
  * @param {number} u
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.posBCAt = function(b, c, t, u) {
   return b * u + c * t;
@@ -146,6 +159,7 @@ ol.geom.CubicBezier.posBCAt = function(b, c, t, u) {
  * @param {number} t
  * @param {number} u
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.posCDAt = function(c, d, t, u) {
   return c * u + d * t;
@@ -159,6 +173,7 @@ ol.geom.CubicBezier.posCDAt = function(c, d, t, u) {
  * @param {number} t
  * @param {number} u
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.posABCAt = function(a, b, c, t, u) {
   return ol.geom.CubicBezier.posABAt(a, b, t, u) * u +
@@ -173,6 +188,7 @@ ol.geom.CubicBezier.posABCAt = function(a, b, c, t, u) {
  * @param {number} t
  * @param {number} u
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.posBCDAt = function(b, c, d, t, u) {
   return ol.geom.CubicBezier.posBCAt(b, c, t, u) * u +
@@ -187,6 +203,7 @@ ol.geom.CubicBezier.posBCDAt = function(b, c, d, t, u) {
  * @param {number} d
  * @param {number} t
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.posAt = function(a, b, c, d, t) {
   goog.asserts.assert(goog.isNumber(a));
@@ -206,6 +223,7 @@ ol.geom.CubicBezier.posAt = function(a, b, c, d, t) {
  * @param {number} c
  * @param {number} d
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.dRootN = function(a, b, c, d) {
   goog.asserts.assert(goog.isNumber(a));
@@ -221,6 +239,7 @@ ol.geom.CubicBezier.dRootN = function(a, b, c, d) {
  * @param {number} b
  * @param {number} c
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.dRootM = function(a, b, c) {
   goog.asserts.assert(goog.isNumber(a));
@@ -234,6 +253,7 @@ ol.geom.CubicBezier.dRootM = function(a, b, c) {
  * @param {number} a
  * @param {number} b
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.dRootQ = function(a, b) {
   goog.asserts.assert(goog.isNumber(a));
@@ -247,6 +267,7 @@ ol.geom.CubicBezier.dRootQ = function(a, b) {
  * @param {number} N
  * @param {number} Q
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.dRootR = function(M, N, Q) {
   goog.asserts.assert(goog.isNumber(M));
@@ -262,6 +283,7 @@ ol.geom.CubicBezier.dRootR = function(M, N, Q) {
  * @param {number} c
  * @param {number} d
  * @return {Array.<number>}
+ * @todo api
  */
 ol.geom.CubicBezier.dRoots = function(a, b, c, d) {
   goog.asserts.assert(goog.isNumber(a));
@@ -269,14 +291,14 @@ ol.geom.CubicBezier.dRoots = function(a, b, c, d) {
   goog.asserts.assert(goog.isNumber(c));
   goog.asserts.assert(goog.isNumber(d));
   var N = ol.geom.CubicBezier.dRootN(a, b, c, d);
-  if (N == 0) {
+  if (N === 0) {
     return [];
   }
   var M = ol.geom.CubicBezier.dRootM(a, b, c);
   var Q = ol.geom.CubicBezier.dRootQ(a, b);
   var R = ol.geom.CubicBezier.dRootR(M, N, Q);
   var K = -M / 3 / N;
-  if (R == 0) {
+  if (R === 0) {
     return [K];
   }else if (R < 0) {
     return [];
@@ -288,6 +310,7 @@ ol.geom.CubicBezier.dRoots = function(a, b, c, d) {
 
 /**
  * @inheritDoc
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.getSimplifiedGeometry =
     function(squaredTolarence) {
@@ -297,6 +320,7 @@ ol.geom.CubicBezier.prototype.getSimplifiedGeometry =
 
 /**
  * @inheritDoc
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.getType = function() {
   return ol.geom.GeometryType.CUBICBEZIER;
@@ -306,17 +330,18 @@ ol.geom.CubicBezier.prototype.getType = function() {
 /**
  * @param {ol.geom.RawLinearRing} coordinates Coordinates
  * @param {ol.geom.GeometryLayout=} opt_layout Layout.
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.setCoordinates =
     function(coordinates, opt_layout) {
   if (goog.isNull(coordinates)) {
-    this.setFlatCoordinates(ol.geom.GeometryLayout.XY, null);
+    this.setFlatCoordinates(ol.geom.GeometryLayout.XY, null, this.ends_);
   }else {
     this.setLayout(opt_layout, coordinates, 1);
     if (goog.isNull(this.flatCoordinates)) {
       this.flatCoordinates = [];
     }
-    this.flatCoordinates.length = ol.geom.flat.deflateCoordinates(
+    this.flatCoordinates.length = ol.geom.flat.deflate.coordinates(
         this.flatCoordinates, 0, coordinates, this.stride);
     this.dispatchChangeEvent();
   }
@@ -326,10 +351,13 @@ ol.geom.CubicBezier.prototype.setCoordinates =
 /**
  * @param {ol.geom.GeometryLayout} layout
  * @param {Array.<number>} flatCoordinates
+ * @param {Array.<number>} ends Ends.
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.setFlatCoordinates =
-    function(layout, flatCoordinates) {
+    function(layout, flatCoordinates, ends) {
   this.setFlatCoordinatesInternal(layout, flatCoordinates);
+  this.ends_ = ends;
   this.dispatchChangeEvent();
 };
 
@@ -338,6 +366,7 @@ ol.geom.CubicBezier.prototype.setFlatCoordinates =
  * @param {number} x
  * @param {number} y
  * @return {number} Closest T from given point.
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.getClosestTFromPoint = function(x, y) {
   var currentT = 0.5;
@@ -388,6 +417,7 @@ ol.geom.CubicBezier.prototype.getClosestTFromPoint = function(x, y) {
  * @param {number} y
  * @param {number} t
  * @return {number}
+ * @todo api
  */
 ol.geom.CubicBezier.prototype.getSquaredDistanceFromXYToT = function(x, y, t) {
   var xOnB = this.getXAtT_(t);
