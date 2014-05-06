@@ -1,7 +1,6 @@
 goog.require('goog.array');
 goog.require('ol.Feature');
 goog.require('ol.Map');
-goog.require('ol.RendererHint');
 goog.require('ol.View2D');
 goog.require('ol.control');
 goog.require('ol.geom.CubicBezier');
@@ -45,7 +44,6 @@ var map = new ol.Map({
   controls: ol.control.defaults({
     attribution: false
   }),
-  renderer: ol.RendererHint.CANVAS,
   target: 'map',
   view: new ol.View2D({
     center: [0, 0],
@@ -75,7 +73,6 @@ var displaySnap = function(coordinate) {
       line.setCoordinates(lineParams);
     }
   }
-  map.requestRenderFrame();
 };
 
 $(map.getViewport()).on('mousemove', function(evt) {
@@ -94,15 +91,4 @@ var imageStyle = new ol.style.Circle({
 var strokeStyle = new ol.style.Stroke({
   color: 'rgba(255,0,0,0.9)',
   width: 1
-});
-map.on('postcompose', function(evt) {
-  var render = evt.render;
-  if (point !== null) {
-    render.setImageStyle(imageStyle);
-    render.drawPointGeometry(point);
-  }
-  if (line !== null) {
-    render.setFillStrokeStyle(null, strokeStyle);
-    render.drawLineStringGeometry(line);
-  }
 });
