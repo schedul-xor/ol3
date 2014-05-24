@@ -999,8 +999,8 @@ ol.render.canvas.LineStringReplay.prototype.drawFlatCoordinates_ =
  * @private
  * @return {number} end.
  */
-ol.render.canvas.LineStringReplay.prototype.
-    drawFlatCoordinatesForCubicBezier_ = function(flatCoordinates, offset, end, stride) {
+ol.render.canvas.LineStringReplay.prototype.drawFlatCoordinatesForCubicBezier_ =
+  function(flatCoordinates, offset, end, stride) {
   var myBegin = this.coordinates.length;
   var myEnd = this.appendFlatCoordinates(
       flatCoordinates, offset, end, stride, false);
