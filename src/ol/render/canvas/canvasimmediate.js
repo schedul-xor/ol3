@@ -371,11 +371,14 @@ ol.render.canvas.Immediate.prototype.moveToLineTo_ =
 /**
  * @private
  * @param {Array.<number>} pixelCoordinates Pixel coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {boolean} close Close.
  */
-ol.render.canvas.Immediate.prototype.cubicBezierTo_ =
-    function(pixelCoordinates) {
+ol.render.canvas.Immediate.prototype.moveToCubicBezierTo_ =
+    function(pixelCoordinates, offset, end, close) {
   var context = this.context_;
-  var d = 0;
+  var d = offset;
   context.moveTo(pixelCoordinates[d], pixelCoordinates[d + 1]);
   context.bezierCurveTo(pixelCoordinates[d + 2], pixelCoordinates[d + 3],
       pixelCoordinates[d + 4], pixelCoordinates[d + 5],
@@ -604,12 +607,16 @@ ol.render.canvas.Immediate.prototype.drawCubicBezierGeometry =
   if (!ol.extent.intersects(this.extent_, geometryExtent)) {
     return;
   }
-  var context = this.context_;
-  var pixelCoordinates = ol.geom.transformSimpleGeometry2D(
-      cubicBezierGeometry, this.transform_, this.pixelCoordinates_);
-  context.beginPath();
-  this.cubicBezierTo_(pixelCoordinates);
-  context.stroke();
+  if (!goog.isNull(this.strokeState_)) {
+    this.setContextStrokeState_(this.strokeState_);
+    var pixelCoordinates = ol.geom.transformSimpleGeometry2D(
+        cubicBezierGeometry, this.transform_, this.pixelCoordinates_);
+    var context = this.context_;
+    context.beginPath();
+    this.moveToCubicBezierTo_(pixelCoordinates, 0, pixelCoordinates.length,
+        false);
+    context.stroke();
+  }
 };
 
 
