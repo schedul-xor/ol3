@@ -146,9 +146,28 @@ ol.render.canvas.Replay = function(tolerance, maxExtent, resolution) {
  * @protected
  * @return {number} My end.
  */
+ol.render.canvas.Replay.prototype.appendFlatCoordinatesForCubicBezier =
+    function(flatCoordinates, offset, end, stride, close) {
+  var myEnd = this.coordinates.length;
+
+  for (var i = 0; i < 8; i++) {
+    this.coordinates[myEnd++] = flatCoordinates[offset + i];
+  }
+  return myEnd;
+};
+
+
+/**
+ * @param {Array.<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {number} stride Stride.
+ * @param {boolean} close Close.
+ * @protected
+ * @return {number} My end.
+ */
 ol.render.canvas.Replay.prototype.appendFlatCoordinates =
     function(flatCoordinates, offset, end, stride, close) {
-
   var myEnd = this.coordinates.length;
   var extent = this.getBufferedMaxExtent();
   var lastCoord = [flatCoordinates[offset], flatCoordinates[offset + 1]];
@@ -1002,8 +1021,8 @@ ol.render.canvas.LineStringReplay.prototype.drawFlatCoordinates_ =
 ol.render.canvas.LineStringReplay.prototype.drawFlatCoordinatesForCubicBezier_ =
     function(flatCoordinates, offset, end, stride) {
   var myBegin = this.coordinates.length;
-  var myEnd = this.appendFlatCoordinates(
-      flatCoordinates, offset, end, stride, false);
+  var myEnd = this.appendFlatCoordinatesForCubicBezier(
+      flatCoordinates, offset, end, stride, true);
   var moveToCubicBezierToInstruction =
       [ol.render.canvas.Instruction.MOVE_TO_CUBICBEZIER_TO, myBegin, myEnd];
   this.instructions.push(moveToCubicBezierToInstruction);
