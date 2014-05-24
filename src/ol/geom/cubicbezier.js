@@ -88,7 +88,7 @@ ol.geom.CubicBezier.prototype.createOrUpdateExtent_ =
       }
       var q = ol.geom.CubicBezier.posAt(q0, q1, q2, q3, root);
       limitQs.push(q);
-    },this);
+    }, this);
     limitQs.push(q0);
     limitQs.push(q3);
 
@@ -101,7 +101,7 @@ ol.geom.CubicBezier.prototype.createOrUpdateExtent_ =
       if (limitQ < minQ) {
         minQ = limitQ;
       }
-    },this);
+    }, this);
 
     extent[dimension] = minQ;
     extent[totalDimensions + dimension] = maxQ;

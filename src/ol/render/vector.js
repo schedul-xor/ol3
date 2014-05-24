@@ -324,7 +324,7 @@ ol.renderer.vector.renderCubicBezier_ =
   }
   goog.asserts.assertInstanceof(geometry, ol.geom.CubicBezier);
   var replay = replayGroup.getReplay(
-      style.getZIndex(), ol.render.ReplayType.CUBIC_BEZIER);
+      style.getZIndex(), ol.render.ReplayType.LINE_STRING);
 
   replay.setFillStrokeStyle(null, strokeStyle);
   replay.drawCubicBezierGeometry(geometry, data);
