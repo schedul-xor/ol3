@@ -27,10 +27,22 @@ var styleArray = [
   })
 ];
 
+var p1 = [0, -10000000];
+var p2 = [10000000, 5000000];
+var p3 = [-19000000, 0];
+var p4 = [0, 10000000];
+var p5 = [10000000, -1000000];
+var p6 = [1000000, 5000000];
+var p7 = [-1900000, 0];
+var p8 = [-2000000, -10000000];
+var l1 = [p1, p2, p3, p4];
+var l2 = [p5, p6, p7, p8];
+
 var vectorSource = new ol.source.Vector();
-vectorSource.addFeature(new ol.Feature(new ol.geom.CubicBezier([
-  [0, -10000000], [10000000, 5000000],
-  [-19000000, 0], [0, 10000000]])));
+vectorSource.addFeature(new ol.Feature(new ol.geom.CubicBezier(l1)));
+vectorSource.addFeature(new ol.Feature(new ol.geom.CubicBezier(l2)));
+vectorSource.addFeature(new ol.Feature(new ol.geom.LineString(l1)));
+vectorSource.addFeature(new ol.Feature(new ol.geom.LineString(l2)));
 
 var vector = new ol.layer.Vector({
   styleFunction: function(feature, resolution) {

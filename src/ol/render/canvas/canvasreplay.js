@@ -40,7 +40,7 @@ ol.render.canvas.Instruction = {
   SET_STROKE_STYLE: 10,
   SET_TEXT_STYLE: 11,
   STROKE: 12,
-  CUBIC_BEZIER: 13
+  MOVE_TO_CUBICBEZIER_TO: 13
 };
 
 
@@ -406,6 +406,17 @@ ol.render.canvas.Replay.prototype.replay_ = function(
         }
         ++i;
         break;
+      case ol.render.canvas.Instruction.MOVE_TO_CUBICBEZIER_TO:
+        goog.asserts.assertNumber(instruction[1]);
+        d = /** @type {number} */ (instruction[1]);
+        goog.asserts.assert(goog.isNumber(instruction[2]));
+        dd = /** @type {number} */ (instruction[2]);
+        context.moveTo(pixelCoordinates[d], pixelCoordinates[d + 1]);
+        context.bezierCurveTo(pixelCoordinates[d + 2], pixelCoordinates[d + 3],
+            pixelCoordinates[d + 4], pixelCoordinates[d + 5],
+            pixelCoordinates[d + 6], pixelCoordinates[d + 7]);
+        ++i;
+        break;
       case ol.render.canvas.Instruction.SET_FILL_STYLE:
         goog.asserts.assert(goog.isString(instruction[1]));
         context.fillStyle = /** @type {string} */ (instruction[1]);
@@ -439,21 +450,6 @@ ol.render.canvas.Replay.prototype.replay_ = function(
         break;
       case ol.render.canvas.Instruction.STROKE:
         context.stroke();
-        ++i;
-        break;
-      case ol.render.canvas.Instruction.CUBIC_BEZIER:
-        goog.asserts.assertNumber(instruction[1]);
-        goog.asserts.assertNumber(instruction[2]);
-        goog.asserts.assertNumber(instruction[3]);
-        goog.asserts.assertNumber(instruction[4]);
-        goog.asserts.assertNumber(instruction[5]);
-        goog.asserts.assertNumber(instruction[6]);
-        goog.asserts.assertNumber(instruction[7]);
-        goog.asserts.assertNumber(instruction[8]);
-        context.moveTo(pixelCoordinates[d], pixelCoordinates[d + 1]);
-        context.bezierCurveTo(pixelCoordinates[d + 2], pixelCoordinates[d + 3],
-            pixelCoordinates[d + 4], pixelCoordinates[d + 5],
-            pixelCoordinates[d + 6], pixelCoordinates[d + 7]);
         ++i;
         break;
       default:
@@ -996,6 +992,27 @@ ol.render.canvas.LineStringReplay.prototype.drawFlatCoordinates_ =
 
 
 /**
+ * @param {Array.<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {number} stride Stride.
+ * @private
+ * @return {number} end.
+ */
+ol.render.canvas.LineStringReplay.prototype.
+    drawFlatCoordinatesForCubicBezier_ = function(flatCoordinates, offset, end, stride) {
+  var myBegin = this.coordinates.length;
+  var myEnd = this.appendFlatCoordinates(
+      flatCoordinates, offset, end, stride, false);
+  var moveToCubicBezierToInstruction =
+      [ol.render.canvas.Instruction.MOVE_TO_CUBICBEZIER_TO, myBegin, myEnd];
+  this.instructions.push(moveToCubicBezierToInstruction);
+  this.hitDetectionInstructions.push(moveToCubicBezierToInstruction);
+  return end;
+};
+
+
+/**
  * @inheritDoc
  */
 ol.render.canvas.LineStringReplay.prototype.getBufferedMaxExtent = function() {
@@ -1110,6 +1127,35 @@ ol.render.canvas.LineStringReplay.prototype.drawMultiLineStringGeometry =
   }
   this.hitDetectionInstructions.push([ol.render.canvas.Instruction.STROKE]);
   this.endGeometry(multiLineStringGeometry, data);
+};
+
+
+/**
+ * @inheritDoc
+ */
+ol.render.canvas.LineStringReplay.prototype.drawCubicBezierGeometry =
+    function(cubicBezierGeometry, data) {
+  var state = this.state_;
+  goog.asserts.assert(!goog.isNull(state));
+  var strokeStyle = state.strokeStyle;
+  var lineWidth = state.lineWidth;
+  if (!goog.isDef(strokeStyle) || !goog.isDef(lineWidth)) {
+    return;
+  }
+  ol.extent.extend(this.extent_, cubicBezierGeometry.getExtent());
+  this.setStrokeStyle_();
+  this.beginGeometry(cubicBezierGeometry, data);
+  this.hitDetectionInstructions.push(
+      [ol.render.canvas.Instruction.SET_STROKE_STYLE,
+       state.strokeStyle, state.lineWidth, state.lineCap, state.lineJoin,
+       state.miterLimit, state.lineDash],
+      [ol.render.canvas.Instruction.BEGIN_PATH]);
+  var flatCoordinates = cubicBezierGeometry.getFlatCoordinates();
+  var stride = cubicBezierGeometry.getStride();
+  this.drawFlatCoordinatesForCubicBezier_(flatCoordinates, 0,
+      flatCoordinates.length, stride);
+  this.hitDetectionInstructions.push([ol.render.canvas.Instruction.STROKE]);
+  this.endGeometry(cubicBezierGeometry, data);
 };
 
 
@@ -1516,84 +1562,6 @@ ol.render.canvas.PolygonReplay.prototype.setFillStrokeStyles_ = function() {
  * @protected
  * @struct
  */
-ol.render.canvas.CubicBezierReplay =
-    function(tolerance, maxExtent, resolution) {
-  goog.base(this, tolerance, maxExtent, resolution);
-
-  /**
-   * @private
-   * @type {{currentStrokeStyle: (string|undefined),
-   *         currentLineCap: (string|undefined),
-   *         currentLineDash: Array.<number>,
-   *         currentLineJoin: (string|undefined),
-   *         currentLineWidth: (number|undefined),
-   *         currentMiterLimit: (number|undefined),
-   *         lastStroke: number,
-   *         strokeStyle: (string|undefined),
-   *         lineCap: (string|undefined),
-   *         lineDash: Array.<number>,
-   *         lineJoin: (string|undefined),
-   *         lineWidth: (number|undefined),
-   *         miterLimit: (number|undefined)}|null}
-   */
-  this.state_ = {
-    currentStrokeStyle: undefined,
-    currentLineCap: undefined,
-    currentLineDash: null,
-    currentLineJoin: undefined,
-    currentLineWidth: undefined,
-    currentMiterLimit: undefined,
-    lastStroke: 0,
-    strokeStyle: undefined,
-    lineCap: undefined,
-    lineDash: null,
-    lineJoin: undefined,
-    lineWidth: undefined,
-    miterLimit: undefined
-  };
-};
-goog.inherits(ol.render.canvas.CubicBezierReplay, ol.render.canvas.Replay);
-
-
-/**
- * @inheritDoc
- */
-ol.render.canvas.CubicBezierReplay.prototype.setFillStrokeStyle =
-    function(fillStyle, strokeStyle) {
-  goog.asserts.assert(!goog.isNull(this.state_));
-  goog.asserts.assert(goog.isNull(fillStyle));
-  goog.asserts.assert(!goog.isNull(strokeStyle));
-  var strokeStyleColor = strokeStyle.getColor();
-  this.state_.strokeStyle = ol.color.asString(!goog.isNull(strokeStyleColor) ?
-      strokeStyleColor : ol.render.canvas.defaultStrokeStyle);
-  var strokeStyleLineCap = strokeStyle.getLineCap();
-  this.state_.lineCap = goog.isDef(strokeStyleLineCap) ?
-      strokeStyleLineCap : ol.render.canvas.defaultLineCap;
-  var strokeStyleLineDash = strokeStyle.getLineDash();
-  this.state_.lineDash = !goog.isNull(strokeStyleLineDash) ?
-      strokeStyleLineDash : ol.render.canvas.defaultLineDash;
-  var strokeStyleLineJoin = strokeStyle.getLineJoin();
-  this.state_.lineJoin = goog.isDef(strokeStyleLineJoin) ?
-      strokeStyleLineJoin : ol.render.canvas.defaultLineJoin;
-  var strokeStyleWidth = strokeStyle.getWidth();
-  this.state_.lineWidth = goog.isDef(strokeStyleWidth) ?
-      strokeStyleWidth : ol.render.canvas.defaultLineWidth;
-  var strokeStyleMiterLimit = strokeStyle.getMiterLimit();
-  this.state_.miterLimit = goog.isDef(strokeStyleMiterLimit) ?
-      strokeStyleMiterLimit : ol.render.canvas.defaultMiterLimit;
-};
-
-
-
-/**
- * @constructor
- * @extends {ol.render.canvas.Replay}
- * @param {number} tolerance Tolerance.
- * @param {ol.Extent} maxExtent Maximum extent.
- * @param {number} resolution Resolution.
- * @protected
- * @struct
- */
 ol.render.canvas.TextReplay = function(tolerance, maxExtent, resolution) {
 
   goog.base(this, tolerance, maxExtent, resolution);
@@ -1730,76 +1698,6 @@ ol.render.canvas.TextReplay.prototype.setReplayFillState_ =
 
 
 /**
- * @inheritDoc
- */
-ol.render.canvas.CubicBezierReplay.prototype.drawCubicBezierGeometry =
-    function(cubicBezierGeometry, data) {
-  var state = this.state_;
-  goog.asserts.assert(!goog.isNull(state));
-  var strokeStyle = state.strokeStyle;
-  var lineWidth = state.lineWidth;
-  if (!goog.isDef(strokeStyle) || !goog.isDef(lineWidth)) {
-    return;
-  }
-  ol.extent.extend(this.extent_, cubicBezierGeometry.getExtent());
-  this.setStrokeStyle_();
-  this.beginGeometry(cubicBezierGeometry, data);
-  this.hitDetectionInstructions.push(
-      [ol.render.canvas.Instruction.SET_STROKE_STYLE,
-       state.strokeStyle, state.lineWidth, state.lineCap, state.lineJoin,
-       state.miterLimit, state.lineDash]);
-  var flatCoordinates = cubicBezierGeometry.getFlatCoordinates();
-  var stride = cubicBezierGeometry.getStride();
-  this.drawFlatCoordinates_(
-      flatCoordinates, 0, flatCoordinates.length, stride);
-  this.endGeometry(cubicBezierGeometry, data);
-  if (goog.isDef(state.strokeStyle)) {
-    goog.asserts.assert(goog.isDef(state.lineWidth));
-    var strokeInstruction = [ol.render.canvas.Instruction.STROKE];
-    this.instructions.push(strokeInstruction);
-    this.hitDetectionInstructions.push(strokeInstruction);
-  }
-};
-
-
-/**
- * @param {Array.<number>} flatCoordinates Flat coordinates.
- * @param {number} offset Offset.
- * @param {number} end End.
- * @param {number} stride Stride.
- * @private
- * @return {number} end.
- */
-ol.render.canvas.CubicBezierReplay.prototype.drawFlatCoordinates_ =
-    function(flatCoordinates, offset, end, stride) {
-  var cubicBezierInstruction =
-      [ol.render.canvas.Instruction.CUBIC_BEZIER];
-  for (var i = 0; i < 8; i++) {
-    cubicBezierInstruction.push(flatCoordinates[i]);
-  }
-  this.appendFlatCoordinates(
-      flatCoordinates, 0, flatCoordinates.length, stride, false);
-  this.instructions.push(cubicBezierInstruction);
-  //  this.hitDetectionInstructions.push(cubicBezierInstruction);
-  return end;
-};
-
-
-/**
- * @inheritDoc
- */
-ol.render.canvas.CubicBezierReplay.prototype.finish = function() {
-  var state = this.state_;
-  goog.asserts.assert(!goog.isNull(state));
-  if (state.lastStroke != this.coordinates.length) {
-    this.instructions.push([ol.render.canvas.Instruction.STROKE]);
-  }
-  this.reverseHitDetectionInstructions_();
-  this.state_ = null;
-};
-
-
-/**
  * @param {ol.render.canvas.StrokeState} strokeState Stroke state.
  * @private
  */
@@ -1838,48 +1736,6 @@ ol.render.canvas.TextReplay.prototype.setReplayStrokeState_ =
     replayStrokeState.lineWidth = strokeState.lineWidth;
     replayStrokeState.miterLimit = strokeState.miterLimit;
     replayStrokeState.strokeStyle = strokeState.strokeStyle;
-  }
-};
-
-
-/**
- * @private
- */
-ol.render.canvas.CubicBezierReplay.prototype.setStrokeStyle_ = function() {
-  var state = this.state_;
-  var strokeStyle = state.strokeStyle;
-  var lineCap = state.lineCap;
-  var lineDash = state.lineDash;
-  var lineJoin = state.lineJoin;
-  var lineWidth = state.lineWidth;
-  var miterLimit = state.miterLimit;
-  goog.asserts.assert(goog.isDef(strokeStyle));
-  goog.asserts.assert(goog.isDef(lineCap));
-  goog.asserts.assert(!goog.isNull(lineDash));
-  goog.asserts.assert(goog.isDef(lineJoin));
-  goog.asserts.assert(goog.isDef(lineWidth));
-  goog.asserts.assert(goog.isDef(miterLimit));
-  if (state.currentStrokeStyle != strokeStyle ||
-      state.currentLineCap != lineCap ||
-      state.currentLineDash != lineDash ||
-      state.currentLineJoin != lineJoin ||
-      state.currentLineWidth != lineWidth ||
-      state.currentMiterLimit != miterLimit) {
-    if (state.lastStroke != this.coordinates.length) {
-      this.instructions.push(
-          [ol.render.canvas.Instruction.STROKE]);
-      state.lastStroke = this.coordinates.length;
-    }
-    this.instructions.push(
-        [ol.render.canvas.Instruction.SET_STROKE_STYLE,
-         strokeStyle, lineWidth, lineCap, lineJoin, miterLimit, lineDash],
-        [ol.render.canvas.Instruction.BEGIN_PATH]);
-    state.currentStrokeStyle = strokeStyle;
-    state.currentLineCap = lineCap;
-    state.currentLineDash = lineDash;
-    state.currentLineJoin = lineJoin;
-    state.currentLineWidth = lineWidth;
-    state.currentMiterLimit = miterLimit;
   }
 };
 
@@ -2244,8 +2100,7 @@ ol.render.canvas.ReplayGroup.prototype.getReplay =
     replays = {};
     this.replaysByZIndex_[zIndexKey] = replays;
   }
-  var replay = replays[replayType];
-  if (!goog.isDef(replay)) {
+  var replay = replays[replayType]; if (!goog.isDef(replay)) {
     var Constructor = ol.render.canvas.BATCH_CONSTRUCTORS_[replayType];
     goog.asserts.assert(goog.isDef(Constructor));
     replay = new Constructor(this.tolerance_, this.maxExtent_,
@@ -2275,6 +2130,5 @@ ol.render.canvas.BATCH_CONSTRUCTORS_ = {
   'Image': ol.render.canvas.ImageReplay,
   'LineString': ol.render.canvas.LineStringReplay,
   'Polygon': ol.render.canvas.PolygonReplay,
-  'Text': ol.render.canvas.TextReplay,
-  'CubicBezier': ol.render.canvas.CubicBezierReplay
+  'Text': ol.render.canvas.TextReplay
 };
