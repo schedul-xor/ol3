@@ -402,7 +402,6 @@ ol.render.canvas.Immediate.prototype.moveToCubicBezierTo_ =
 
 /**
  * @param {Array.<number>} flatCoordinates Flat coordinates.
-
  * @param {number} offset Offset.
  * @param {Array.<number>} ends Ends.
  * @param {number} stride Stride.
@@ -638,6 +637,9 @@ ol.render.canvas.Immediate.prototype.drawCubicBezierGeometry =
 
 
 /**
+ * Render a MultiLineString geometry into the canvas.  Rendering is immediate
+ * and uses the current style.
+ *
  * @param {ol.geom.MultiLineString} multiLineStringGeometry
  *     MultiLineString geometry.
  * @param {Object} data Opaque data object.
