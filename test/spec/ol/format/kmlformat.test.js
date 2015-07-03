@@ -919,7 +919,7 @@ describe('ol.format.KML', function() {
         expect(g.getGeometries()).to.be.empty();
       });
 
-      it('can read heterogenous GeometryCollection geometries', function() {
+      it('can read heterogeneous GeometryCollection geometries', function() {
         var text =
             '<kml xmlns="http://earth.google.com/kml/2.2">' +
             '  <Placemark>' +
@@ -2407,7 +2407,7 @@ describe('ol.format.KML', function() {
       expect(features).to.have.length(50);
     });
 
-    it('creates features with heterogenous geometry collections', function() {
+    it('creates features with heterogeneous geometry collections', function() {
       // FIXME decide if we should instead create features with multiple geoms
       var feature = features[0];
       expect(feature).to.be.an(ol.Feature);
@@ -2485,6 +2485,45 @@ describe('ol.format.KML', function() {
           '  </Document>' +
           '</kml>';
       expect(format.readName(kml)).to.be('Document name');
+    });
+
+  });
+
+  describe('#readNetworkLinks', function() {
+    it('returns empty array if no network links found', function() {
+      var text =
+          '<kml xmlns="http://www.opengis.net/kml/2.2">' +
+          '  <Document>' +
+          '  </Document>' +
+          '</kml>';
+      var nl = format.readNetworkLinks(text);
+      expect(nl).to.have.length(0);
+    });
+
+    it('returns an array of network links', function() {
+      var text =
+          '<kml xmlns="http://www.opengis.net/kml/2.2">' +
+          '  <Document>' +
+          '    <NetworkLink>' +
+          '      <name>bar</name>' +
+          '      <Link>' +
+          '        <href>bar/bar.kml</href>' +
+          '      </Link>' +
+          '    </NetworkLink>' +
+          '  </Document>' +
+          '  <Folder>' +
+          '    <NetworkLink>' +
+          '      <Link>' +
+          '        <href>http://foo.com/foo.kml</href>' +
+          '      </Link>' +
+          '    </NetworkLink>' +
+          '  </Folder>' +
+          '</kml>';
+      var nl = format.readNetworkLinks(text);
+      expect(nl).to.have.length(2);
+      expect(nl[0].name).to.be('bar');
+      expect(nl[0].href).to.be('bar/bar.kml');
+      expect(nl[1].href).to.be('http://foo.com/foo.kml');
     });
 
   });

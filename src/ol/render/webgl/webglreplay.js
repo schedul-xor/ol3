@@ -9,6 +9,7 @@ goog.require('goog.vec.Mat4');
 goog.require('ol.color.Matrix');
 goog.require('ol.extent');
 goog.require('ol.render.IReplayGroup');
+goog.require('ol.render.IVectorContext');
 goog.require('ol.render.webgl.imagereplay.shader.Color');
 goog.require('ol.render.webgl.imagereplay.shader.Default');
 goog.require('ol.vec.Mat4');
@@ -1195,7 +1196,7 @@ ol.render.webgl.ReplayGroup.prototype.forEachFeatureAtCoordinate = function(
     // build an extent around the coordinate, so that only features that
     // intersect this extent are checked
     hitExtent = ol.extent.buffer(
-        ol.extent.boundingExtent([coordinate]),
+        ol.extent.createOrUpdateFromCoordinate(coordinate),
         resolution * this.renderBuffer_);
   }
 

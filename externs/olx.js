@@ -2519,7 +2519,8 @@ olx.interaction.PointerOptions.prototype.handleUpEvent;
  *     layers: (Array.<ol.layer.Layer>|function(ol.layer.Layer): boolean|undefined),
  *     style: (ol.style.Style|Array.<ol.style.Style>|ol.style.StyleFunction|undefined),
  *     removeCondition: (ol.events.ConditionType|undefined),
- *     toggleCondition: (ol.events.ConditionType|undefined)}}
+ *     toggleCondition: (ol.events.ConditionType|undefined),
+ *     multi: (boolean|undefined)}}
  * @api
  */
 olx.interaction.SelectOptions;
@@ -2595,6 +2596,15 @@ olx.interaction.SelectOptions.prototype.removeCondition;
  * @api
  */
 olx.interaction.SelectOptions.prototype.toggleCondition;
+
+/**
+ * A boolean that determines if the default behaviour should select only
+ * single features or all (overlapping) features at the clicked map
+ * position. Default is false i.e single select
+ * @type {boolean|undefined}
+ * @api
+ */
+olx.interaction.SelectOptions.prototype.multi;
 
 
 /**
@@ -4970,13 +4980,24 @@ olx.source.ServerVectorOptions.prototype.projection;
 
 
 /**
- * @typedef {{crossOrigin: (null|string|undefined),
+ * @typedef {{attributions: (Array.<ol.Attribution>|undefined),
+ *     crossOrigin: (null|string|undefined),
  *     tileLoadFunction: (ol.TileLoadFunctionType|undefined),
  *     url: string,
  *     wrapX: (boolean|undefined)}}
  * @api
  */
 olx.source.TileJSONOptions;
+
+
+/**
+ * Optional attributions for the source.  If provided, these will be used
+ * instead of any attribution data advertised by the server.  If not provided,
+ * any attributions advertised by the server will be used.
+ * @type {Array.<ol.Attribution>|undefined}
+ * @api stable
+ */
+olx.source.TileJSONOptions.prototype.attributions;
 
 
 /**
