@@ -8,12 +8,7 @@
     <link rel="stylesheet" href="../resources/bootstrap/css/bootstrap.min.css" type="text/css">
     <link rel="stylesheet" href="../resources/layout.css" type="text/css">
     <link rel="stylesheet" href="../resources/bootstrap/css/bootstrap-responsive.min.css" type="text/css">
-    <title>WMTS HiDPI example</title>
-    <style>
-      .map {
-        background: white;
-      }
-    </style>
+    <title>Sphere Mollweide example</title>
   </head>
   <body>
 
@@ -36,12 +31,12 @@
       <div class="row-fluid">
 
         <div class="span12">
-          <h4 id="title">WMTS HiDPI example</h4>
-          <p id="shortdesc">Example of a WMTS based HiDPI layer.</p>
+          <h4 id="title">Sphere Mollweide example</h4>
+          <p id="shortdesc">Example of a Sphere Mollweide map with a Graticule component.</p>
           <div id="docs">
-            <p>See the <a href="wmts-hidpi.js" target="_blank">wmts-hidpi.js source</a> to see how this is done.</p>
+            <p>See the <a href="sphere-mollweide.js" target="_blank">sphere-mollweide.js source</a> to see how this is done.</p>
           </div>
-          <div id="tags">hidpi, retina, wmts</div>
+          <div id="tags">graticule, Mollweide, projection, proj4js</div>
         </div>
 
       </div>
@@ -50,7 +45,8 @@
 
     <script src="jquery.min.js" type="text/javascript"></script>
     <script src="../resources/example-behaviour.js" type="text/javascript"></script>
-    <script src="loader.js?id=wmts-hidpi" type="text/javascript"></script>
+    <script src="http://cdnjs.cloudflare.com/ajax/libs/proj4js/2.2.1/proj4.js" type="text/javascript"></script>
+    <script src="loader.js?id=sphere-mollweide" type="text/javascript"></script>
 
   </body>
 </html>

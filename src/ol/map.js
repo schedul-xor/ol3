@@ -120,8 +120,8 @@ ol.MapProperty = {
 
 /**
  * @classdesc
- * The map is the core component of OpenLayers. In its minimal configuration it
- * needs a view, one or more layers, and a target container:
+ * The map is the core component of OpenLayers. For a map to render, a view,
+ * one or more layers, and a target container are needed:
  *
  *     var map = new ol.Map({
  *       view: new ol.View({
@@ -172,9 +172,9 @@ ol.Map = function(options) {
 
   /**
    * @private
-   * @type {boolean}
+   * @type {Object}
    */
-  this.ol3Logo_ = optionsInternal.ol3Logo;
+  this.logos_ = optionsInternal.logos;
 
   /**
    * @private
@@ -330,6 +330,7 @@ ol.Map = function(options) {
    * @private
    */
   this.viewportSizeMonitor_ = new goog.dom.ViewportSizeMonitor();
+  this.registerDisposable(this.viewportSizeMonitor_);
 
   goog.events.listen(this.viewportSizeMonitor_, goog.events.EventType.RESIZE,
       this.updateSize, false, this);
@@ -689,8 +690,7 @@ ol.Map.prototype.getInteractions = function() {
  * @api stable
  */
 ol.Map.prototype.getLayerGroup = function() {
-  return /** @type {ol.layer.Group} */ (
-      this.get(ol.MapProperty.LAYERGROUP));
+  return /** @type {ol.layer.Group} */ (this.get(ol.MapProperty.LAYERGROUP));
 };
 goog.exportProperty(
     ol.Map.prototype,
@@ -1210,7 +1210,7 @@ ol.Map.prototype.renderFrame_ = function(time) {
       index: this.frameIndex_++,
       layerStates: layerStates,
       layerStatesArray: layerStatesArray,
-      logos: {},
+      logos: this.logos_,
       pixelRatio: this.pixelRatio_,
       pixelToCoordinateMatrix: this.pixelToCoordinateMatrix_,
       postRenderFunctions: [],
@@ -1223,9 +1223,6 @@ ol.Map.prototype.renderFrame_ = function(time) {
       viewHints: viewHints,
       wantedTiles: {}
     });
-    if (this.ol3Logo_) {
-      frameState.logos[ol.OL3_LOGO_URL] = ol.OL3_URL;
-    }
   }
 
   var preRenderFunctions = this.preRenderFunctions_;
@@ -1357,8 +1354,7 @@ ol.Map.prototype.updateSize = function() {
   /**
    * @type {Element}
    */
-  var targetElement = goog.isDef(target) ?
-      goog.dom.getElement(target) : null;
+  var targetElement = goog.isDef(target) ? goog.dom.getElement(target) : null;
 
   if (goog.isNull(targetElement)) {
     this.setSize(undefined);
@@ -1384,7 +1380,7 @@ ol.Map.prototype.unskipFeature = function(feature) {
  *            deviceOptions: olx.DeviceOptions,
  *            interactions: ol.Collection,
  *            keyboardEventTarget: (Element|Document),
- *            ol3Logo: boolean,
+ *            logos: Object,
  *            overlays: ol.Collection,
  *            rendererConstructor:
  *                function(new: ol.renderer.Map, Element, ol.Map),
@@ -1416,7 +1412,20 @@ ol.Map.createOptionsInternal = function(options) {
    */
   var values = {};
 
-  var ol3Logo = goog.isDef(options.ol3Logo) ? options.ol3Logo : true;
+  var logos = {};
+  if (!goog.isDef(options.logo) ||
+      (goog.isBoolean(options.logo) && options.logo)) {
+    logos[ol.OL3_LOGO_URL] = ol.OL3_URL;
+  } else {
+    var logo = options.logo;
+    if (goog.isString(logo)) {
+      logos[logo] = '';
+    } else if (goog.isObject(logo)) {
+      goog.asserts.assertString(logo.href);
+      goog.asserts.assertString(logo.src);
+      logos[logo.src] = logo.href;
+    }
+  }
 
   var layerGroup = (options.layers instanceof ol.layer.Group) ?
       options.layers : new ol.layer.Group({layers: options.layers});
@@ -1514,7 +1523,7 @@ ol.Map.createOptionsInternal = function(options) {
     deviceOptions: deviceOptions,
     interactions: interactions,
     keyboardEventTarget: keyboardEventTarget,
-    ol3Logo: ol3Logo,
+    logos: logos,
     overlays: overlays,
     rendererConstructor: rendererConstructor,
     values: values
