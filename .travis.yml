@@ -3,6 +3,7 @@ before_install:
   - "npm install -g npm && npm install"
 
 before_script:
+  - "cp -r vendor/schedul-math-js/src/schedul src"
   - "rm src/ol/renderer/webgl/*shader.js"
 
 script: "./build.py ci"

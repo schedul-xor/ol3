@@ -6,13 +6,14 @@ goog.require('ol.extent');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.SimpleGeometry');
 goog.require('ol.geom.flat.deflate');
+goog.require('schedul.math.Algebra');
 
 
 
 /**
  * @constructor
  * @extends {ol.geom.SimpleGeometry}
- * @param {ol.geom.RawLinearRing} coordinates
+ * @param {Array.<ol.Coordinate>} coordinates
  * @param {ol.geom.GeometryLayout=} opt_layout Layout.
  * @api
  */
@@ -25,6 +26,9 @@ ol.geom.CubicBezier = function(coordinates, opt_layout) {
    */
   this.ends_ = [];
   this.setCoordinates(coordinates, opt_layout);
+
+  this.xPolyCache_ = null;
+  this.yPolyCache_ = null;
 };
 goog.inherits(ol.geom.CubicBezier, ol.geom.SimpleGeometry);
 
@@ -35,8 +39,9 @@ goog.inherits(ol.geom.CubicBezier, ol.geom.SimpleGeometry);
  */
 ol.geom.CubicBezier.prototype.clone = function() {
   var cubicBezier = new ol.geom.CubicBezier(null);
-  cubicBezier.setFlatCoordinates(
-      this.layout, this.flatCoordinates.slice(), this.ends_.slice());
+  cubicBezier.setFlatCoordinates(this.layout,
+      this.flatCoordinates.slice(),
+      this.ends_.slice());
   return cubicBezier;
 };
 
@@ -45,8 +50,8 @@ ol.geom.CubicBezier.prototype.clone = function() {
  * @inheritDoc
  * @api
  */
-ol.geom.CubicBezier.prototype.closestPointXY =
-    function(x, y, closestPoint, minSquaredDistance) {
+ol.geom.CubicBezier.prototype.closestPointXY = function(x,
+    y, closestPoint, minSquaredDistance) {
   var nearestT = this.getClosestTFromPoint(x, y);
   var squaredDistance = this.getSquaredDistanceFromXYToT(x, y, nearestT);
   if (minSquaredDistance < squaredDistance) {
@@ -107,8 +112,8 @@ ol.geom.CubicBezier.prototype.createOrUpdateExtent_ =
     extent[totalDimensions + dimension] = maxQ;
   }
 
-  return ol.extent.createOrUpdate(
-      extent[0], extent[1], extent[2], extent[3], opt_extent);
+  return ol.extent.createOrUpdate(extent[0], extent[1],
+      extent[2], extent[3], opt_extent);
 };
 
 
@@ -328,7 +333,7 @@ ol.geom.CubicBezier.prototype.getType = function() {
 
 
 /**
- * @param {ol.geom.RawLinearRing} coordinates Coordinates
+ * @param {Array.<ol.Coordinate>} coordinates Coordinates
  * @param {ol.geom.GeometryLayout=} opt_layout Layout.
  * @api
  */
@@ -345,6 +350,8 @@ ol.geom.CubicBezier.prototype.setCoordinates =
         this.flatCoordinates, 0, coordinates, this.stride);
     this.dispatchChangeEvent();
   }
+  this.xPolyCache_ = null;
+  this.yPolyCache_ = null;
 };
 
 
@@ -363,52 +370,97 @@ ol.geom.CubicBezier.prototype.setFlatCoordinates =
 
 
 /**
+ * @private
+ * @param {!number} dimension
+ * @param {!Array.<!number>} polyCache
+ */
+ol.geom.CubicBezier.prototype.preparePolyCache_ =
+    function(dimension, polyCache) {
+  var bernstein = [this.flatCoordinates[dimension],
+                   this.flatCoordinates[dimension + 2],
+                   this.flatCoordinates[dimension + 4],
+                   this.flatCoordinates[dimension + 6]];
+  schedul.math.Algebra.bernstein2poly(bernstein, polyCache);
+};
+
+
+/**
+ * @private
+ */
+ol.geom.CubicBezier.prototype.prepareXPolyCache_ = function() {
+  if (!goog.isNull(this.xPolyCache_)) {return;}
+  this.xPolyCache_ = [];
+  this.preparePolyCache_(0, this.xPolyCache_);
+};
+
+
+/**
+ * @private
+ */
+ol.geom.CubicBezier.prototype.prepareYPolyCache_ = function() {
+  if (!goog.isNull(this.yPolyCache_)) {return;}
+  this.yPolyCache_ = [];
+  this.preparePolyCache_(1, this.yPolyCache_);
+};
+
+
+/**
+ * Returns the closest point on bezier curve from (x,y).
+ *
+ * Points on bezier curves are parametric, so
+ *
+ * x(t) = a+bt+ct^2+dt^3
+ * y(t) = e+ft+gt^2+ht^3
+ *
+ * distance from (x,y) will be
+ *
+ * deltaX = x(t)-x = a-x+bt+ct^2+dt^3
+ * deltaY = y(t)-y = e-y+ft+gt^2+ht^3
+ * Since Math.sqrt is a monotone function, t when d(t)^2
+ * is minima should equal t when d(t) is minima.
+ *
+ * d(t) = deltaX^2+delta^Y which is a sextic. In order to find
+ * the minima in t in [0,1), We'll solve quintic d'(t)=0.
+ *
  * @param {number} x
  * @param {number} y
  * @return {number} Closest T from given point.
  * @api
  */
 ol.geom.CubicBezier.prototype.getClosestTFromPoint = function(x, y) {
-  var currentT = 0.5;
-  var currentStep = 0;
-  var deltaT = 0.25;
-  var minDeltaT = 1e-13;
-  var maxSteps = 100;
-  var lastSquaredDistance = 0;
-  while (currentStep < maxSteps) {
-    if (minDeltaT > deltaT) {
-      break;
+  this.prepareXPolyCache_();
+  this.prepareYPolyCache_();
+
+  var xpoly = goog.array.clone(this.xPolyCache_); // x(t)
+  var ypoly = goog.array.clone(this.yPolyCache_); // y(t)
+  xpoly[0] -= x;
+  ypoly[0] -= y;
+  var xsqpoly = [];
+  schedul.math.Algebra.polySquare(xpoly, xsqpoly); // deltaX
+  var ysqpoly = [];
+  schedul.math.Algebra.polySquare(ypoly, ysqpoly); // deltaY
+
+  var dpoly = [];
+  schedul.math.Algebra.polyAdd(xsqpoly, ysqpoly, dpoly); // d(t)
+  var derivdpoly = [];
+  schedul.math.Algebra.polyDerivative(dpoly, derivdpoly); // d'(t)
+
+  var roots = [];
+  schedul.math.Algebra.quinticEqRealRoots(derivdpoly, roots, 0, 1);
+  roots.push(1);
+
+  var nearestRoot = 0;
+  var nearestSquaredDistance = this.getSquaredDistanceFromXYToT(x, y, 0);
+  goog.array.forEach(roots, function(root) {
+    if (root < 0 || root > 1) {return;}
+    var squaredDistance = this.getSquaredDistanceFromXYToT(x, y, root);
+    if (squaredDistance < nearestSquaredDistance) {
+      nearestSquaredDistance = squaredDistance;
+      nearestRoot = root;
     }
+  },this);
 
-    var plusT = currentT + deltaT;
-    var plusSquaredDistance = this.getSquaredDistanceFromXYToT(x, y, plusT);
-
-    var minusT = currentT - deltaT;
-    var minusSquaredDistance = this.getSquaredDistanceFromXYToT(x, y, minusT);
-
-    if (plusSquaredDistance < minusSquaredDistance) {
-      currentT = plusT;
-      lastSquaredDistance = plusSquaredDistance;
-    }else {
-      currentT = minusT;
-      lastSquaredDistance = minusSquaredDistance;
-    }
-
-    deltaT /= 2;
-    currentStep++;
-  }
-
-  var squaredDistanceAt0 = this.getSquaredDistanceFromXYToT(x, y, 0);
-  if (lastSquaredDistance > squaredDistanceAt0) {
-    currentT = 0;
-    lastSquaredDistance = squaredDistanceAt0;
-  }
-  var squaredDistanceAt1 = this.getSquaredDistanceFromXYToT(x, y, 1);
-  if (lastSquaredDistance > squaredDistanceAt1) {
-    currentT = 1;
-  }
-
-  return currentT;
+  return nearestRoot;
 };
 
 
@@ -454,10 +506,8 @@ ol.geom.CubicBezier.prototype.getYAtT_ = function(t) {
  * @param {number} dimension
  * @return {number}
  */
-ol.geom.CubicBezier.prototype.getVAtTAndDimension_ =
-    function(t, dimension) {
-  return ol.geom.CubicBezier.posAt(
-      this.flatCoordinates[dimension],
+ol.geom.CubicBezier.prototype.getVAtTAndDimension_ = function(t, dimension) {
+  return ol.geom.CubicBezier.posAt(this.flatCoordinates[dimension],
       this.flatCoordinates[dimension + 2],
       this.flatCoordinates[dimension + 4],
       this.flatCoordinates[dimension + 6], t);

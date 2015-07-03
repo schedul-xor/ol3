@@ -1,0 +1,3 @@
+[submodule "vendor/schedul-math-js"]
+	path = vendor/schedul-math-js
+	url = git@bitbucket.org:schedulxor/schedul-math-js.git
