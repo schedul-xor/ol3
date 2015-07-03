@@ -28,6 +28,7 @@ exports.publish = function(data, opts) {
       [
         {define: {isObject: true}},
         {api: {isString: true}},
+        {'interface': {is: true}},
         function() {
           return this.meta && (/[\\\/]externs$/).test(this.meta.path);
         }
@@ -40,6 +41,7 @@ exports.publish = function(data, opts) {
   var defines = [];
   var typedefs = [];
   var externs = [];
+  var interfaces = [];
   docs.filter(function(doc) {
     var include = true;
     var constructor = doc.memberof;
@@ -103,11 +105,19 @@ exports.publish = function(data, opts) {
           if (typeof param.optional == 'boolean') {
             paramInfo.optional = param.optional;
           }
+          if (typeof param.nullable == 'boolean') {
+            paramInfo.nullable = param.nullable;
+          }
         });
         symbol.params = params;
       }
       if (doc.returns) {
-        symbol.returns = getTypes(doc.returns[0].type.names);
+        symbol.returns = {
+          types: getTypes(doc.returns[0].type.names)
+        };
+        if (typeof doc.returns[0].nullable == 'boolean') {
+          symbol.returns.nullable = doc.returns[0].nullable;
+        }
       }
       if (doc.tags) {
         doc.tags.every(function(tag) {
@@ -118,7 +128,7 @@ exports.publish = function(data, opts) {
           return true;
         });
       }
-      var target = isExterns ? externs : symbols;
+      var target = isExterns ? externs : (doc.interface ? interfaces : symbols);
       target.push(symbol);
     }
   });
@@ -128,7 +138,8 @@ exports.publish = function(data, opts) {
         symbols: symbols,
         defines: defines,
         typedefs: typedefs,
-        externs: externs
+        externs: externs,
+        interfaces: interfaces
       }, null, 2));
 
 };

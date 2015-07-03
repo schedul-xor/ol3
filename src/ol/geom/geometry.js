@@ -97,7 +97,7 @@ goog.inherits(ol.geom.Geometry, ol.Observable);
 /**
  * Make a complete copy of the geometry.
  * @function
- * @return {ol.geom.Geometry} Clone.
+ * @return {!ol.geom.Geometry} Clone.
  * @api stable
  */
 ol.geom.Geometry.prototype.clone = goog.abstractMethod;
