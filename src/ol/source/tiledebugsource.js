@@ -6,6 +6,7 @@ goog.require('ol.TileCoord');
 goog.require('ol.TileState');
 goog.require('ol.dom');
 goog.require('ol.source.Tile');
+goog.require('ol.tilecoord');
 goog.require('ol.tilegrid.TileGrid');
 
 
@@ -23,15 +24,9 @@ ol.DebugTile_ = function(tileCoord, tileGrid) {
 
   /**
    * @private
-   * @type {ol.TileCoord}
-   */
-  this.tileCoord_ = tileCoord;
-
-  /**
-   * @private
    * @type {number}
    */
-  this.tileSize_ = tileGrid.getTileSize(tileCoord.z);
+  this.tileSize_ = tileGrid.getTileSize(tileCoord[0]);
 
   /**
    * @private
@@ -62,8 +57,8 @@ ol.DebugTile_.prototype.getImage = function(opt_context) {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.font = '24px sans-serif';
-    context.fillText(
-        this.tileCoord_.toString(), tileSize / 2, tileSize / 2);
+    context.fillText(ol.tilecoord.toString(this.tileCoord),
+        tileSize / 2, tileSize / 2);
 
     this.canvasByContext_[key] = context.canvas;
     return context.canvas;
@@ -74,6 +69,13 @@ ol.DebugTile_.prototype.getImage = function(opt_context) {
 
 
 /**
+ * @classdesc
+ * A pseudo tile source, which does not fetch tiles from a server, but renders
+ * a grid outline for the tile grid/projection along with the coordinates for
+ * each tile. See examples/canvas-tiles for an example.
+ *
+ * Uses Canvas context2d, so requires Canvas support.
+ *
  * @constructor
  * @extends {ol.source.Tile}
  * @param {olx.source.TileDebugOptions} options Debug tile options.
@@ -82,7 +84,6 @@ ol.DebugTile_.prototype.getImage = function(opt_context) {
 ol.source.TileDebug = function(options) {
 
   goog.base(this, {
-    extent: options.extent,
     opaque: false,
     projection: options.projection,
     tileGrid: options.tileGrid
@@ -122,7 +123,7 @@ ol.source.TileDebug.prototype.getTile = function(z, x, y) {
   if (this.tileCache_.containsKey(tileCoordKey)) {
     return /** @type {!ol.DebugTile_} */ (this.tileCache_.get(tileCoordKey));
   } else {
-    var tile = new ol.DebugTile_(new ol.TileCoord(z, x, y), this.tileGrid);
+    var tile = new ol.DebugTile_([z, x, y], this.tileGrid);
     this.tileCache_.set(tileCoordKey, tile);
     return tile;
   }

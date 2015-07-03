@@ -42,6 +42,7 @@ ol.proj.Units = {
  * @type {Object.<ol.proj.Units, number>}
  * @api
  */
+ol.proj.METERS_PER_UNIT = {};
 ol.proj.METERS_PER_UNIT[ol.proj.Units.DEGREES] =
     2 * Math.PI * ol.sphere.NORMAL.radius / 360;
 ol.proj.METERS_PER_UNIT[ol.proj.Units.FEET] = 0.3048;
@@ -51,16 +52,14 @@ ol.proj.METERS_PER_UNIT[ol.proj.Units.METERS] = 1;
 
 /**
  * @classdesc
- * Class for coordinate transforms between coordinate systems. By default,
- * OpenLayers ships with the ability to transform coordinates between
- * geographic (EPSG:4326) and web or spherical mercator (EPSG:3857)
- * coordinate reference systems. Any transform functions can be added with
- * {@link ol.proj.addCoordinateTransforms}.
+ * Projection definition class. One of these is created for each projection
+ * supported in the application and stored in the {@link ol.proj} namespace.
+ * You can use these in applications, but this is not required, as API params
+ * and options use {@link ol.proj.ProjectionLike} which means the simple string
+ * code will suffice.
  *
- * Additional transforms may be added by using the {@link http://proj4js.org/}
- * library. If the proj4js library is loaded, transforms will work between any
- * coordinate reference systems with proj4js definitions. These definitions can
- * be obtained from {@link http://epsg.io/}.
+ * You can use {@link ol.proj.get} to retrieve the object for a particular
+ * projection.
  *
  * @constructor
  * @param {olx.ProjectionOptions} options Projection options.
@@ -86,6 +85,13 @@ ol.proj.Projection = function(options) {
    * @type {ol.Extent}
    */
   this.extent_ = goog.isDef(options.extent) ? options.extent : null;
+
+  /**
+   * @private
+   * @type {ol.Extent}
+   */
+  this.worldExtent_ = goog.isDef(options.worldExtent) ?
+      options.worldExtent : null;
 
   /**
    * @private
@@ -143,9 +149,20 @@ ol.proj.Projection.prototype.getUnits = function() {
  * Get the amount of meters per unit of this projection.  If the projection is
  * not configured with a units identifier, the return is `undefined`.
  * @return {number|undefined} Meters.
+ * @api
  */
 ol.proj.Projection.prototype.getMetersPerUnit = function() {
   return ol.proj.METERS_PER_UNIT[this.units_];
+};
+
+
+/**
+ * Get the world extent for this projection.
+ * @return {ol.Extent} Extent.
+ * @api
+ */
+ol.proj.Projection.prototype.getWorldExtent = function() {
+  return this.worldExtent_;
 };
 
 
@@ -167,6 +184,7 @@ ol.proj.Projection.prototype.getAxisOrientation = function() {
 /**
  * Is this projection a global projection which spans the whole world?
  * @return {boolean} Wether the projection is global.
+ * @api
  */
 ol.proj.Projection.prototype.isGlobal = function() {
   return this.global_;
@@ -196,6 +214,17 @@ ol.proj.Projection.prototype.setDefaultTileGrid = function(tileGrid) {
  */
 ol.proj.Projection.prototype.setExtent = function(extent) {
   this.extent_ = extent;
+};
+
+
+/**
+ * Set the world extent for this projection.
+ * @param {ol.Extent} worldExtent World extent
+ *     [minlon, minlat, maxlon, maxlat].
+ * @api
+ */
+ol.proj.Projection.prototype.setWorldExtent = function(worldExtent) {
+  this.worldExtent_ = worldExtent;
 };
 
 
@@ -368,6 +397,9 @@ ol.proj.addTransform = function(source, destination, transformFn) {
 /**
  * Registers coordinate transform functions to convert coordinates between the
  * source projection and the destination projection.
+ * The forward and inverse functions convert coordinate pairs; this function
+ * converts these into the functions used internally which also handle
+ * extents and coordinate arrays.
  *
  * @param {ol.proj.ProjectionLike} source Source projection.
  * @param {ol.proj.ProjectionLike} destination Destination projection.

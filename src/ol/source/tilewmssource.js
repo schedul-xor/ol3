@@ -14,9 +14,11 @@ goog.require('ol');
 goog.require('ol.TileCoord');
 goog.require('ol.TileUrlFunction');
 goog.require('ol.extent');
+goog.require('ol.proj');
 goog.require('ol.source.TileImage');
 goog.require('ol.source.wms');
 goog.require('ol.source.wms.ServerType');
+goog.require('ol.tilecoord');
 
 
 
@@ -40,7 +42,6 @@ ol.source.TileWMS = function(opt_options) {
   goog.base(this, {
     attributions: options.attributions,
     crossOrigin: options.crossOrigin,
-    extent: options.extent,
     logo: options.logo,
     opaque: !transparent,
     projection: options.projection,
@@ -122,7 +123,7 @@ goog.inherits(ol.source.TileWMS, ol.source.TileImage);
  * constructed.
  * @param {ol.Coordinate} coordinate Coordinate.
  * @param {number} resolution Resolution.
- * @param {ol.proj.Projection} projection Projection.
+ * @param {ol.proj.ProjectionLike} projection Projection.
  * @param {!Object} params GetFeatureInfo params. `INFO_FORMAT` at least should
  *     be provided. If `QUERY_LAYERS` is not provided then the layers specified
  *     in the `LAYERS` parameter will be used. `VERSION` should not be
@@ -140,22 +141,24 @@ ol.source.TileWMS.prototype.getGetFeatureInfoUrl =
     return undefined;
   }
 
+  var projectionObj = ol.proj.get(projection);
+
   var tileGrid = this.getTileGrid();
   if (goog.isNull(tileGrid)) {
-    tileGrid = this.getTileGridForProjection(projection);
+    tileGrid = this.getTileGridForProjection(projectionObj);
   }
 
   var tileCoord = tileGrid.getTileCoordForCoordAndResolution(
       coordinate, resolution);
 
-  if (tileGrid.getResolutions().length <= tileCoord.z) {
+  if (tileGrid.getResolutions().length <= tileCoord[0]) {
     return undefined;
   }
 
-  var tileResolution = tileGrid.getResolution(tileCoord.z);
+  var tileResolution = tileGrid.getResolution(tileCoord[0]);
   var tileExtent = tileGrid.getTileCoordExtent(
       tileCoord, this.tmpExtent_);
-  var tileSize = tileGrid.getTileSize(tileCoord.z);
+  var tileSize = tileGrid.getTileSize(tileCoord[0]);
 
   var gutter = this.gutter_;
   if (gutter !== 0) {
@@ -186,7 +189,7 @@ ol.source.TileWMS.prototype.getGetFeatureInfoUrl =
   goog.object.set(baseParams, this.v13_ ? 'J' : 'Y', y);
 
   return this.getRequestUrl_(tileCoord, tileSize, tileExtent,
-      pixelRatio, projection, baseParams);
+      pixelRatio, projectionObj, baseParams);
 };
 
 
@@ -283,7 +286,7 @@ ol.source.TileWMS.prototype.getRequestUrl_ =
   if (urls.length == 1) {
     url = urls[0];
   } else {
-    var index = goog.math.modulo(tileCoord.hash(), urls.length);
+    var index = goog.math.modulo(ol.tilecoord.hash(tileCoord), urls.length);
     url = urls[index];
   }
   return goog.uri.utils.appendParamsFromMap(url, params);
@@ -374,7 +377,7 @@ ol.source.TileWMS.prototype.tileUrlFunction_ =
     tileGrid = this.getTileGridForProjection(projection);
   }
 
-  if (tileGrid.getResolutions().length <= tileCoord.z) {
+  if (tileGrid.getResolutions().length <= tileCoord[0]) {
     return undefined;
   }
 
@@ -382,22 +385,16 @@ ol.source.TileWMS.prototype.tileUrlFunction_ =
     pixelRatio = 1;
   }
 
-  var tileResolution = tileGrid.getResolution(tileCoord.z);
+  var tileResolution = tileGrid.getResolution(tileCoord[0]);
   var tileExtent = tileGrid.getTileCoordExtent(
       tileCoord, this.tmpExtent_);
-  var tileSize = tileGrid.getTileSize(tileCoord.z);
+  var tileSize = tileGrid.getTileSize(tileCoord[0]);
 
   var gutter = this.gutter_;
   if (gutter !== 0) {
     tileSize += 2 * gutter;
     tileExtent = ol.extent.buffer(tileExtent,
         tileResolution * gutter, tileExtent);
-  }
-
-  var extent = this.getExtent();
-  if (!goog.isNull(extent) && (!ol.extent.intersects(tileExtent, extent) ||
-      ol.extent.touches(tileExtent, extent))) {
-    return undefined;
   }
 
   if (pixelRatio != 1) {

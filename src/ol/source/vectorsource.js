@@ -54,10 +54,10 @@ ol.source.Vector = function(opt_options) {
 
   goog.base(this, {
     attributions: options.attributions,
-    extent: options.extent,
     logo: options.logo,
     projection: options.projection,
-    state: options.state
+    state: goog.isDef(options.state) ?
+        /** @type {ol.source.State} */ (options.state) : undefined
   });
 
   /**
@@ -332,6 +332,7 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
 
 
 /**
+ * Get the extent of the features currently in the source.
  * @return {ol.Extent} Extent.
  * @api
  */
@@ -483,6 +484,10 @@ ol.source.Vector.prototype.removeFromIdIndex_ = function(feature) {
 
 
 /**
+ * @classdesc
+ * Events emitted by {@link ol.source.Vector} instances are instances of this
+ * type.
+ *
  * @constructor
  * @extends {goog.events.Event}
  * @implements {oli.source.VectorEvent}

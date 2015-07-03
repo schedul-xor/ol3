@@ -3,13 +3,12 @@
 goog.provide('ol.Geolocation');
 goog.provide('ol.GeolocationProperty');
 
-goog.require('goog.asserts');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 goog.require('goog.math');
-goog.require('ol.BrowserFeature');
 goog.require('ol.Coordinate');
 goog.require('ol.Object');
+goog.require('ol.browserfeature');
 goog.require('ol.geom.Geometry');
 goog.require('ol.geom.Polygon');
 goog.require('ol.proj');
@@ -42,9 +41,10 @@ ol.GeolocationProperty = {
  *
  * Example:
  *
- *     var geolocation = new ol.Geolocation();
- *     // take the projection to use from the map's view
- *     geolocation.bindTo('projection', map.getView());
+ *     var geolocation = new ol.Geolocation({
+ *       // take the projection to use from the map's view
+ *       projection: view.getprojection()
+ *     });
  *     // listen to changes in position
  *     geolocation.on('change', function(evt) {
  *       window.console.log(geolocation.getPosition());
@@ -130,7 +130,7 @@ ol.Geolocation.prototype.handleProjectionChanged_ = function() {
  * @private
  */
 ol.Geolocation.prototype.handleTrackingChanged_ = function() {
-  if (ol.BrowserFeature.HAS_GEOLOCATION) {
+  if (ol.browserfeature.HAS_GEOLOCATION) {
     var tracking = this.getTracking();
     if (tracking && !goog.isDef(this.watchId_)) {
       this.watchId_ = goog.global.navigator.geolocation.watchPosition(

@@ -7,7 +7,6 @@ goog.require('ol.control.Zoom');
 
 
 /**
- * @classdesc
  * Set of controls included in maps by default. Unless configured otherwise,
  * this returns a collection containing an instance of each of the following
  * controls:
@@ -16,7 +15,7 @@ goog.require('ol.control.Zoom');
  * * {@link ol.control.Attribution}
  *
  * @param {olx.control.DefaultsOptions=} opt_options Defaults options.
- * @return {ol.Collection} Controls.
+ * @return {ol.Collection.<ol.control.Control>} Controls.
  * @api
  */
 ol.control.defaults = function(opt_options) {

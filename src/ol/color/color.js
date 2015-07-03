@@ -18,6 +18,7 @@ goog.require('ol');
  * red, green, and blue should be integers in the range 0..255 inclusive.
  * alpha should be a float in the range 0..1 inclusive.
  * @typedef {Array.<number>}
+ * @api
  */
 ol.Color;
 
@@ -109,7 +110,7 @@ ol.color.asArray = function(color) {
 
 /**
  * @param {ol.Color|string} color Color.
- * @return {string} String.
+ * @return {string} Rgba string.
  * @api
  */
 ol.color.asString = function(color) {

@@ -20,6 +20,10 @@ goog.require('ol.pointer.PointerEventHandler');
 
 
 /**
+ * @classdesc
+ * Events emitted as map browser events are instances of this type.
+ * See {@link ol.Map} for which events trigger a map browser event.
+ *
  * @constructor
  * @extends {ol.MapEvent}
  * @implements {oli.MapBrowserEvent}
@@ -46,16 +50,16 @@ ol.MapBrowserEvent = function(type, map, browserEvent, opt_frameState) {
   this.originalEvent = browserEvent.getBrowserEvent();
 
   /**
-   * @type {ol.Coordinate}
-   * @api
-   */
-  this.coordinate = map.getEventCoordinate(this.originalEvent);
-
-  /**
    * @type {ol.Pixel}
    * @api
    */
   this.pixel = map.getEventPixel(this.originalEvent);
+
+  /**
+   * @type {ol.Coordinate}
+   * @api
+   */
+  this.coordinate = map.getCoordinateFromPixel(this.pixel);
 
 };
 goog.inherits(ol.MapBrowserEvent, ol.MapEvent);
