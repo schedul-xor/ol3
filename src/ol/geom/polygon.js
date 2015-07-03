@@ -14,6 +14,7 @@ goog.require('ol.geom.flat.contains');
 goog.require('ol.geom.flat.deflate');
 goog.require('ol.geom.flat.inflate');
 goog.require('ol.geom.flat.interiorpoint');
+goog.require('ol.geom.flat.intersectsextent');
 goog.require('ol.geom.flat.orient');
 goog.require('ol.geom.flat.simplify');
 
@@ -94,7 +95,7 @@ ol.geom.Polygon.prototype.appendLinearRing = function(linearRing) {
     ol.array.safeExtend(this.flatCoordinates, linearRing.getFlatCoordinates());
   }
   this.ends_.push(this.flatCoordinates.length);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -193,6 +194,23 @@ ol.geom.Polygon.prototype.getInteriorPoint = function() {
 
 
 /**
+ * Return the number of rings of the polygon,  this includes the exterior
+ * ring and any interior rings.
+ *
+ * @return {number} Number of rings.
+ * @api
+ */
+ol.geom.Polygon.prototype.getLinearRingCount = function() {
+  return this.ends_.length;
+};
+
+
+/**
+ * Return the Nth linear ring of the polygon geometry. Return `null` if the
+ * given index is out of range.
+ * The exterior linear ring is available at index `0` and the interior rings
+ * at index `1` and beyond.
+ *
  * @param {number} index Index.
  * @return {ol.geom.LinearRing} Linear ring.
  * @api stable
@@ -280,6 +298,16 @@ ol.geom.Polygon.prototype.getType = function() {
 
 
 /**
+ * @inheritDoc
+ * @api
+ */
+ol.geom.Polygon.prototype.intersectsExtent = function(extent) {
+  return ol.geom.flat.intersectsextent.linearRings(
+      this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, extent);
+};
+
+
+/**
  * @param {Array.<Array.<ol.Coordinate>>} coordinates Coordinates.
  * @param {ol.geom.GeometryLayout=} opt_layout Layout.
  * @api stable
@@ -295,7 +323,7 @@ ol.geom.Polygon.prototype.setCoordinates = function(coordinates, opt_layout) {
     var ends = ol.geom.flat.deflate.coordinatess(
         this.flatCoordinates, 0, coordinates, this.stride, this.ends_);
     this.flatCoordinates.length = ends.length === 0 ? 0 : ends[ends.length - 1];
-    this.dispatchChangeEvent();
+    this.changed();
   }
 };
 
@@ -316,7 +344,7 @@ ol.geom.Polygon.prototype.setFlatCoordinates =
   }
   this.setFlatCoordinatesInternal(layout, flatCoordinates);
   this.ends_ = ends;
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 

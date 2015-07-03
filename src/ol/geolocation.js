@@ -173,7 +173,7 @@ ol.Geolocation.prototype.positionChange_ = function(position) {
       ol.sphere.WGS84, this.position_, coords.accuracy);
   geometry.applyTransform(this.transform_);
   this.set(ol.GeolocationProperty.ACCURACY_GEOMETRY, geometry);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -183,6 +183,7 @@ ol.Geolocation.prototype.positionChange_ = function(position) {
  */
 ol.Geolocation.prototype.positionError_ = function(error) {
   error.type = goog.events.EventType.ERROR;
+  this.setTracking(false);
   this.dispatchEvent(error);
 };
 

@@ -66,7 +66,7 @@ goog.require('ol.vec.Mat4');
  * @const
  * @type {string}
  */
-ol.OL3_URL = 'http://ol3js.org/';
+ol.OL3_URL = 'http://openlayers.org/';
 
 
 /**
@@ -265,8 +265,7 @@ ol.Map = function(options) {
     goog.events.EventType.TOUCHSTART,
     goog.events.EventType.MSPOINTERDOWN,
     ol.MapBrowserEvent.EventType.POINTERDOWN,
-    // see https://github.com/google/closure-library/pull/308
-    goog.userAgent.GECKO ? 'DOMMouseScroll' : 'mousewheel'
+    goog.events.EventType.MOUSEWHEEL
   ], goog.events.Event.stopPropagation);
   goog.dom.appendChild(this.viewport_, this.overlayContainerStopEvent_);
 
@@ -495,7 +494,6 @@ ol.Map.prototype.addInteraction = function(interaction) {
  */
 ol.Map.prototype.addLayer = function(layer) {
   var layers = this.getLayerGroup().getLayers();
-  goog.asserts.assert(goog.isDef(layers));
   layers.push(layer);
 };
 
@@ -703,16 +701,12 @@ goog.exportProperty(
 
 /**
  * Get the collection of layers associated with this map.
- * @return {ol.Collection.<ol.layer.Base>|undefined} Layers.
+ * @return {!ol.Collection.<ol.layer.Base>} Layers.
  * @api stable
  */
 ol.Map.prototype.getLayers = function() {
-  var layerGroup = this.getLayerGroup();
-  if (goog.isDef(layerGroup)) {
-    return layerGroup.getLayers();
-  } else {
-    return undefined;
-  }
+  var layers = this.getLayerGroup().getLayers();
+  return layers;
 };
 
 
@@ -759,7 +753,7 @@ goog.exportProperty(
 /**
  * Get the view associated with this map. A view manages properties such as
  * center and resolution.
- * @return {ol.View|undefined} The view that controls this map.
+ * @return {ol.View} The view that controls this map.
  * @observable
  * @api stable
  */
@@ -994,7 +988,7 @@ ol.Map.prototype.handleViewChanged_ = function() {
     this.viewPropertyListenerKey_ = null;
   }
   var view = this.getView();
-  if (goog.isDefAndNotNull(view)) {
+  if (!goog.isNull(view)) {
     this.viewPropertyListenerKey_ = goog.events.listen(
         view, ol.ObjectEventType.PROPERTYCHANGE,
         this.handleViewPropertyChanged_, false, this);
@@ -1067,7 +1061,7 @@ ol.Map.prototype.isDef = function() {
     return false;
   }
   var view = this.getView();
-  if (!goog.isDef(view) || !view.isDef()) {
+  if (goog.isNull(view) || !view.isDef()) {
     return false;
   }
   return true;
@@ -1147,7 +1141,6 @@ ol.Map.prototype.removeInteraction = function(interaction) {
  */
 ol.Map.prototype.removeLayer = function(layer) {
   var layers = this.getLayerGroup().getLayers();
-  goog.asserts.assert(goog.isDef(layers));
   return layers.remove(layer);
 };
 
@@ -1196,7 +1189,7 @@ ol.Map.prototype.renderFrame_ = function(time) {
   /** @type {?olx.FrameState} */
   var frameState = null;
   if (goog.isDef(size) && hasArea(size) &&
-      goog.isDef(view) && view.isDef()) {
+      !goog.isNull(view) && view.isDef()) {
     var viewHints = view.getHints();
     var layerStatesArray = this.getLayerGroup().getLayerStatesArray();
     var layerStates = {};
@@ -1228,17 +1221,17 @@ ol.Map.prototype.renderFrame_ = function(time) {
     });
   }
 
-  var preRenderFunctions = this.preRenderFunctions_;
-  var n = 0, preRenderFunction;
-  for (i = 0, ii = preRenderFunctions.length; i < ii; ++i) {
-    preRenderFunction = preRenderFunctions[i];
-    if (preRenderFunction(this, frameState)) {
-      preRenderFunctions[n++] = preRenderFunction;
-    }
-  }
-  preRenderFunctions.length = n;
-
   if (!goog.isNull(frameState)) {
+    var preRenderFunctions = this.preRenderFunctions_;
+    var n = 0, preRenderFunction;
+    for (i = 0, ii = preRenderFunctions.length; i < ii; ++i) {
+      preRenderFunction = preRenderFunctions[i];
+      if (preRenderFunction(this, frameState)) {
+        preRenderFunctions[n++] = preRenderFunction;
+      }
+    }
+    preRenderFunctions.length = n;
+
     frameState.extent = ol.extent.getForViewAndSize(viewState.center,
         viewState.resolution, viewState.rotation, frameState.size);
   }

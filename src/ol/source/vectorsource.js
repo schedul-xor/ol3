@@ -106,7 +106,7 @@ goog.inherits(ol.source.Vector, ol.source.Source);
  */
 ol.source.Vector.prototype.addFeature = function(feature) {
   this.addFeatureInternal(feature);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -152,7 +152,7 @@ ol.source.Vector.prototype.addFeatureInternal = function(feature) {
  */
 ol.source.Vector.prototype.addFeatures = function(features) {
   this.addFeaturesInternal(features);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -181,7 +181,7 @@ ol.source.Vector.prototype.clear = function() {
       this.nullGeometryFeatures_, this.removeFeatureInternal, this);
   goog.object.clear(this.nullGeometryFeatures_);
   goog.asserts.assert(goog.object.isEmpty(this.featureChangeKeys_));
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -244,6 +244,39 @@ ol.source.Vector.prototype.forEachFeatureInExtent =
 ol.source.Vector.prototype.forEachFeatureInExtentAtResolution =
     function(extent, resolution, f, opt_this) {
   return this.forEachFeatureInExtent(extent, f, opt_this);
+};
+
+
+/**
+ * This function executes the `callback` function once for each feature
+ * intersecting the `extent` until `callback` returns a truthy value. When
+ * `callback` returns a truthy value the function immediately returns that
+ * value. Otherwise the function returns `undefined`.
+ * @param {ol.Extent} extent Extent.
+ * @param {function(this: T, ol.Feature): S} f Callback.
+ * @param {T=} opt_this The object to use as `this` in `f`.
+ * @return {S|undefined}
+ * @template T,S
+ * @api
+ */
+ol.source.Vector.prototype.forEachFeatureIntersectingExtent =
+    function(extent, f, opt_this) {
+  return this.forEachFeatureInExtent(extent,
+      /**
+       * @param {ol.Feature} feature Feature.
+       * @return {S|undefined}
+       * @template S
+       */
+      function(feature) {
+        var geometry = feature.getGeometry();
+        goog.asserts.assert(goog.isDefAndNotNull(geometry));
+        if (geometry.intersectsExtent(extent)) {
+          var result = f.call(opt_this, feature);
+          if (result) {
+            return result;
+          }
+        }
+      });
 };
 
 
@@ -403,7 +436,7 @@ ol.source.Vector.prototype.handleFeatureChange_ = function(event) {
       goog.asserts.assert(this.undefIdIndex_[featureKey] === feature);
     }
   }
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -436,7 +469,7 @@ ol.source.Vector.prototype.removeFeature = function(feature) {
     this.rBush_.remove(feature);
   }
   this.removeFeatureInternal(feature);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
