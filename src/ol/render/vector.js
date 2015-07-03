@@ -89,18 +89,11 @@ ol.renderer.vector.renderFeature = function(
   var loading = false;
   var imageStyle, imageState;
   imageStyle = style.getImage();
-  if (goog.isNull(imageStyle)) {
-    ol.renderer.vector.renderFeature_(
-        replayGroup, feature, style, squaredTolerance);
-  } else {
+  if (!goog.isNull(imageStyle)) {
     imageState = imageStyle.getImageState();
     if (imageState == ol.style.ImageState.LOADED ||
         imageState == ol.style.ImageState.ERROR) {
       imageStyle.unlistenImageChange(listener, thisArg);
-      if (imageState == ol.style.ImageState.LOADED) {
-        ol.renderer.vector.renderFeature_(
-            replayGroup, feature, style, squaredTolerance);
-      }
     } else {
       if (imageState == ol.style.ImageState.IDLE) {
         imageStyle.load();
@@ -111,6 +104,8 @@ ol.renderer.vector.renderFeature = function(
       loading = true;
     }
   }
+  ol.renderer.vector.renderFeature_(replayGroup, feature, style,
+      squaredTolerance);
   return loading;
 };
 
@@ -255,6 +250,9 @@ ol.renderer.vector.renderPointGeometry_ =
   goog.asserts.assertInstanceof(geometry, ol.geom.Point);
   var imageStyle = style.getImage();
   if (!goog.isNull(imageStyle)) {
+    if (imageStyle.getImageState() != ol.style.ImageState.LOADED) {
+      return;
+    }
     var imageReplay = replayGroup.getReplay(
         style.getZIndex(), ol.render.ReplayType.IMAGE);
     imageReplay.setImageStyle(imageStyle);
@@ -282,6 +280,9 @@ ol.renderer.vector.renderMultiPointGeometry_ =
   goog.asserts.assertInstanceof(geometry, ol.geom.MultiPoint);
   var imageStyle = style.getImage();
   if (!goog.isNull(imageStyle)) {
+    if (imageStyle.getImageState() != ol.style.ImageState.LOADED) {
+      return;
+    }
     var imageReplay = replayGroup.getReplay(
         style.getZIndex(), ol.render.ReplayType.IMAGE);
     imageReplay.setImageStyle(imageStyle);
