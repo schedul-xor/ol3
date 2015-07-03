@@ -118,10 +118,10 @@ ol.render.IVectorContext.prototype.drawText =
 
 /**
  * @param {ol.geom.CubicBezier} cubicBezierGeometry Cubic bezier geometry.
- * @param {Object} data Opaque data object.
+ * @param {ol.Feature} feature Feature.
  */
 ol.render.IVectorContext.prototype.drawCubicBezierGeometry =
-    function(cubicBezierGeometry, data) {
+    function(cubicBezierGeometry, feature) {
 };
 
 

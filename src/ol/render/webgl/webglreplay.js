@@ -457,6 +457,13 @@ ol.render.webgl.ImageReplay.prototype.drawText = goog.abstractMethod;
 
 
 /**
+ * @inheritDoc
+ */
+ol.render.webgl.ImageReplay.prototype.drawCubicBezierGeometry =
+    goog.abstractMethod;
+
+
+/**
  * @param {ol.webgl.Context} context Context.
  */
 ol.render.webgl.ImageReplay.prototype.finish = function(context) {

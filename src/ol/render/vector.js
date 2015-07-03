@@ -334,10 +334,10 @@ ol.renderer.vector.renderPolygonGeometry_ =
  * @param {ol.render.IReplayGroup} replayGroup Replay group.
  * @param {ol.geom.Geometry} geometry Geometry.
  * @param {ol.style.Style} style Style.
- * @param {Object} data Opaque data object.
+ * @param {ol.Feature} feature Feature.
  */
 ol.renderer.vector.renderCubicBezier_ =
-    function(replayGroup, geometry, style, data) {
+    function(replayGroup, geometry, style, feature) {
   var strokeStyle = style.getStroke();
   if (goog.isNull(strokeStyle)) {
     return;
@@ -347,7 +347,7 @@ ol.renderer.vector.renderCubicBezier_ =
       style.getZIndex(), ol.render.ReplayType.LINE_STRING);
 
   replay.setFillStrokeStyle(null, strokeStyle);
-  replay.drawCubicBezierGeometry(geometry, data);
+  replay.drawCubicBezierGeometry(geometry, feature);
 };
 
 

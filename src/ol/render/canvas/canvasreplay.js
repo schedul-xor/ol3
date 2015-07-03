@@ -1138,7 +1138,7 @@ ol.render.canvas.LineStringReplay.prototype.drawMultiLineStringGeometry =
  * @inheritDoc
  */
 ol.render.canvas.LineStringReplay.prototype.drawCubicBezierGeometry =
-    function(cubicBezierGeometry, data) {
+    function(cubicBezierGeometry, feature) {
   var state = this.state_;
   goog.asserts.assert(!goog.isNull(state));
   var strokeStyle = state.strokeStyle;
@@ -1146,9 +1146,8 @@ ol.render.canvas.LineStringReplay.prototype.drawCubicBezierGeometry =
   if (!goog.isDef(strokeStyle) || !goog.isDef(lineWidth)) {
     return;
   }
-  ol.extent.extend(this.extent_, cubicBezierGeometry.getExtent());
   this.setStrokeStyle_();
-  this.beginGeometry(cubicBezierGeometry, data);
+  this.beginGeometry(cubicBezierGeometry, feature);
   this.hitDetectionInstructions.push(
       [ol.render.canvas.Instruction.SET_STROKE_STYLE,
        state.strokeStyle, state.lineWidth, state.lineCap, state.lineJoin,
@@ -1159,7 +1158,7 @@ ol.render.canvas.LineStringReplay.prototype.drawCubicBezierGeometry =
   this.drawFlatCoordinatesForCubicBezier_(flatCoordinates, 0,
       flatCoordinates.length, stride);
   this.hitDetectionInstructions.push([ol.render.canvas.Instruction.STROKE]);
-  this.endGeometry(cubicBezierGeometry, data);
+  this.endGeometry(cubicBezierGeometry, feature);
 };
 
 

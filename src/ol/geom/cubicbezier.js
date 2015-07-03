@@ -118,21 +118,6 @@ ol.geom.CubicBezier.prototype.createOrUpdateExtent_ =
 
 
 /**
- * @param {ol.Extent=} opt_extent Extent.
- * @return {Array.<number>}
- * @api
- */
-ol.geom.CubicBezier.prototype.getExtent = function(opt_extent) {
-  if (this.extentRevision != this.getRevision()) {
-    this.extent = this.createOrUpdateExtent_(this.stride, opt_extent);
-    this.extentRevision = this.getRevision();
-  }
-  goog.asserts.assert(goog.isDef(this.extent));
-  return ol.extent.returnOrUpdate(this.extent, opt_extent);
-};
-
-
-/**
  * @param {number} a
  * @param {number} b
  * @param {number} t
