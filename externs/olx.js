@@ -10,7 +10,7 @@ var olx;
 /**
  * @typedef {{html: string,
  *     tileRanges: (Object.<string, Array.<ol.TileRange>>|undefined)}}
- * @api
+ * @api stable
  */
 olx.AttributionOptions;
 
@@ -20,13 +20,6 @@ olx.AttributionOptions;
  * @type {string}
  */
 olx.AttributionOptions.prototype.html;
-
-
-/**
- * Tile ranges (FOR INTERNAL USE ONLY).
- * @type {Object.<string, Array.<ol.TileRange>>|undefined}
- */
-olx.AttributionOptions.prototype.tileRanges;
 
 
 /**
@@ -287,7 +280,7 @@ olx.MapOptions.prototype.view;
  *     positioning: (ol.OverlayPositioning|string|undefined),
  *     stopEvent: (boolean|undefined),
  *     insertFirst: (boolean|undefined)}}
- * @api
+ * @api stable
  */
 olx.OverlayOptions;
 
@@ -779,7 +772,7 @@ olx.control.AttributionOptions.prototype.collapseLabel;
 /**
  * @typedef {{element: (Element|undefined),
  *     target: (Element|string|undefined)}}
- * @api
+ * @api stable
  */
 olx.control.ControlOptions;
 
@@ -897,7 +890,7 @@ olx.control.FullScreenOptions.prototype.target;
  *     projection: ol.proj.ProjectionLike,
  *     target: (Element|undefined),
  *     undefinedHTML: (string|undefined)}}
- * @api
+ * @api stable
  */
 olx.control.MousePositionOptions;
 
@@ -942,7 +935,7 @@ olx.control.MousePositionOptions.prototype.undefinedHTML;
  *     minWidth: (number|undefined),
  *     target: (Element|undefined),
  *     units: (ol.control.ScaleLineUnits|string|undefined)}}
- * @api
+ * @api stable
  */
 olx.control.ScaleLineOptions;
 
@@ -982,7 +975,7 @@ olx.control.ScaleLineOptions.prototype.units;
  *     tipLabel: (string|undefined),
  *     target: (Element|undefined),
  *     autoHide: (boolean|undefined)}}
- * @api
+ * @api stable
  */
 olx.control.RotateOptions;
 
@@ -1038,7 +1031,7 @@ olx.control.RotateOptions.prototype.target;
  *     zoomOutTipLabel: (string|undefined),
  *     delta: (number|undefined),
  *     target: (Element|undefined)}}
- * @api
+ * @api stable
  */
 olx.control.ZoomOptions;
 
@@ -1103,7 +1096,7 @@ olx.control.ZoomOptions.prototype.target;
  * @typedef {{className: (string|undefined),
  *     maxResolution: (number|undefined),
  *     minResolution: (number|undefined)}}
- * @api
+ * @api stable
  */
 olx.control.ZoomSliderOptions;
 
@@ -1134,7 +1127,7 @@ olx.control.ZoomSliderOptions.prototype.minResolution;
  *     target: (Element|undefined),
  *     tipLabel: (string|undefined),
  *     extent: (ol.Extent|undefined)}}
- * @api
+ * @api stable
  */
 olx.control.ZoomToExtentOptions;
 
@@ -5092,17 +5085,46 @@ olx.tilegrid.WMTSOptions.prototype.tileSizes;
 
 
 /**
- * @typedef {{maxZoom: number}}
+ * @typedef {{extent: (ol.Extent|undefined),
+ *     maxZoom: (number|undefined),
+ *     minZoom: (number|undefined),
+ *     tileSize: (number|undefined)}}
  * @api
  */
 olx.tilegrid.XYZOptions;
 
 
 /**
- * Maximum zoom.
- * @type {number}
+ * Extent for the tile grid.  The origin for an XYZ tile grid is the top-left
+ * corner of the extent.  The zero level of the grid is defined by the
+ * resolution at which one tile fits in the provided extent.  If not provided,
+ * the extent of the EPSG:3857 projection is used.
+ * @type {ol.Extent|undefined}
+ */
+olx.tilegrid.XYZOptions.prototype.extent;
+
+
+/**
+ * Maximum zoom.  The default is `ol.DEFAULT_MAX_ZOOM`.  This determines the
+ * number of levels in the grid set.  For example, a `maxZoom` of 21 means there
+ * are 22 levels in the grid set.
+ * @type {number|undefined}
  */
 olx.tilegrid.XYZOptions.prototype.maxZoom;
+
+
+/**
+ * Minimum zoom. Default is 0.
+ * @type {number|undefined}
+ */
+olx.tilegrid.XYZOptions.prototype.minZoom;
+
+
+/**
+ * Tile size in pixels. Default is 256. (Only square tiles are supported.)
+ * @type {number|undefined}
+ */
+olx.tilegrid.XYZOptions.prototype.tileSize;
 
 
 /**
