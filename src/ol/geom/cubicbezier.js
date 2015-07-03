@@ -391,23 +391,6 @@ ol.geom.CubicBezier.prototype.prepareYPolyCache_ = function() {
 
 
 /**
- * Returns the closest point on bezier curve from (x,y).
- *
- * Points on bezier curves are parametric, so
- *
- * x(t) = a+bt+ct^2+dt^3
- * y(t) = e+ft+gt^2+ht^3
- *
- * distance from (x,y) will be
- *
- * deltaX = x(t)-x = a-x+bt+ct^2+dt^3
- * deltaY = y(t)-y = e-y+ft+gt^2+ht^3
- * Since Math.sqrt is a monotone function, t when d(t)^2
- * is minima should equal t when d(t) is minima.
- *
- * d(t) = deltaX^2+delta^Y which is a sextic. In order to find
- * the minima in t in [0,1), We'll solve quintic d'(t)=0.
- *
  * @param {number} x
  * @param {number} y
  * @return {number} Closest T from given point.
@@ -419,20 +402,23 @@ ol.geom.CubicBezier.prototype.getClosestTFromPoint = function(x, y) {
 
   var xpoly = goog.array.clone(this.xPolyCache_); // x(t)
   var ypoly = goog.array.clone(this.yPolyCache_); // y(t)
-  xpoly[0] -= x;
-  ypoly[0] -= y;
-  var xsqpoly = [];
-  schedul.math.Algebra.polySquare(xpoly, xsqpoly); // deltaX
-  var ysqpoly = [];
-  schedul.math.Algebra.polySquare(ypoly, ysqpoly); // deltaY
+  xpoly[0] -= x; // x(t)-x
+  ypoly[0] -= y; // y(t)-y
 
-  var dpoly = [];
-  schedul.math.Algebra.polyAdd(xsqpoly, ysqpoly, dpoly); // d(t)
-  var derivdpoly = [];
-  schedul.math.Algebra.polyDerivative(dpoly, derivdpoly); // d'(t)
+  var xderiv = [];
+  schedul.math.Algebra.polyDerivative(xpoly, xderiv); // x'(t)
+  var yderiv = [];
+  schedul.math.Algebra.polyDerivative(ypoly, yderiv); // y'(t)
+
+  var xdot = [];
+  schedul.math.Algebra.polyMultiple(xpoly, xderiv, xdot);
+  var ydot = [];
+  schedul.math.Algebra.polyMultiple(ypoly, yderiv, ydot);
+  var dot = [];
+  schedul.math.Algebra.polyAdd(xdot, ydot, dot);
 
   var roots = [];
-  schedul.math.Algebra.quinticEqRealRoots(derivdpoly, roots, 0, 1);
+  schedul.math.Algebra.quinticEqRealRoots(dot, roots, 0, 1);
   roots.push(1);
 
   var nearestRoot = 0;
