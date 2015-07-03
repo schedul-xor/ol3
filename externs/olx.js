@@ -386,7 +386,7 @@ olx.ProjectionOptions;
 /**
  * The SRS identifier code, e.g. `EPSG:4326`.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.ProjectionOptions.prototype.code;
 
@@ -394,7 +394,7 @@ olx.ProjectionOptions.prototype.code;
 /**
  * Units.
  * @type {ol.proj.Units|string}
- * @api
+ * @api stable
  */
 olx.ProjectionOptions.prototype.units;
 
@@ -402,7 +402,7 @@ olx.ProjectionOptions.prototype.units;
 /**
  * The validity extent for the SRS.
  * @type {ol.Extent|undefined}
- * @api
+ * @api stable
  */
 olx.ProjectionOptions.prototype.extent;
 
@@ -410,7 +410,7 @@ olx.ProjectionOptions.prototype.extent;
 /**
  * The axis orientation as specified in Proj4. The default is `enu`.
  * @type {string|undefined}
- * @api
+ * @api stable
  */
 olx.ProjectionOptions.prototype.axisOrientation;
 
@@ -418,7 +418,7 @@ olx.ProjectionOptions.prototype.axisOrientation;
 /**
  * Whether the projection is valid for the whole globe. Default is `false`.
  * @type {boolean|undefined}
- * @api
+ * @api stable
  */
 olx.ProjectionOptions.prototype.global;
 
@@ -457,7 +457,7 @@ olx.ViewOptions;
  * specified with the `projection` option. Default is `undefined`, and layer
  * sources will not be fetched if this is not set.
  * @type {ol.Coordinate|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.center;
 
@@ -498,7 +498,7 @@ olx.ViewOptions.prototype.extent;
  * (the default) then `maxResolution` defaults to `40075016.68557849 / 256 =
  * 156543.03392804097`.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.maxResolution;
 
@@ -511,7 +511,7 @@ olx.ViewOptions.prototype.maxResolution;
  * defaults to `40075016.68557849 / 256 / Math.pow(2, 28) =
  * 0.0005831682455839253`.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.minResolution;
 
@@ -522,7 +522,7 @@ olx.ViewOptions.prototype.minResolution;
  * is `28`.  Note that if `minResolution` is also provided, it is given
  * precedence over `maxZoom`.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.maxZoom;
 
@@ -533,7 +533,7 @@ olx.ViewOptions.prototype.maxZoom;
  * is `0`. Note that if `maxResolution` is also provided, it is given
  * precedence over `minZoom`.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.minZoom;
 
@@ -541,7 +541,7 @@ olx.ViewOptions.prototype.minZoom;
 /**
  * The projection. Default is `EPSG:3857` (Spherical Mercator).
  * @type {ol.proj.ProjectionLike}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.projection;
 
@@ -552,7 +552,7 @@ olx.ViewOptions.prototype.projection;
  * `zoom`. Default is `undefined`, and layer sources will not be fetched if
  * neither this nor `zoom` are defined.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.resolution;
 
@@ -562,7 +562,7 @@ olx.ViewOptions.prototype.resolution;
  * `maxResolution`, `minResolution`, `minZoom`, `maxZoom`, and `zoomFactor`
  * options are ignored.
  * @type {Array.<number>|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.resolutions;
 
@@ -571,7 +571,7 @@ olx.ViewOptions.prototype.resolutions;
  * The initial rotation for the view in radians (positive rotation clockwise).
  * Default is `0`.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.rotation;
 
@@ -581,7 +581,7 @@ olx.ViewOptions.prototype.rotation;
  * initial resolution for the view. The initial resolution is determined using
  * the `ol.View#constrainResolution` method.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.zoom;
 
@@ -589,7 +589,7 @@ olx.ViewOptions.prototype.zoom;
 /**
  * The zoom factor used to determine the resolution constraint.  Default is `2`.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.ViewOptions.prototype.zoomFactor;
 
@@ -1294,7 +1294,7 @@ olx.format.ReadOptions;
  * the data and if no `defaultDataProjection` is set for a format, the features
  * will not be reprojected.
  * @type {ol.proj.ProjectionLike|undefined}
- * @api
+ * @api stable
  */
 olx.format.ReadOptions.prototype.dataProjection;
 
@@ -1303,7 +1303,7 @@ olx.format.ReadOptions.prototype.dataProjection;
  * Projection of the feature geometries created by the format reader. If not
  * provided, features will be returned in the `dataProjection`.
  * @type {ol.proj.ProjectionLike|undefined}
- * @api
+ * @api stable
  */
 olx.format.ReadOptions.prototype.featureProjection;
 
@@ -1322,7 +1322,7 @@ olx.format.WriteOptions;
  * `defaultDataProjection` is set for a format, the features will be returned
  * in the `featureProjection`.
  * @type {ol.proj.ProjectionLike|undefined}
- * @api
+ * @api stable
  */
 olx.format.WriteOptions.prototype.dataProjection;
 
@@ -1331,7 +1331,7 @@ olx.format.WriteOptions.prototype.dataProjection;
  * Projection of the feature geometries that will be serialized by the format
  * writer.
  * @type {ol.proj.ProjectionLike}
- * @api
+ * @api stable
  */
 olx.format.WriteOptions.prototype.featureProjection;
 
@@ -1347,7 +1347,7 @@ olx.format.GeoJSONOptions;
 /**
  * Default data projection.
  * @type {ol.proj.ProjectionLike}
- * @api
+ * @api stable
  */
 olx.format.GeoJSONOptions.prototype.defaultDataProjection;
 
@@ -1355,7 +1355,7 @@ olx.format.GeoJSONOptions.prototype.defaultDataProjection;
 /**
  * Geometry name to use when creating features.
  * @type {string|undefined}
- * @api
+ * @api stable
  */
 olx.format.GeoJSONOptions.prototype.geometryName;
 
@@ -1371,7 +1371,7 @@ olx.format.PolylineOptions;
  * The factor by which the coordinates values will be scaled.
  * Default is `1e5`.
  * @type {number}
- * @api
+ * @api stable
  */
 olx.format.PolylineOptions.prototype.factor;
 
@@ -1386,7 +1386,7 @@ olx.format.TopoJSONOptions;
 /**
  * Default data projection.
  * @type {ol.proj.ProjectionLike}
- * @api
+ * @api stable
  */
 olx.format.TopoJSONOptions.prototype.defaultDataProjection;
 
@@ -1418,7 +1418,7 @@ olx.format.KMLOptions;
 /**
  * Extract styles from the KML. Default is `true`.
  * @type {boolean|undefined}
- * @api
+ * @api stable
  */
 olx.format.KMLOptions.prototype.extractStyles;
 
@@ -1426,7 +1426,7 @@ olx.format.KMLOptions.prototype.extractStyles;
 /**
  * Default style. The default default style is the same as Google Earth.
  * @type {Array.<ol.style.Style>|undefined}
- * @api
+ * @api stable
  */
 olx.format.KMLOptions.prototype.defaultStyle;
 
@@ -1448,7 +1448,7 @@ olx.format.GMLOptions;
 /**
  * Feature namespace.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.GMLOptions.prototype.featureNS;
 
@@ -1456,7 +1456,7 @@ olx.format.GMLOptions.prototype.featureNS;
 /**
  * Feature type to parse.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.GMLOptions.prototype.featureType;
 
@@ -1473,7 +1473,7 @@ olx.format.GMLOptions.prototype.srsName;
  * Write gml:Surface instead of gml:Polygon elements. This also affects the
  * elements in multi-part geometries. Default is `false`.
  * @type {boolean|undefined}
- * @api
+ * @api stable
  */
 olx.format.GMLOptions.prototype.surface;
 
@@ -1482,7 +1482,7 @@ olx.format.GMLOptions.prototype.surface;
  * Write gml:Curve instead of gml:LineString elements. This also affects the
  * elements in multi-part geometries. Default is `false`.
  * @type {boolean|undefined}
- * @api
+ * @api stable
  */
 olx.format.GMLOptions.prototype.curve;
 
@@ -1491,7 +1491,7 @@ olx.format.GMLOptions.prototype.curve;
  * Write gml:MultiCurve instead of gml:MultiLineString. Since the latter is
  * deprecated in GML 3, the default is `true`.
  * @type {boolean|undefined}
- * @api
+ * @api stable
  */
 olx.format.GMLOptions.prototype.multiCurve;
 
@@ -1500,7 +1500,7 @@ olx.format.GMLOptions.prototype.multiCurve;
  * Write gml:multiSurface instead of gml:MultiPolygon. Since the latter is
  * deprecated in GML 3, the default is `true`.
  * @type {boolean|undefined}
- * @api
+ * @api stable
  */
 olx.format.GMLOptions.prototype.multiSurface;
 
@@ -1509,7 +1509,7 @@ olx.format.GMLOptions.prototype.multiSurface;
  * Optional schemaLocation to use when writing out the GML, this will override
  * the default provided.
  * @type {string|undefined}
- * @api
+ * @api stable
  */
 olx.format.GMLOptions.prototype.schemaLocation;
 
@@ -1529,7 +1529,7 @@ olx.format.GPXOptions;
  * nodes from `wpt`, `rte` and `trk` can be processed, as those are
  * directly mapped to a feature.
  * @type {function(ol.Feature, Node)}
- * @api
+ * @api stable
  */
 olx.format.GPXOptions.prototype.readExtensions;
 
@@ -1546,7 +1546,7 @@ olx.format.WFSOptions;
 /**
  * The namespace URI used for features.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.WFSOptions.prototype.featureNS;
 
@@ -1554,7 +1554,7 @@ olx.format.WFSOptions.prototype.featureNS;
 /**
  * The feature type to parse. Only used for read operations.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.WFSOptions.prototype.featureType;
 
@@ -1563,7 +1563,7 @@ olx.format.WFSOptions.prototype.featureType;
  * Optional schemaLocation to use for serialization, this will override the
  * default.
  * @type {string|undefined}
- * @api
+ * @api stable
  */
 olx.format.WFSOptions.prototype.schemaLocation;
 
@@ -1586,7 +1586,7 @@ olx.format.WFSWriteGetFeatureOptions;
 /**
  * The namespace URI used for features.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteGetFeatureOptions.prototype.featureNS;
 
@@ -1594,7 +1594,7 @@ olx.format.WFSWriteGetFeatureOptions.prototype.featureNS;
 /**
  * The prefix for the feature namespace.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteGetFeatureOptions.prototype.featurePrefix;
 
@@ -1602,7 +1602,7 @@ olx.format.WFSWriteGetFeatureOptions.prototype.featurePrefix;
 /**
  * The feature type names.
  * @type {Array.<string>}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteGetFeatureOptions.prototype.featureTypes;
 
@@ -1619,7 +1619,7 @@ olx.format.WFSWriteGetFeatureOptions.prototype.srsName;
 /**
  * Handle.
  * @type {string|undefined}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteGetFeatureOptions.prototype.handle;
 
@@ -1627,7 +1627,7 @@ olx.format.WFSWriteGetFeatureOptions.prototype.handle;
 /**
  * Output format.
  * @type {string|undefined}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteGetFeatureOptions.prototype.outputFormat;
 
@@ -1635,7 +1635,7 @@ olx.format.WFSWriteGetFeatureOptions.prototype.outputFormat;
 /**
  * Maximum number of features to fetch.
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteGetFeatureOptions.prototype.maxFeatures;
 
@@ -1664,7 +1664,7 @@ olx.format.WFSWriteGetFeatureOptions.prototype.bbox;
  *     handle: (string|undefined),
  *     nativeElements: Array.<Object>,
  *     gmlOptions: (olx.format.GMLOptions|undefined)}}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteTransactionOptions;
 
@@ -1672,7 +1672,7 @@ olx.format.WFSWriteTransactionOptions;
 /**
  * The namespace URI used for features.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteTransactionOptions.prototype.featureNS;
 
@@ -1680,7 +1680,7 @@ olx.format.WFSWriteTransactionOptions.prototype.featureNS;
 /**
  * The prefix for the feature namespace.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteTransactionOptions.prototype.featurePrefix;
 
@@ -1688,7 +1688,7 @@ olx.format.WFSWriteTransactionOptions.prototype.featurePrefix;
 /**
  * The feature type name.
  * @type {string}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteTransactionOptions.prototype.featureType;
 
@@ -1705,7 +1705,7 @@ olx.format.WFSWriteTransactionOptions.prototype.srsName;
 /**
  * Handle.
  * @type {string|undefined}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteTransactionOptions.prototype.handle;
 
@@ -1721,7 +1721,7 @@ olx.format.WFSWriteTransactionOptions.prototype.nativeElements;
 /**
  * GML options for the WFS transaction writer.
  * @type {olx.format.GMLOptions|undefined}
- * @api
+ * @api stable
  */
 olx.format.WFSWriteTransactionOptions.prototype.gmlOptions;
 
@@ -1737,7 +1737,7 @@ olx.format.WKTOptions;
  * Whether to split GeometryCollections into
  * multiple features on reading. Default is `false`.
  * @type {boolean|undefined}
- * @api
+ * @api stable
  */
 olx.format.WKTOptions.prototype.splitCollection;
 
@@ -4811,7 +4811,7 @@ olx.source.WMTSOptions;
 /**
  * Attributions.
  * @type {Array.<ol.Attribution>|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.attributions;
 
@@ -4819,7 +4819,7 @@ olx.source.WMTSOptions.prototype.attributions;
 /**
  * crossOrigin setting for image requests.
  * @type {string|null|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.crossOrigin;
 
@@ -4827,7 +4827,7 @@ olx.source.WMTSOptions.prototype.crossOrigin;
 /**
  * Logo.
  * @type {string|olx.LogoOptions|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.logo;
 
@@ -4835,7 +4835,7 @@ olx.source.WMTSOptions.prototype.logo;
 /**
  * Tile grid.
  * @type {ol.tilegrid.WMTS}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.tileGrid;
 
@@ -4851,7 +4851,7 @@ olx.source.WMTSOptions.prototype.projection;
 /**
  * Request encoding.
  * @type {ol.source.WMTSRequestEncoding|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.requestEncoding;
 
@@ -4859,7 +4859,7 @@ olx.source.WMTSOptions.prototype.requestEncoding;
 /**
  * Layer.
  * @type {string}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.layer;
 
@@ -4867,7 +4867,7 @@ olx.source.WMTSOptions.prototype.layer;
 /**
  * Style.
  * @type {string}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.style;
 
@@ -4886,7 +4886,7 @@ olx.source.WMTSOptions.prototype.tilePixelRatio;
 /**
  * WMTS version. Default is `1.0.0`.
  * @type {string|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.version;
 
@@ -4894,7 +4894,7 @@ olx.source.WMTSOptions.prototype.version;
 /**
  * Image format. Default is `image/jpeg`.
  * @type {string|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.format;
 
@@ -4902,7 +4902,7 @@ olx.source.WMTSOptions.prototype.format;
 /**
  * Matrix set.
  * @type {string}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.matrixSet;
 
@@ -4910,7 +4910,7 @@ olx.source.WMTSOptions.prototype.matrixSet;
 /**
  * Dimensions.
  * @type {Object|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.dimensions;
 
@@ -4918,7 +4918,7 @@ olx.source.WMTSOptions.prototype.dimensions;
 /**
  * URL.
  * @type {string|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.url;
 
@@ -4942,7 +4942,7 @@ olx.source.WMTSOptions.prototype.tileLoadFunction;
 /**
  * Urls.
  * @type {Array.<string>|undefined}
- * @api stable
+ * @api
  */
 olx.source.WMTSOptions.prototype.urls;
 
@@ -5569,7 +5569,7 @@ olx.tilegrid.TileGridOptions.prototype.minZoom;
 /**
  * Origin. Default is null.
  * @type {ol.Coordinate|undefined}
- * @api
+ * @api stable
  */
 olx.tilegrid.TileGridOptions.prototype.origin;
 
@@ -5578,7 +5578,7 @@ olx.tilegrid.TileGridOptions.prototype.origin;
  * Origins. If given, the array should match the `resolutions` array, i.e.
  * each resolution can have a different origin.
  * @type {Array.<ol.Coordinate>|undefined}
- * @api
+ * @api stable
  */
 olx.tilegrid.TileGridOptions.prototype.origins;
 
@@ -5586,7 +5586,7 @@ olx.tilegrid.TileGridOptions.prototype.origins;
 /**
  * Resolutions.
  * @type {!Array.<number>}
- * @api
+ * @api stable
  */
 olx.tilegrid.TileGridOptions.prototype.resolutions;
 
@@ -5594,7 +5594,7 @@ olx.tilegrid.TileGridOptions.prototype.resolutions;
 /**
  * Tile size. Default is 256. (Only square tiles are supported.)
  * @type {number|undefined}
- * @api
+ * @api stable
  */
 olx.tilegrid.TileGridOptions.prototype.tileSize;
 
@@ -5603,7 +5603,7 @@ olx.tilegrid.TileGridOptions.prototype.tileSize;
  * Tile sizes. If given, the array should match the `resolutions` array, i.e.
  * each resolution can have a different tile size.
  * @type {Array.<number>|undefined}
- * @api
+ * @api stable
  */
 olx.tilegrid.TileGridOptions.prototype.tileSizes;
 
