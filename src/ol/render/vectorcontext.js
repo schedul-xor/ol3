@@ -88,6 +88,13 @@ ol.render.VectorContext.prototype.drawPolygonGeometry = goog.abstractMethod;
 
 
 /**
+ * @param {ol.geom.CubicBezier} cubicBezierGeometry Cubic bezier geometry.
+ * @param {ol.Feature} feature Feature.
+ */
+ol.render.VectorContext.prototype.drawCubicBezierGeometry = goog.abstractMethod;
+
+
+/**
  * @param {Array.<number>} flatCoordinates Flat coordinates.
  * @param {number} offset Offset.
  * @param {number} end End.
