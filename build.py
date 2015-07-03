@@ -33,10 +33,12 @@ class ThreadPool:
                     function(*args, **kargs)
                 except:
                     print(sys.exc_info()[0])
+                    self.tasks.errors = True
                 self.tasks.task_done()
 
     def __init__(self, num_threads = multiprocessing.cpu_count() + 1):
         self.tasks = Queue(num_threads)
+        self.tasks.errors = False
         # create num_threads Workers, by default the number of CPUs + 1
         for _ in range(num_threads): self.Worker(self.tasks)
 
@@ -46,6 +48,7 @@ class ThreadPool:
     def wait_completion(self):
         # wait for the queue to be empty
         self.tasks.join()
+        return self.tasks.errors
 
 
 if sys.platform == 'win32':
@@ -248,15 +251,31 @@ def build_examples_all_js(t):
 @rule(r'\Abuild/examples/(?P<id>.*).json\Z')
 def examples_star_json(name, match):
     def action(t):
-        # It would make more sense to use olx.js as an input file here. We use
-        # it as an externs file instead to prevent "Cannot read property '*' of
-        # undefined" error when running examples in "raw" or "whitespace" mode.
-        # Note that we use the proper way in config/examples-all.json, which
-        # is only used to check the examples code using the compiler.
+
+        # When compiling the ol3 code and the application code together it is
+        # better to use oli.js and olx.js files as "input" files rather than
+        # "externs" files. Indeed, externs prevent renaming, which is neither
+        # necessary nor desirable in this case.
+        #
+        # oli.js and olx.js do not provide or require namespaces (using
+        # "goog.provide" or "goog.require"). For that reason, if they are
+        # specified as input files through the "src" property, then
+        # closure-util will exclude them when creating the dependencies graph.
+        # So the compile "js" property is used instead. With that property the
+        # oli.js and olx.js files are passed directly to the compiler. And by
+        # setting "manage_closure_dependencies" to "true" the compiler will not
+        # exclude them from its dependencies graph.
+
         content = json.dumps({
           "exports": [],
-          "src": ["src/**/*.js", "examples/%(id)s.js" % match.groupdict()],
+          "src": [
+            "src/**/*.js",
+            "examples/%(id)s.js" % match.groupdict()],
           "compile": {
+            "js": [
+              "externs/olx.js",
+              "externs/oli.js",
+            ],
             "externs": [
               "externs/bingmaps.js",
               "externs/bootstrap.js",
@@ -264,8 +283,6 @@ def examples_star_json(name, match):
               "externs/example.js",
               "externs/geojson.js",
               "externs/jquery-1.9.js",
-              "externs/oli.js",
-              "externs/olx.js",
               "externs/proj4js.js",
               "externs/tilejson.js",
               "externs/topojson.js",
@@ -661,7 +678,9 @@ def check_examples(t):
     pool = ThreadPool()
     for example in all_examples:
         pool.add_task(t.run, '%(PHANTOMJS)s', 'bin/check-example.js', example)
-    pool.wait_completion()
+    errors = pool.wait_completion()
+    if errors:
+        sys.exit(1)
 
 
 @target('test', phony=True)

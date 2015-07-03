@@ -1038,6 +1038,78 @@ olx.control.MousePositionOptions.prototype.undefinedHTML;
 
 
 /**
+ * @typedef {{collapsed: (boolean|undefined),
+ *     collapseLabel: (string|undefined),
+ *     collapsible: (boolean|undefined),
+ *     label: (string|undefined),
+ *     layers: (Array.<ol.layer.Layer>|ol.Collection|undefined),
+ *     target: (Element|undefined),
+ *     tipLabel: (string|undefined)}}
+ * @api
+ */
+olx.control.OverviewMapOptions;
+
+
+/**
+ * Whether the control should start collapsed or not (expanded).
+ * Default to `true`.
+ * @type {boolean|undefined}
+ * @api
+ */
+olx.control.OverviewMapOptions.prototype.collapsed;
+
+
+/**
+ * Text label to use for the expanded overviewmap button. Default is `«`
+ * @type {string|undefined}
+ * @api
+ */
+olx.control.OverviewMapOptions.prototype.collapseLabel;
+
+
+/**
+ * Whether the control can be collapsed or not. Default to `true`.
+ * @type {boolean|undefined}
+ * @api
+ */
+olx.control.OverviewMapOptions.prototype.collapsible;
+
+
+/**
+ * Text label to use for the collapsed overviewmap button. Default is `»`
+ * @type {string|undefined}
+ * @api
+ */
+olx.control.OverviewMapOptions.prototype.label;
+
+
+/**
+ * Layers for the overview map. If not set, then all main map layers are used
+ * instead.
+ * @type {!Array.<ol.layer.Layer>|!ol.Collection|undefined}
+ * @api
+ */
+olx.control.OverviewMapOptions.prototype.layers;
+
+
+/**
+ * Specify a target if you want the control to be rendered outside of the map's
+ * viewport.
+ * @type {Element|undefined}
+ * @api
+ */
+olx.control.OverviewMapOptions.prototype.target;
+
+
+/**
+ * Text label to use for the button tip. Default is `Overview map`
+ * @type {string|undefined}
+ * @api
+ */
+olx.control.OverviewMapOptions.prototype.tipLabel;
+
+
+/**
  * @typedef {{className: (string|undefined),
  *     minWidth: (number|undefined),
  *     target: (Element|undefined),
@@ -3527,7 +3599,7 @@ olx.source.TileImageOptions.prototype.state;
 
 
 /**
- * tile class
+ * Class used to instantiate image tiles. Default is {@link ol.ImageTile}.
  * @type {function(new: ol.ImageTile, ol.TileCoord,
  *                 ol.TileState, string, ?string,
  *                 ol.TileLoadFunctionType)|undefined}
@@ -4452,7 +4524,7 @@ olx.source.StamenOptions.prototype.url;
 /**
  * @typedef {{attributions: (Array.<ol.Attribution>|undefined),
  *     crossOrigin: (null|string|undefined),
- *     imageExtent: (ol.Extent|undefined),
+ *     imageExtent: (ol.Extent),
  *     imageSize: (ol.Size|undefined),
  *     logo: (string|olx.LogoOptions|undefined),
  *     projection: ol.proj.ProjectionLike,
@@ -4480,7 +4552,7 @@ olx.source.ImageStaticOptions.prototype.crossOrigin;
 
 /**
  * Extent of the image.
- * @type {ol.Extent|undefined}
+ * @type {ol.Extent}
  * @api stable
  */
 olx.source.ImageStaticOptions.prototype.imageExtent;
@@ -4924,7 +4996,10 @@ olx.source.StaticVectorOptions.prototype.urls;
  *     url: (string|undefined),
  *     maxZoom: (number|undefined),
  *     tileLoadFunction: (ol.TileLoadFunctionType|undefined),
- *     urls: (Array.<string>|undefined)}}
+ *     urls: (Array.<string>|undefined),
+ *     tileClass: (function(new: ol.ImageTile, ol.TileCoord,
+ *                          ol.TileState, string, ?string,
+ *                          ol.TileLoadFunctionType)|undefined)}}
  * @api
  */
 olx.source.WMTSOptions;
@@ -4992,6 +5067,16 @@ olx.source.WMTSOptions.prototype.layer;
  * @api
  */
 olx.source.WMTSOptions.prototype.style;
+
+
+/**
+ * Class used to instantiate image tiles. Default is {@link ol.ImageTile}.
+ * @type {function(new: ol.ImageTile, ol.TileCoord,
+ *                 ol.TileState, string, ?string,
+ *                 ol.TileLoadFunctionType)|undefined}
+ * @api
+ */
+olx.source.WMTSOptions.prototype.tileClass;
 
 
 /**
