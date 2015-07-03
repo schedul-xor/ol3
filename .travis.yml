@@ -1,3 +1,6 @@
+env:
+  - DISPLAY=:99.0
+
 before_install:
   - "sudo pip install -r requirements.txt"
   - "npm install -g npm && npm install"
@@ -5,5 +8,10 @@ before_install:
 before_script:
   - "cp -r vendor/schedul-math-js/src/schedul src"
   - "rm src/ol/renderer/webgl/*shader.js"
+  - "sh -e /etc/init.d/xvfb start"
 
-script: "./build.py ci"
+script: "make ci"
+
+after_success:
+  - "make test-coverage"
+  - "cat coverage/lcov.info | ./node_modules/.bin/coveralls"
