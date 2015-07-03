@@ -16,7 +16,9 @@ goog.require('ol.tilegrid.WMTS');
 
 
 /**
+ * Request encoding. One of 'KVP', 'REST'.
  * @enum {string}
+ * @api
  */
 ol.source.WMTSRequestEncoding = {
   KVP: 'KVP',  // see spec §8
@@ -238,7 +240,6 @@ ol.source.WMTS.prototype.updateDimensions = function(dimensions) {
  * @param {Object} wmtsCap An object representing the capabilities document.
  * @param {string} layer The layer identifier.
  * @return {olx.source.WMTSOptions} WMTS source options object.
- * @api
  */
 ol.source.WMTS.optionsFromCapabilities = function(wmtsCap, layer) {
 

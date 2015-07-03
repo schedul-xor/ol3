@@ -29,7 +29,7 @@ goog.require('ol.tilecoord');
  * @constructor
  * @extends {ol.source.TileImage}
  * @param {olx.source.TileWMSOptions=} opt_options Tile WMS options.
- * @api
+ * @api stable
  */
 ol.source.TileWMS = function(opt_options) {
 
@@ -72,12 +72,6 @@ ol.source.TileWMS = function(opt_options) {
    * @type {Object}
    */
   this.params_ = params;
-
-  /**
-   * @private
-   * @type {number}
-   */
-  this.pixelRatio_ = NaN;
 
   /**
    * @private
@@ -129,17 +123,12 @@ goog.inherits(ol.source.TileWMS, ol.source.TileImage);
  *     in the `LAYERS` parameter will be used. `VERSION` should not be
  *     specified here.
  * @return {string|undefined} GetFeatureInfo URL.
- * @api
+ * @api stable
  */
 ol.source.TileWMS.prototype.getGetFeatureInfoUrl =
     function(coordinate, resolution, projection, params) {
 
   goog.asserts.assert(!('VERSION' in params));
-
-  var pixelRatio = this.pixelRatio_;
-  if (isNaN(this.pixelRatio_)) {
-    return undefined;
-  }
 
   var projectionObj = ol.proj.get(projection);
 
@@ -156,8 +145,7 @@ ol.source.TileWMS.prototype.getGetFeatureInfoUrl =
   }
 
   var tileResolution = tileGrid.getResolution(tileCoord[0]);
-  var tileExtent = tileGrid.getTileCoordExtent(
-      tileCoord, this.tmpExtent_);
+  var tileExtent = tileGrid.getTileCoordExtent(tileCoord, this.tmpExtent_);
   var tileSize = tileGrid.getTileSize(tileCoord[0]);
 
   var gutter = this.gutter_;
@@ -165,9 +153,6 @@ ol.source.TileWMS.prototype.getGetFeatureInfoUrl =
     tileSize += 2 * gutter;
     tileExtent = ol.extent.buffer(tileExtent,
         tileResolution * gutter, tileExtent);
-  }
-  if (pixelRatio != 1) {
-    tileSize = (tileSize * pixelRatio + 0.5) | 0;
   }
 
   var baseParams = {
@@ -180,16 +165,14 @@ ol.source.TileWMS.prototype.getGetFeatureInfoUrl =
   };
   goog.object.extend(baseParams, this.params_, params);
 
-  var x = Math.floor((coordinate[0] - tileExtent[0]) /
-      (tileResolution / pixelRatio));
-  var y = Math.floor((tileExtent[3] - coordinate[1]) /
-      (tileResolution / pixelRatio));
+  var x = Math.floor((coordinate[0] - tileExtent[0]) / tileResolution);
+  var y = Math.floor((tileExtent[3] - coordinate[1]) / tileResolution);
 
   goog.object.set(baseParams, this.v13_ ? 'I' : 'X', x);
   goog.object.set(baseParams, this.v13_ ? 'J' : 'Y', y);
 
   return this.getRequestUrl_(tileCoord, tileSize, tileExtent,
-      pixelRatio, projectionObj, baseParams);
+      1, projectionObj, baseParams);
 };
 
 
@@ -213,7 +196,7 @@ ol.source.TileWMS.prototype.getKeyZXY = function(z, x, y) {
  * Get the user-provided params, i.e. those passed to the constructor through
  * the "params" option, and possibly updated using the updateParams method.
  * @return {Object} Params.
- * @api
+ * @api stable
  */
 ol.source.TileWMS.prototype.getParams = function() {
   return this.params_;
@@ -313,7 +296,7 @@ ol.source.TileWMS.prototype.getTilePixelSize =
 /**
  * Return the URLs used for this WMS source.
  * @return {!Array.<string>} URLs.
- * @api
+ * @api stable
  */
 ol.source.TileWMS.prototype.getUrls = function() {
   return this.urls_;
@@ -343,7 +326,7 @@ ol.source.TileWMS.prototype.resetCoordKeyPrefix_ = function() {
 
 /**
  * @param {string|undefined} url URL.
- * @api
+ * @api stable
  */
 ol.source.TileWMS.prototype.setUrl = function(url) {
   var urls = goog.isDef(url) ? ol.TileUrlFunction.expandUrl(url) : null;
@@ -353,7 +336,7 @@ ol.source.TileWMS.prototype.setUrl = function(url) {
 
 /**
  * @param {Array.<string>|undefined} urls URLs.
- * @api
+ * @api stable
  */
 ol.source.TileWMS.prototype.setUrls = function(urls) {
   this.urls_ = goog.isDefAndNotNull(urls) ? urls : [];
@@ -410,8 +393,6 @@ ol.source.TileWMS.prototype.tileUrlFunction_ =
   };
   goog.object.extend(baseParams, this.params_);
 
-  this.pixelRatio_ = pixelRatio;
-
   return this.getRequestUrl_(tileCoord, tileSize, tileExtent,
       pixelRatio, projection, baseParams);
 };
@@ -420,7 +401,7 @@ ol.source.TileWMS.prototype.tileUrlFunction_ =
 /**
  * Update the user-provided params.
  * @param {Object} params Params.
- * @api
+ * @api stable
  */
 ol.source.TileWMS.prototype.updateParams = function(params) {
   goog.object.extend(this.params_, params);

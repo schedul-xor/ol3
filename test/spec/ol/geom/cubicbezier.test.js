@@ -49,4 +49,12 @@ describe('#dRoots()', function() {
   });
 });
 
+describe('nearest', function() {
+  it('', function() {
+    var cb = new ol.geom.CubicBezier([[1, 1], [0, 2], [2, 1], [3, 4]]);
+    var t = cb.getClosestTFromPoint(2, 3);
+    expect(t).to.be(0.8793325013936245);
+  });
+});
+
 goog.require('ol.geom.CubicBezier');

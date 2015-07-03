@@ -15,7 +15,7 @@ goog.require('ol.vec.Mat4');
 /**
  * Available renderers: `'canvas'`, `'dom'` or `'webgl'`.
  * @enum {string}
- * @api
+ * @api stable
  */
 ol.RendererType = {
   CANVAS: 'canvas',
@@ -92,9 +92,7 @@ ol.renderer.Map.prototype.createLayerRenderer = function(layer) {
  * @inheritDoc
  */
 ol.renderer.Map.prototype.disposeInternal = function() {
-  goog.object.forEach(this.layerRenderers_, function(layerRenderer) {
-    goog.dispose(layerRenderer);
-  });
+  goog.object.forEach(this.layerRenderers_, goog.dispose);
   goog.base(this, 'disposeInternal');
 };
 

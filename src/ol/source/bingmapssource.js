@@ -24,7 +24,7 @@ goog.require('ol.tilegrid.XYZ');
  * @constructor
  * @extends {ol.source.TileImage}
  * @param {olx.source.BingMapsOptions} options Bing Maps options.
- * @api
+ * @api stable
  */
 ol.source.BingMaps = function(options) {
 
@@ -89,7 +89,9 @@ ol.source.BingMaps.prototype.handleImageryMetadataResponse =
   var resource = response.resourceSets[0].resources[0];
 
   goog.asserts.assert(resource.imageWidth == resource.imageHeight);
+  var sourceProjection = this.getProjection();
   var tileGrid = new ol.tilegrid.XYZ({
+    extent: ol.tilegrid.extentFromProjection(sourceProjection),
     minZoom: resource.zoomMin,
     maxZoom: resource.zoomMax,
     tileSize: resource.imageWidth
@@ -97,7 +99,6 @@ ol.source.BingMaps.prototype.handleImageryMetadataResponse =
   this.tileGrid = tileGrid;
 
   var culture = this.culture_;
-  var sourceProjection = this.getProjection();
   this.tileUrlFunction = ol.TileUrlFunction.withTileCoordTransform(
       tileGrid.createTileCoordTransform(),
       ol.TileUrlFunction.createFromTileUrlFunctions(

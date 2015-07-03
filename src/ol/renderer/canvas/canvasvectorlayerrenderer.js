@@ -93,6 +93,10 @@ ol.renderer.canvas.VectorLayer.prototype.composeFrame =
     } else {
       replayContext = context;
     }
+    // for performance reasons, context.save / context.restore is not used
+    // to save and restore the transformation matrix and the opacity.
+    // see http://jsperf.com/context-save-restore-versus-variable
+    var alpha = replayContext.globalAlpha;
     replayContext.globalAlpha = layerState.opacity;
     replayGroup.replay(
         replayContext, frameState.extent, frameState.pixelRatio, transform,
@@ -102,6 +106,7 @@ ol.renderer.canvas.VectorLayer.prototype.composeFrame =
       this.dispatchRenderEvent(replayContext, frameState, transform);
       context.drawImage(replayContext.canvas, 0, 0);
     }
+    replayContext.globalAlpha = alpha;
   }
 
   this.dispatchPostComposeEvent(context, frameState, transform);
@@ -171,7 +176,7 @@ ol.renderer.canvas.VectorLayer.prototype.prepareFrame =
 
   if (!this.dirty_ && (frameState.viewHints[ol.ViewHint.ANIMATING] ||
       frameState.viewHints[ol.ViewHint.INTERACTING])) {
-    return;
+    return true;
   }
 
   var frameStateExtent = frameState.extent;
@@ -190,7 +195,7 @@ ol.renderer.canvas.VectorLayer.prototype.prepareFrame =
       this.renderedRevision_ == vectorLayerRevision &&
       this.renderedRenderOrder_ == vectorLayerRenderOrder &&
       ol.extent.containsExtent(this.renderedExtent_, frameStateExtent)) {
-    return;
+    return true;
   }
 
   var extent = this.renderedExtent_;
@@ -253,6 +258,7 @@ ol.renderer.canvas.VectorLayer.prototype.prepareFrame =
   this.renderedRenderOrder_ = vectorLayerRenderOrder;
   this.replayGroup_ = replayGroup;
 
+  return true;
 };
 
 
