@@ -348,7 +348,7 @@ ol.geom.CubicBezier.prototype.setCoordinates =
     }
     this.flatCoordinates.length = ol.geom.flat.deflate.coordinates(
         this.flatCoordinates, 0, coordinates, this.stride);
-    this.dispatchChangeEvent();
+    this.changed();
   }
   this.xPolyCache_ = null;
   this.yPolyCache_ = null;
@@ -365,7 +365,7 @@ ol.geom.CubicBezier.prototype.setFlatCoordinates =
     function(layout, flatCoordinates, ends) {
   this.setFlatCoordinatesInternal(layout, flatCoordinates);
   this.ends_ = ends;
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
