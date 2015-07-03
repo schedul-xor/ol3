@@ -24,23 +24,30 @@ ol.layer.TileProperty = {
  * @constructor
  * @extends {ol.layer.Layer}
  * @fires ol.render.Event
- * @param {olx.layer.TileOptions} options Tile layer options.
+ * @param {olx.layer.TileOptions=} opt_options Tile layer options.
  * @api stable
  */
-ol.layer.Tile = function(options) {
+ol.layer.Tile = function(opt_options) {
+  var options = goog.isDef(opt_options) ? opt_options : {};
   goog.base(this,  /** @type {olx.layer.LayerOptions} */ (options));
+
+  if (!goog.isDef(this.getPreload())) {
+    this.setPreload(0);
+  }
+  if (!goog.isDef(this.getUseInterimTilesOnError())) {
+    this.setUseInterimTilesOnError(true);
+  }
 };
 goog.inherits(ol.layer.Tile, ol.layer.Layer);
 
 
 /**
- * @return {number|undefined} The level to preload tiles up to.
+ * @return {number} The level to preload tiles up to.
  * @observable
  * @api
  */
 ol.layer.Tile.prototype.getPreload = function() {
-  return /** @type {number|undefined} */ (
-      this.get(ol.layer.TileProperty.PRELOAD));
+  return /** @type {number} */ (this.get(ol.layer.TileProperty.PRELOAD));
 };
 goog.exportProperty(
     ol.layer.Tile.prototype,
@@ -71,12 +78,12 @@ goog.exportProperty(
 
 
 /**
- * @return {boolean|undefined} Use interim tiles on error.
+ * @return {boolean} Use interim tiles on error.
  * @observable
  * @api
  */
 ol.layer.Tile.prototype.getUseInterimTilesOnError = function() {
-  return /** @type {boolean|undefined} */ (
+  return /** @type {boolean} */ (
       this.get(ol.layer.TileProperty.USE_INTERIM_TILES_ON_ERROR));
 };
 goog.exportProperty(
@@ -86,7 +93,7 @@ goog.exportProperty(
 
 
 /**
- * @param {boolean|undefined} useInterimTilesOnError Use interim tiles on error.
+ * @param {boolean} useInterimTilesOnError Use interim tiles on error.
  * @observable
  * @api
  */

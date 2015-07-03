@@ -55,8 +55,16 @@ oli.DrawEvent.prototype.feature;
 oli.ObjectEvent = function() {};
 
 
-/** @type {string} */
+/**
+ * @type {string}
+ */
 oli.ObjectEvent.prototype.key;
+
+
+/**
+ * @type {*}
+ */
+oli.ObjectEvent.prototype.oldValue;
 
 
 
@@ -122,11 +130,11 @@ oli.control.Control = function() {};
 oli.control.Control.prototype.setMap = function(map) {};
 
 
+
 /**
  * @type {Object}
  */
 oli.interaction;
-
 
 
 /**

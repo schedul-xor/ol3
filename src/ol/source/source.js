@@ -3,17 +3,17 @@ goog.provide('ol.source.State');
 
 goog.require('goog.events.EventType');
 goog.require('ol.Attribution');
-goog.require('ol.Extent');
 goog.require('ol.Observable');
 goog.require('ol.proj');
 
 
 /**
- * State of the source, one of 'loading', 'ready' or 'error'.
+ * State of the source, one of 'undefined', 'loading', 'ready' or 'error'.
  * @enum {string}
  * @api
  */
 ol.source.State = {
+  UNDEFINED: 'undefined',
   LOADING: 'loading',
   READY: 'ready',
   ERROR: 'error'
@@ -77,7 +77,6 @@ goog.inherits(ol.source.Source, ol.Observable);
 
 
 /**
- * @param {ol.Extent} extent Extent.
  * @param {number} resolution Resolution.
  * @param {number} rotation Rotation.
  * @param {ol.Coordinate} coordinate Coordinate.

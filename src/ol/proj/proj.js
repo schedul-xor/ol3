@@ -196,7 +196,7 @@ ol.proj.Projection.prototype.getAxisOrientation = function() {
 
 /**
  * Is this projection a global projection which spans the whole world?
- * @return {boolean} Wether the projection is global.
+ * @return {boolean} Whether the projection is global.
  * @api stable
  */
 ol.proj.Projection.prototype.isGlobal = function() {
@@ -678,7 +678,7 @@ ol.proj.cloneTransform = function(input, opt_output, opt_dimension) {
  */
 ol.proj.transform = function(coordinate, source, destination) {
   var transformFn = ol.proj.getTransform(source, destination);
-  return transformFn(coordinate);
+  return transformFn(coordinate, undefined, coordinate.length);
 };
 
 
