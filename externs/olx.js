@@ -2963,6 +2963,7 @@ olx.source.GPXOptions.prototype.urls;
  *            logo: (string|olx.LogoOptions|undefined),
  *            opaque: (boolean|undefined),
  *            projection: ol.proj.ProjectionLike,
+ *            state: (ol.source.State|string|undefined),
  *            tileClass: (function(new: ol.ImageTile, ol.TileCoord,
  *                                 ol.TileState, string, ?string,
  *                                 ol.TileLoadFunctionType)|undefined),
@@ -3008,6 +3009,13 @@ olx.source.TileImageOptions.prototype.opaque;
  * @type {ol.proj.ProjectionLike}
  */
 olx.source.TileImageOptions.prototype.projection;
+
+
+/**
+ * Source state.
+ * @type {ol.source.State|string|undefined}
+ */
+olx.source.TileImageOptions.prototype.state;
 
 
 /**
@@ -3261,28 +3269,28 @@ olx.source.IGCOptions.prototype.urls;
  *     params: (Object|undefined)}}
  * @api
  */
-olx.source.MapGuideOptions;
+olx.source.ImageMapGuideOptions;
 
 
 /**
  * The mapagent url.
  * @type {string|undefined}
  */
-olx.source.MapGuideOptions.prototype.url;
+olx.source.ImageMapGuideOptions.prototype.url;
 
 
 /**
  * The display resolution. Default is `96`.
  * @type {number|undefined}
  */
-olx.source.MapGuideOptions.prototype.displayDpi;
+olx.source.ImageMapGuideOptions.prototype.displayDpi;
 
 
 /**
  * The meters-per-unit value. Default is `1`.
  * @type {number|undefined}
  */
-olx.source.MapGuideOptions.prototype.metersPerUnit;
+olx.source.ImageMapGuideOptions.prototype.metersPerUnit;
 
 
 /**
@@ -3290,21 +3298,21 @@ olx.source.MapGuideOptions.prototype.metersPerUnit;
  * server. Default is `true`.
  * @type {boolean|undefined}
  */
-olx.source.MapGuideOptions.prototype.hidpi;
+olx.source.ImageMapGuideOptions.prototype.hidpi;
 
 
 /**
  * If `true`, will use `GETDYNAMICMAPOVERLAYIMAGE`.
  * @type {boolean|undefined}
  */
-olx.source.MapGuideOptions.prototype.useOverlay;
+olx.source.ImageMapGuideOptions.prototype.useOverlay;
 
 
 /**
  * Projection.
  * @type {ol.proj.ProjectionLike}
  */
-olx.source.MapGuideOptions.prototype.projection;
+olx.source.ImageMapGuideOptions.prototype.projection;
 
 
 /**
@@ -3312,21 +3320,21 @@ olx.source.MapGuideOptions.prototype.projection;
  * twice the size of the map viewport, and so on. Default is `1`.
  * @type {number|undefined}
  */
-olx.source.MapGuideOptions.prototype.ratio;
+olx.source.ImageMapGuideOptions.prototype.ratio;
 
 
 /**
  * Resolutions. If specified, requests will be made for these resolutions only.
  * @type {Array.<number>|undefined}
  */
-olx.source.MapGuideOptions.prototype.resolutions;
+olx.source.ImageMapGuideOptions.prototype.resolutions;
 
 
 /**
  * Additional parameters.
  * @type {Object|undefined}
  */
-olx.source.MapGuideOptions.prototype.params;
+olx.source.ImageMapGuideOptions.prototype.params;
 
 
 /**
@@ -4644,8 +4652,8 @@ olx.style.FillOptions;
 
 
 /**
- * Color. Default null; if null, the Canvas/renderer default black will be
- * used.
+ * Color. See {@link ol.color} for possible formats. Default null; if null,
+ * the Canvas/renderer default black will be used.
  * @type {ol.Color|string|undefined}
  */
 olx.style.FillOptions.prototype.color;
@@ -4797,8 +4805,8 @@ olx.style.StrokeOptions;
 
 
 /**
- * Color. Default null; if null, the Canvas/renderer default black will be
- * used.
+ * Color. See {@link ol.color} for possible formats. Default null; if null,
+ * the Canvas/renderer default black will be used.
  * @type {ol.Color|string|undefined}
  */
 olx.style.StrokeOptions.prototype.color;
