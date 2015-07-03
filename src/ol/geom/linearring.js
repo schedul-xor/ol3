@@ -13,6 +13,8 @@ goog.require('ol.geom.flat.simplify');
 
 /**
  * @classdesc
+ * Abstract base class; only used for creating subclasses; do not instantiate
+ * in apps, as cannot be rendered.
  * Linear ring geometry.
  *
  * @constructor
@@ -76,7 +78,7 @@ ol.geom.LinearRing.prototype.closestPointXY =
 
 
 /**
- * @return {number} Area.
+ * @return {number} Area (on projected plane).
  * @api
  */
 ol.geom.LinearRing.prototype.getArea = function() {
