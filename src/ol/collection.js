@@ -76,10 +76,6 @@ ol.CollectionProperty = {
  * Collection; they trigger events on the appropriate object, not on the
  * Collection as a whole.
  *
- * Because a Collection is itself an {@link ol.Object}, it can be bound to any
- * other Object or Collection such that a change in one will automatically be
- * reflected in the other.
- *
  * @constructor
  * @extends {ol.Object}
  * @fires ol.CollectionEvent
@@ -95,7 +91,7 @@ ol.Collection = function(opt_array) {
    * @private
    * @type {Array.<T>}
    */
-  this.array_ = opt_array || [];
+  this.array_ = goog.isDef(opt_array) ? opt_array : [];
 
   this.updateLength_();
 
@@ -115,6 +111,8 @@ ol.Collection.prototype.clear = function() {
 
 
 /**
+ * Add elements to the collection.  This pushes each item in the provided array
+ * to the end of the collection.
  * @param {Array.<T>} arr Array.
  * @return {ol.Collection.<T>} This collection.
  * @api stable
@@ -192,8 +190,9 @@ ol.Collection.prototype.insertAt = function(index, elem) {
 
 
 /**
- * Remove the last element of the collection.
- * @return {T} Element.
+ * Remove the last element of the collection and return it.
+ * Return `undefined` if the collection is empty.
+ * @return {T|undefined} Element.
  * @api stable
  */
 ol.Collection.prototype.pop = function() {
@@ -215,9 +214,9 @@ ol.Collection.prototype.push = function(elem) {
 
 
 /**
- * Removes the first occurence of elem from the collection.
+ * Remove the first occurrence of an element from the collection.
  * @param {T} elem Element.
- * @return {T|undefined} The removed element or undefined if elem was not found.
+ * @return {T|undefined} The removed element or undefined if none found.
  * @api stable
  */
 ol.Collection.prototype.remove = function(elem) {
@@ -233,9 +232,10 @@ ol.Collection.prototype.remove = function(elem) {
 
 
 /**
- * Remove the element at the provided index.
+ * Remove the element at the provided index and return it.
+ * Return `undefined` if the collection does not contain this index.
  * @param {number} index Index.
- * @return {T} Value.
+ * @return {T|undefined} Value.
  * @api stable
  */
 ol.Collection.prototype.removeAt = function(index) {

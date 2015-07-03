@@ -1,6 +1,5 @@
 goog.provide('ol.source.OSM');
 
-goog.require('ol');
 goog.require('ol.Attribution');
 goog.require('ol.source.XYZ');
 
@@ -23,15 +22,14 @@ ol.source.OSM = function(opt_options) {
   if (goog.isDef(options.attributions)) {
     attributions = options.attributions;
   } else {
-    attributions = ol.source.OSM.ATTRIBUTIONS;
+    attributions = [ol.source.OSM.ATTRIBUTION];
   }
 
   var crossOrigin = goog.isDef(options.crossOrigin) ?
       options.crossOrigin : 'anonymous';
 
-  var protocol = ol.IS_HTTPS ? 'https:' : 'http:';
   var url = goog.isDef(options.url) ?
-      options.url : protocol + '//{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+      options.url : 'https://{a-c}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
   goog.base(this, {
     attributions: attributions,
@@ -39,7 +37,8 @@ ol.source.OSM = function(opt_options) {
     opaque: true,
     maxZoom: goog.isDef(options.maxZoom) ? options.maxZoom : 19,
     tileLoadFunction: options.tileLoadFunction,
-    url: url
+    url: url,
+    wrapX: options.wrapX
   });
 
 };
@@ -47,36 +46,14 @@ goog.inherits(ol.source.OSM, ol.source.XYZ);
 
 
 /**
+ * The attribution containing a link to the OpenStreetMap Copyright and License
+ * page.
  * @const
  * @type {ol.Attribution}
  * @api
  */
-ol.source.OSM.DATA_ATTRIBUTION = new ol.Attribution({
-  html: 'Data &copy; ' +
-      '<a href="http://www.openstreetmap.org/">OpenStreetMap</a> ' +
-      'contributors, ' +
-      '<a href="http://www.openstreetmap.org/copyright">ODbL</a>'
+ol.source.OSM.ATTRIBUTION = new ol.Attribution({
+  html: '&copy; ' +
+      '<a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> ' +
+      'contributors.'
 });
-
-
-/**
- * @const
- * @type {ol.Attribution}
- * @api
- */
-ol.source.OSM.TILE_ATTRIBUTION = new ol.Attribution({
-  html: 'Tiles &copy; ' +
-      '<a href="http://www.openstreetmap.org/">OpenStreetMap</a> ' +
-      'contributors, ' +
-      '<a href="http://creativecommons.org/licenses/by-sa/2.0/">CC BY-SA</a>'
-});
-
-
-/**
- * @const
- * @type {Array.<ol.Attribution>}
- */
-ol.source.OSM.ATTRIBUTIONS = [
-  ol.source.OSM.TILE_ATTRIBUTION,
-  ol.source.OSM.DATA_ATTRIBUTION
-];

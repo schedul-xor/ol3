@@ -3,6 +3,17 @@ goog.provide('ol.test.source.XYZ');
 
 describe('ol.source.XYZ', function() {
 
+  describe('constructor', function() {
+
+    it('can be constructed with a custom tile size', function() {
+      var tileSource = new ol.source.XYZ({
+        tileSize: 512
+      });
+      expect(tileSource.getTileGrid().getTileSize(0)).to.be(512);
+    });
+
+  });
+
   describe('tileUrlFunction', function() {
 
     var xyzTileSource, tileGrid;
@@ -53,14 +64,17 @@ describe('ol.source.XYZ', function() {
     describe('wrap x', function() {
 
       it('returns the expected URL', function() {
+        var projection = xyzTileSource.getProjection();
         var tileUrl = xyzTileSource.tileUrlFunction(
-            [6, -31, -23]);
+            xyzTileSource.getWrapXTileCoord([6, -31, -23], projection));
         expect(tileUrl).to.eql('6/33/22');
 
-        tileUrl = xyzTileSource.tileUrlFunction([6, 33, -23]);
+        tileUrl = xyzTileSource.tileUrlFunction(
+            xyzTileSource.getWrapXTileCoord([6, 33, -23], projection));
         expect(tileUrl).to.eql('6/33/22');
 
-        tileUrl = xyzTileSource.tileUrlFunction([6, 97, -23]);
+        tileUrl = xyzTileSource.tileUrlFunction(
+            xyzTileSource.getWrapXTileCoord([6, 97, -23], projection));
         expect(tileUrl).to.eql('6/33/22');
       });
 

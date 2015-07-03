@@ -40,11 +40,14 @@ var map = new ol.Map({
       source: source
     })
   ],
-  renderer: exampleNS.getRendererFromQueryString(),
+  renderer: common.getRendererFromQueryString(),
   target: 'map',
   view: new ol.View({
     projection: proj,
     center: imgCenter,
-    zoom: 0
+    zoom: 0,
+    // constrain the center: center cannot be set outside
+    // this extent
+    extent: [0, -imgHeight, imgWidth, 0]
   })
 });

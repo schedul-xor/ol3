@@ -26,10 +26,12 @@ ol.style.ImageOptions;
 
 /**
  * @classdesc
- * Set image style for vector features.
+ * A base class used for creating subclasses and not instantiated in
+ * apps. Base class for {@link ol.style.Icon} and {@link ol.style.Circle}.
  *
  * @constructor
  * @param {ol.style.ImageOptions} options Options.
+ * @api
  */
 ol.style.Image = function(options) {
 
@@ -67,7 +69,9 @@ ol.style.Image = function(options) {
 
 
 /**
+ * Get the symbolizer opacity.
  * @return {number} Opacity.
+ * @api
  */
 ol.style.Image.prototype.getOpacity = function() {
   return this.opacity_;
@@ -75,7 +79,9 @@ ol.style.Image.prototype.getOpacity = function() {
 
 
 /**
+ * Determine whether the symbolizer rotates with the map.
  * @return {boolean} Rotate with map.
+ * @api
  */
 ol.style.Image.prototype.getRotateWithView = function() {
   return this.rotateWithView_;
@@ -83,6 +89,7 @@ ol.style.Image.prototype.getRotateWithView = function() {
 
 
 /**
+ * Get the symoblizer rotation.
  * @return {number} Rotation.
  * @api
  */
@@ -92,6 +99,7 @@ ol.style.Image.prototype.getRotation = function() {
 
 
 /**
+ * Get the symbolizer scale.
  * @return {number} Scale.
  * @api
  */
@@ -101,7 +109,9 @@ ol.style.Image.prototype.getScale = function() {
 
 
 /**
- * @return {boolean} Snap to pixel?
+ * Determine whether the symbolizer should be snapped to a pixel.
+ * @return {boolean} The symbolizer should snap to a pixel.
+ * @api
  */
 ol.style.Image.prototype.getSnapToPixel = function() {
   return this.snapToPixel_;
@@ -124,16 +134,28 @@ ol.style.Image.prototype.getImage = goog.abstractMethod;
 
 
 /**
+ * @param {number} pixelRatio Pixel ratio.
+ * @return {HTMLCanvasElement|HTMLVideoElement|Image} Image element.
+ */
+ol.style.Image.prototype.getHitDetectionImage = goog.abstractMethod;
+
+
+/**
  * @return {ol.style.ImageState} Image state.
  */
 ol.style.Image.prototype.getImageState = goog.abstractMethod;
 
 
 /**
- * @param {number} pixelRatio Pixel ratio.
- * @return {HTMLCanvasElement|HTMLVideoElement|Image} Image element.
+ * @return {ol.Size} Image size.
  */
-ol.style.Image.prototype.getHitDetectionImage = goog.abstractMethod;
+ol.style.Image.prototype.getImageSize = goog.abstractMethod;
+
+
+/**
+ * @return {ol.Size} Size of the hit-detection image.
+ */
+ol.style.Image.prototype.getHitDetectionImageSize = goog.abstractMethod;
 
 
 /**
@@ -148,6 +170,58 @@ ol.style.Image.prototype.getOrigin = goog.abstractMethod;
  * @return {ol.Size} Size.
  */
 ol.style.Image.prototype.getSize = goog.abstractMethod;
+
+
+/**
+ * Set the opacity.
+ *
+ * @param {number} opacity Opacity.
+ */
+ol.style.Image.prototype.setOpacity = function(opacity) {
+  this.opacity_ = opacity;
+};
+
+
+/**
+ * Set whether to rotate the style with the view.
+ *
+ * @param {boolean} rotateWithView Rotate with map.
+ */
+ol.style.Image.prototype.setRotateWithView = function(rotateWithView) {
+  this.rotateWithView_ = rotateWithView;
+};
+
+
+/**
+ * Set the rotation.
+ *
+ * @param {number} rotation Rotation.
+ * @api
+ */
+ol.style.Image.prototype.setRotation = function(rotation) {
+  this.rotation_ = rotation;
+};
+
+
+/**
+ * Set the scale.
+ *
+ * @param {number} scale Scale.
+ * @api
+ */
+ol.style.Image.prototype.setScale = function(scale) {
+  this.scale_ = scale;
+};
+
+
+/**
+ * Set whether to snap the image to the closest pixel.
+ *
+ * @param {boolean} snapToPixel Snap to pixel?
+ */
+ol.style.Image.prototype.setSnapToPixel = function(snapToPixel) {
+  this.snapToPixel_ = snapToPixel;
+};
 
 
 /**

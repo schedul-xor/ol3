@@ -7,9 +7,11 @@ var nomnom = require('nomnom');
 
 var generateInfo = require('./generate-info');
 
+var googRegEx = /^goog\..*$/;
+
 /**
  * Read the symbols from info file.
- * @param {funciton(Error, Array.<string>, Array.<Object>)} callback Called
+ * @param {function(Error, Array.<string>, Array.<Object>)} callback Called
  *     with the patterns and symbols (or any error).
  */
 function getInfo(callback) {
@@ -19,7 +21,7 @@ function getInfo(callback) {
       return;
     }
     var info = require('../build/info.json');
-    callback(null, info.typedefs, info.symbols, info.externs, info.interfaces);
+    callback(null, info.typedefs, info.symbols, info.externs, info.base);
   });
 }
 
@@ -29,14 +31,15 @@ function getInfo(callback) {
  * @param {Array.<Object>} typedefs List of typedefs.
  * @param {Array.<Object>} symbols List of symbols.
  * @param {Array.<Object>} externs List of externs.
- * @param {Array.<Object>} externs List of interfaces.
+ * @param {Array.<Object>} base List of base.
  * @param {string|undefined} namespace Target object for exported symbols.
  * @return {string} Export code.
  */
-function generateExterns(typedefs, symbols, externs, interfaces) {
+function generateExterns(typedefs, symbols, externs, base) {
   var lines = [];
   var processedSymbols = {};
   var constructors = {};
+  var constructorOptionsTypes = {};
 
   function addNamespaces(name) {
     var parts = name.split('.');
@@ -64,12 +67,14 @@ function generateExterns(typedefs, symbols, externs, interfaces) {
     return name;
   }
 
-  function noGoogTypes(typesWithGoog) {
-    var typesWithoutGoog = [];
-    typesWithGoog.forEach(function(type) {
-      typesWithoutGoog.push(type.replace(/^goog\..*$/, '*'));
+  // Store in "constructorOptionsTypes" type names that start
+  // with "ol." and end with "Options".
+  function findConstructorOptionsTypes(types) {
+    types.forEach(function(type) {
+      if (type.match(/^ol\..*Options$/)) {
+        constructorOptionsTypes[type] = true;
+      }
     });
-    return typesWithoutGoog;
   }
 
   function processSymbol(symbol) {
@@ -93,17 +98,21 @@ function generateExterns(typedefs, symbols, externs, interfaces) {
     if (symbol.kind === 'class') {
       constructors[name] = true;
       lines.push(' * @constructor');
+      if (symbol.extends && !googRegEx.test(symbol.extends)) {
+        lines.push(' * @extends {' + symbol.extends + '}');
+      }
     }
     if (symbol.types) {
-      lines.push(' * @type {' + noGoogTypes(symbol.types).join('|') + '}');
+      lines.push(' * @type {' + symbol.types.join('|') + '}');
     }
     var args = [];
     if (symbol.params) {
       symbol.params.forEach(function(param) {
+        findConstructorOptionsTypes(param.types);
         args.push(param.name);
         lines.push(' * @param {' +
             (param.variable ? '...' : '') +
-            noGoogTypes(param.types).join('|') +
+            param.types.join('|') +
             (param.optional ? '=' : '') + (param.nullable ? '!' : '') +
             '} ' + param.name);
       });
@@ -111,7 +120,7 @@ function generateExterns(typedefs, symbols, externs, interfaces) {
     if (symbol.returns) {
       lines.push(' * @return {' +
           (symbol.returns.nullable ? '!' : '') +
-          noGoogTypes(symbol.returns.types).join('|') + '}');
+          symbol.returns.types.join('|') + '}');
     }
     if (symbol.template) {
       lines.push(' * @template ' + symbol.template);
@@ -127,16 +136,39 @@ function generateExterns(typedefs, symbols, externs, interfaces) {
 
   externs.forEach(processSymbol);
 
-  interfaces.forEach(processSymbol);
+  base.forEach(processSymbol);
 
   symbols.forEach(processSymbol);
 
   typedefs.forEach(function(typedef) {
+    // we're about to add a @typedef for "typedef.name" so remove that
+    // type from constructorOptionsTypes
+    delete constructorOptionsTypes[typedef.name];
+
     addNamespaces(typedef.name);
     lines.push('/**');
-    lines.push(' * @typedef {' + noGoogTypes(typedef.types).join('|') + '}');
+    lines.push(' * @typedef {' + typedef.types.join('|') + '}');
     lines.push(' */');
     lines.push(nameToJS(typedef.name) + ';');
+    lines.push('\n');
+  });
+
+
+  // At this point constructorOptionsTypes includes options types for which we
+  // did not have a @typedef yet. For those we add @typedef {Object}.
+  //
+  // This is used for abstract base classes. Abstract base classes should be
+  // defined as types in the ol externs file. But the corresponding @typedef's
+  // are not marked with an @api annotation because abstract base classes are
+  // not instantiated by applications. Yet, we need to have a type defined
+  // in the ol externs file for these options types. So we just use
+  // @typedef {Object}.
+  Object.keys(constructorOptionsTypes).forEach(function(key) {
+    lines.push('/**');
+    lines.push(' * No `@api` annotation for `' + key + '`, use `Object`.');
+    lines.push(' * @typedef {Object}');
+    lines.push(' */');
+    lines.push(nameToJS(key) + ';');
     lines.push('\n');
   });
 
@@ -153,10 +185,10 @@ function generateExterns(typedefs, symbols, externs, interfaces) {
 function main(callback) {
   async.waterfall([
     getInfo,
-    function(typedefs, symbols, externs, interfaces, done) {
+    function(typedefs, symbols, externs, base, done) {
       var code, err;
       try {
-        code = generateExterns(typedefs, symbols, externs, interfaces);
+        code = generateExterns(typedefs, symbols, externs, base);
       } catch (e) {
         err = e;
       }

@@ -1,6 +1,29 @@
 goog.provide('ol.geom.flat.contains');
 
 goog.require('goog.asserts');
+goog.require('ol.extent');
+
+
+/**
+ * @param {Array.<number>} flatCoordinates Flat coordinates.
+ * @param {number} offset Offset.
+ * @param {number} end End.
+ * @param {number} stride Stride.
+ * @param {ol.Extent} extent Extent.
+ * @return {boolean} Contains extent.
+ */
+ol.geom.flat.contains.linearRingContainsExtent =
+    function(flatCoordinates, offset, end, stride, extent) {
+  var outside = ol.extent.forEachCorner(extent,
+      /**
+       * @param {ol.Coordinate} coordinate Coordinate.
+       */
+      function(coordinate) {
+        return !ol.geom.flat.contains.linearRingContainsXY(flatCoordinates,
+            offset, end, stride, coordinate[0], coordinate[1]);
+      });
+  return !outside;
+};
 
 
 /**
@@ -44,7 +67,7 @@ ol.geom.flat.contains.linearRingContainsXY =
  */
 ol.geom.flat.contains.linearRingsContainsXY =
     function(flatCoordinates, offset, ends, stride, x, y) {
-  goog.asserts.assert(ends.length > 0);
+  goog.asserts.assert(ends.length > 0, 'ends should not be an empty array');
   if (ends.length === 0) {
     return false;
   }
@@ -74,7 +97,7 @@ ol.geom.flat.contains.linearRingsContainsXY =
  */
 ol.geom.flat.contains.linearRingssContainsXY =
     function(flatCoordinates, offset, endss, stride, x, y) {
-  goog.asserts.assert(endss.length > 0);
+  goog.asserts.assert(endss.length > 0, 'endss should not be an empty array');
   if (endss.length === 0) {
     return false;
   }

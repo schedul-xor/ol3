@@ -18,14 +18,6 @@ ol.has.DEVICE_PIXEL_RATIO = goog.global.devicePixelRatio || 1;
 
 
 /**
- * True if the browser supports ArrayBuffers.
- * @const
- * @type {boolean}
- */
-ol.has.ARRAY_BUFFER = 'ArrayBuffer' in goog.global;
-
-
-/**
  * True if the browser's Canvas implementation implements {get,set}LineDash.
  * @type {boolean}
  */
@@ -68,8 +60,7 @@ ol.has.CANVAS = ol.ENABLE_CANVAS && (
  * @type {boolean}
  * @api stable
  */
-ol.has.DEVICE_ORIENTATION =
-    'DeviceOrientationEvent' in goog.global;
+ol.has.DEVICE_ORIENTATION = 'DeviceOrientationEvent' in goog.global;
 
 
 /**
@@ -111,8 +102,7 @@ ol.has.POINTER = 'PointerEvent' in goog.global;
  * @const
  * @type {boolean}
  */
-ol.has.MSPOINTER =
-    !!(goog.global.navigator.msPointerEnabled);
+ol.has.MSPOINTER = !!(goog.global.navigator.msPointerEnabled);
 
 
 /**
@@ -121,21 +111,32 @@ ol.has.MSPOINTER =
  * @type {boolean}
  * @api stable
  */
-ol.has.WEBGL = ol.ENABLE_WEBGL && (
-    /**
-     * @return {boolean} WebGL supported.
-     */
-    function() {
-      if (!('WebGLRenderingContext' in goog.global)) {
-        return false;
-      }
+ol.has.WEBGL;
+
+
+(function() {
+  if (ol.ENABLE_WEBGL) {
+    var hasWebGL = false;
+    var textureSize;
+    var /** @type {Array.<string>} */ extensions = [];
+
+    if ('WebGLRenderingContext' in goog.global) {
       try {
         var canvas = /** @type {HTMLCanvasElement} */
             (goog.dom.createElement(goog.dom.TagName.CANVAS));
-        return !goog.isNull(ol.webgl.getContext(canvas, {
+        var gl = ol.webgl.getContext(canvas, {
           failIfMajorPerformanceCaveat: true
-        }));
-      } catch (e) {
-        return false;
-      }
-    })();
+        });
+        if (!goog.isNull(gl)) {
+          hasWebGL = true;
+          textureSize = /** @type {number} */
+              (gl.getParameter(gl.MAX_TEXTURE_SIZE));
+          extensions = gl.getSupportedExtensions();
+        }
+      } catch (e) {}
+    }
+    ol.has.WEBGL = hasWebGL;
+    ol.WEBGL_EXTENSIONS = extensions;
+    ol.WEBGL_MAX_TEXTURE_SIZE = textureSize;
+  }
+})();

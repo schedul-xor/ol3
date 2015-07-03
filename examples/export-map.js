@@ -1,14 +1,22 @@
 goog.require('ol.Map');
 goog.require('ol.View');
 goog.require('ol.control');
+goog.require('ol.format.GeoJSON');
 goog.require('ol.layer.Tile');
+goog.require('ol.layer.Vector');
 goog.require('ol.source.OSM');
-
+goog.require('ol.source.Vector');
 
 var map = new ol.Map({
   layers: [
     new ol.layer.Tile({
       source: new ol.source.OSM()
+    }),
+    new ol.layer.Vector({
+      source: new ol.source.Vector({
+        url: 'data/geojson/countries.geojson',
+        format: new ol.format.GeoJSON()
+      })
     })
   ],
   target: 'map',

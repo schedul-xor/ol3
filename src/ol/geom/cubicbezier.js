@@ -3,6 +3,7 @@ goog.provide('ol.geom.CubicBezier');
 goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('ol.extent');
+goog.require('ol.geom.GeometryLayout');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.SimpleGeometry');
 goog.require('ol.geom.flat.deflate');
@@ -114,21 +115,6 @@ ol.geom.CubicBezier.prototype.createOrUpdateExtent_ =
 
   return ol.extent.createOrUpdate(extent[0], extent[1],
       extent[2], extent[3], opt_extent);
-};
-
-
-/**
- * @param {ol.Extent=} opt_extent Extent.
- * @return {Array.<number>}
- * @api
- */
-ol.geom.CubicBezier.prototype.getExtent = function(opt_extent) {
-  if (this.extentRevision != this.getRevision()) {
-    this.extent = this.createOrUpdateExtent_(this.stride, opt_extent);
-    this.extentRevision = this.getRevision();
-  }
-  goog.asserts.assert(goog.isDef(this.extent));
-  return ol.extent.returnOrUpdate(this.extent, opt_extent);
 };
 
 
@@ -348,7 +334,7 @@ ol.geom.CubicBezier.prototype.setCoordinates =
     }
     this.flatCoordinates.length = ol.geom.flat.deflate.coordinates(
         this.flatCoordinates, 0, coordinates, this.stride);
-    this.dispatchChangeEvent();
+    this.changed();
   }
   this.xPolyCache_ = null;
   this.yPolyCache_ = null;
@@ -365,7 +351,7 @@ ol.geom.CubicBezier.prototype.setFlatCoordinates =
     function(layout, flatCoordinates, ends) {
   this.setFlatCoordinatesInternal(layout, flatCoordinates);
   this.ends_ = ends;
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 

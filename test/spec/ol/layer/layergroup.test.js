@@ -326,6 +326,31 @@ describe('ol.layer.Group', function() {
 
   });
 
+  describe('layers events', function() {
+
+    it('listen / unlisten for layers added to the collection', function() {
+      var layers = new ol.Collection();
+      var layerGroup = new ol.layer.Group({
+        layers: layers
+      });
+      expect(goog.object.getCount(layerGroup.listenerKeys_)).to.eql(0);
+      var layer = new ol.layer.Layer({});
+      layers.push(layer);
+      expect(goog.object.getCount(layerGroup.listenerKeys_)).to.eql(1);
+
+      var listeners = layerGroup.listenerKeys_[goog.getUid(layer)];
+      expect(listeners.length).to.eql(2);
+      expect(listeners[0]).to.be.a(goog.events.Listener);
+      expect(listeners[1]).to.be.a(goog.events.Listener);
+
+      // remove the layer from the group
+      layers.pop();
+      expect(goog.object.getCount(layerGroup.listenerKeys_)).to.eql(0);
+      expect(listeners[0].removed).to.eql(true);
+      expect(listeners[1].removed).to.eql(true);
+    });
+
+  });
 
   describe('#setLayers', function() {
 
@@ -340,9 +365,6 @@ describe('ol.layer.Group', function() {
 
       layerGroup.setLayers(layers);
       expect(layerGroup.getLayers()).to.be(layers);
-
-      layerGroup.setLayers(null);
-      expect(layerGroup.getLayers()).to.be(null);
 
       goog.dispose(layerGroup);
       goog.dispose(layer);
@@ -382,6 +404,12 @@ describe('ol.layer.Group', function() {
       maxResolution: 500,
       minResolution: 0.25
     });
+    var layer3 = new ol.layer.Layer({
+      source: new ol.source.Source({
+        projection: 'EPSG:4326'
+      }),
+      extent: [-5, -2, 5, 2]
+    });
 
     it('does not transform layerStates by default', function() {
       var layerGroup = new ol.layer.Group({
@@ -402,6 +430,29 @@ describe('ol.layer.Group', function() {
 
       expect(layerStatesArray[1]).to.eql(layer2.getLayerState());
 
+      goog.dispose(layerGroup);
+    });
+
+    it('uses the layer group extent if layer has no extent', function() {
+      var groupExtent = [-10, -5, 10, 5];
+      var layerGroup = new ol.layer.Group({
+        extent: groupExtent,
+        layers: [layer1]
+      });
+      var layerStatesArray = layerGroup.getLayerStatesArray();
+      expect(layerStatesArray[0].extent).to.eql(groupExtent);
+      goog.dispose(layerGroup);
+    });
+
+    it('uses the intersection of group and child extent', function() {
+      var groupExtent = [-10, -5, 10, 5];
+      var layerGroup = new ol.layer.Group({
+        extent: groupExtent,
+        layers: [layer3]
+      });
+      var layerStatesArray = layerGroup.getLayerStatesArray();
+      expect(layerStatesArray[0].extent).to.eql(
+          ol.extent.getIntersection(layer3.getExtent(), groupExtent));
       goog.dispose(layerGroup);
     });
 
@@ -451,6 +502,7 @@ describe('ol.layer.Group', function() {
 
     goog.dispose(layer1);
     goog.dispose(layer2);
+    goog.dispose(layer3);
 
   });
 
@@ -458,8 +510,10 @@ describe('ol.layer.Group', function() {
 
 goog.require('goog.dispose');
 goog.require('goog.events.EventType');
+goog.require('goog.events.Listener');
 goog.require('goog.object');
 goog.require('ol.ObjectEventType');
+goog.require('ol.extent');
 goog.require('ol.layer.Layer');
 goog.require('ol.layer.Group');
 goog.require('ol.source.Source');

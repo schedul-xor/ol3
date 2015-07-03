@@ -85,11 +85,31 @@ describe('ol.source.Vector', function() {
 
     describe('#clear', function() {
 
-      it('removes all features', function() {
+      it('removes all features using fast path', function() {
         var changeSpy = sinon.spy();
         goog.events.listen(vectorSource, 'change', changeSpy);
         var removeFeatureSpy = sinon.spy();
         goog.events.listen(vectorSource, 'removefeature', removeFeatureSpy);
+        var clearSourceSpy = sinon.spy();
+        goog.events.listen(vectorSource, 'clear', clearSourceSpy);
+        vectorSource.clear(true);
+        expect(vectorSource.getFeatures()).to.eql([]);
+        expect(vectorSource.isEmpty()).to.be(true);
+        expect(changeSpy).to.be.called();
+        expect(changeSpy.callCount).to.be(1);
+        expect(removeFeatureSpy).not.to.be.called();
+        expect(removeFeatureSpy.callCount).to.be(0);
+        expect(clearSourceSpy).to.be.called();
+        expect(clearSourceSpy.callCount).to.be(1);
+      });
+
+      it('removes all features using slow path', function() {
+        var changeSpy = sinon.spy();
+        goog.events.listen(vectorSource, 'change', changeSpy);
+        var removeFeatureSpy = sinon.spy();
+        goog.events.listen(vectorSource, 'removefeature', removeFeatureSpy);
+        var clearSourceSpy = sinon.spy();
+        goog.events.listen(vectorSource, 'clear', clearSourceSpy);
         vectorSource.clear();
         expect(vectorSource.getFeatures()).to.eql([]);
         expect(vectorSource.isEmpty()).to.be(true);
@@ -97,6 +117,8 @@ describe('ol.source.Vector', function() {
         expect(changeSpy.callCount).to.be(1);
         expect(removeFeatureSpy).to.be.called();
         expect(removeFeatureSpy.callCount).to.be(features.length);
+        expect(clearSourceSpy).to.be.called();
+        expect(clearSourceSpy.callCount).to.be(1);
       });
 
     });
@@ -242,6 +264,17 @@ describe('ol.source.Vector', function() {
       expect(listener).to.be.called();
     });
 
+    it('fires a changefeature event when updating a feature', function() {
+      var feature = new ol.Feature(new ol.geom.Point([1, 1]));
+      vectorSource.addFeature(feature);
+      var listener = sinon.spy(function(event) {
+        expect(event.feature).to.be(feature);
+      });
+      vectorSource.on('changefeature', listener);
+      feature.setStyle(null);
+      expect(listener).to.be.called();
+    });
+
   });
 
   describe('#getFeatureById()', function() {
@@ -332,20 +365,38 @@ describe('ol.source.Vector', function() {
 
   });
 
+  describe('#loadFeatures', function() {
+
+    describe('with no loader and the "all" strategy', function() {
+
+      it('stores the infinity extent in the Rtree', function() {
+        var source = new ol.source.Vector();
+        source.loadFeatures([-10000, -10000, 10000, 10000], 1,
+            ol.proj.get('EPSG:3857'));
+        var loadedExtents = source.loadedExtentsRtree_.getAll();
+        expect(loadedExtents).to.have.length(1);
+        expect(loadedExtents[0].extent).to.eql(
+            [-Infinity, -Infinity, Infinity, Infinity]);
+      });
+    });
+
+  });
+
   describe('the feature id index', function() {
     var source;
     beforeEach(function() {
       source = new ol.source.Vector();
     });
 
-    it('allows adding feature with the same id', function() {
+    it('ignores features with the same id', function() {
       var feature = new ol.Feature();
       feature.setId('foo');
       source.addFeature(feature);
       var dupe = new ol.Feature();
       dupe.setId('foo');
       source.addFeature(dupe);
-      expect(source.getFeatureById('foo')).to.be(dupe);
+      expect(source.getFeatures()).to.have.length(1);
+      expect(source.getFeatureById('foo')).to.be(feature);
     });
 
     it('allows changing feature and set the same id', function() {
@@ -382,4 +433,5 @@ describe('ol.source.Vector', function() {
 goog.require('goog.events');
 goog.require('ol.Feature');
 goog.require('ol.geom.Point');
+goog.require('ol.proj');
 goog.require('ol.source.Vector');

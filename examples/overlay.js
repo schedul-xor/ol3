@@ -13,7 +13,7 @@ var layer = new ol.layer.Tile({
 
 var map = new ol.Map({
   layers: [layer],
-  renderer: exampleNS.getRendererFromQueryString(),
+  renderer: common.getRendererFromQueryString(),
   target: 'map',
   view: new ol.View({
     center: [0, 0],
@@ -21,7 +21,7 @@ var map = new ol.Map({
   })
 });
 
-var pos = ol.proj.transform([16.3725, 48.208889], 'EPSG:4326', 'EPSG:3857');
+var pos = ol.proj.fromLonLat([16.3725, 48.208889]);
 
 // Vienna marker
 var marker = new ol.Overlay({
@@ -53,7 +53,7 @@ map.on('click', function(evt) {
 
   $(element).popover('destroy');
   popup.setPosition(coordinate);
-  // the keys are quoted to prevent renaming in ADVANCED_OPTIMIZATIONS mode.
+  // the keys are quoted to prevent renaming in ADVANCED mode.
   $(element).popover({
     'placement': 'top',
     'animation': false,

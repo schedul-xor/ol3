@@ -12,9 +12,16 @@ goog.require('goog.events');
 goog.require('goog.events.Event');
 goog.require('goog.events.EventType');
 goog.require('goog.object');
+goog.require('ol.Extent');
+goog.require('ol.FeatureLoader');
+goog.require('ol.LoadingStrategy');
 goog.require('ol.ObjectEventType');
+goog.require('ol.extent');
+goog.require('ol.featureloader');
+goog.require('ol.loadingstrategy');
 goog.require('ol.proj');
 goog.require('ol.source.Source');
+goog.require('ol.source.State');
 goog.require('ol.structs.RBush');
 
 
@@ -28,8 +35,24 @@ ol.source.VectorEventType = {
    * @api stable
    */
   ADDFEATURE: 'addfeature',
+
+  /**
+   * Triggered when a feature is updated.
+   * @event ol.source.VectorEvent#changefeature
+   * @api
+   */
+  CHANGEFEATURE: 'changefeature',
+
+  /**
+   * Triggered when the clear method is called on the source.
+   * @event ol.source.VectorEvent#clear
+   * @api
+   */
+  CLEAR: 'clear',
+
   /**
    * Triggered when a feature is removed from the source.
+   * See {@link ol.source.Vector#clear source.clear()} for exceptions.
    * @event ol.source.VectorEvent#removefeature
    * @api stable
    */
@@ -40,7 +63,7 @@ ol.source.VectorEventType = {
 
 /**
  * @classdesc
- * Base class for vector sources.
+ * Provides a source of features for vector layers.
  *
  * @constructor
  * @extends {ol.source.Source}
@@ -55,16 +78,44 @@ ol.source.Vector = function(opt_options) {
   goog.base(this, {
     attributions: options.attributions,
     logo: options.logo,
-    projection: options.projection,
-    state: goog.isDef(options.state) ?
-        /** @type {ol.source.State} */ (options.state) : undefined
+    projection: undefined,
+    state: ol.source.State.READY,
+    wrapX: goog.isDef(options.wrapX) ? options.wrapX : true
   });
+
+  /**
+   * @private
+   * @type {ol.FeatureLoader}
+   */
+  this.loader_ = goog.nullFunction;
+
+  if (goog.isDef(options.loader)) {
+    this.loader_ = options.loader;
+  } else if (goog.isDef(options.url)) {
+    goog.asserts.assert(goog.isDef(options.format),
+        'format must be set when url is set');
+    // create a XHR feature loader for "url" and "format"
+    this.loader_ = ol.featureloader.xhr(options.url, options.format);
+  }
+
+  /**
+   * @private
+   * @type {ol.LoadingStrategy}
+   */
+  this.strategy_ = goog.isDef(options.strategy) ? options.strategy :
+      ol.loadingstrategy.all;
 
   /**
    * @private
    * @type {ol.structs.RBush.<ol.Feature>}
    */
-  this.rBush_ = new ol.structs.RBush();
+  this.featuresRtree_ = new ol.structs.RBush();
+
+  /**
+   * @private
+   * @type {ol.structs.RBush.<{extent: ol.Extent}>}
+   */
+  this.loadedExtentsRtree_ = new ol.structs.RBush();
 
   /**
    * @private
@@ -101,12 +152,15 @@ goog.inherits(ol.source.Vector, ol.source.Source);
 
 
 /**
- * @param {ol.Feature} feature Feature.
+ * Add a single feature to the source.  If you want to add a batch of features
+ * at once, call {@link ol.source.Vector#addFeatures source.addFeatures()}
+ * instead.
+ * @param {ol.Feature} feature Feature to add.
  * @api stable
  */
 ol.source.Vector.prototype.addFeature = function(feature) {
   this.addFeatureInternal(feature);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -117,7 +171,34 @@ ol.source.Vector.prototype.addFeature = function(feature) {
  */
 ol.source.Vector.prototype.addFeatureInternal = function(feature) {
   var featureKey = goog.getUid(feature).toString();
-  goog.asserts.assert(!(featureKey in this.featureChangeKeys_));
+
+  if (!this.addToIndex_(featureKey, feature)) {
+    return;
+  }
+
+  this.setupChangeEvents_(featureKey, feature);
+
+  var geometry = feature.getGeometry();
+  if (goog.isDefAndNotNull(geometry)) {
+    var extent = geometry.getExtent();
+    this.featuresRtree_.insert(extent, feature);
+  } else {
+    this.nullGeometryFeatures_[featureKey] = feature;
+  }
+
+  this.dispatchEvent(
+      new ol.source.VectorEvent(ol.source.VectorEventType.ADDFEATURE, feature));
+};
+
+
+/**
+ * @param {string} featureKey
+ * @param {ol.Feature} feature
+ * @private
+ */
+ol.source.Vector.prototype.setupChangeEvents_ = function(featureKey, feature) {
+  goog.asserts.assert(!(featureKey in this.featureChangeKeys_),
+      'key (%s) not yet registered in featurChangeKey', featureKey);
   this.featureChangeKeys_[featureKey] = [
     goog.events.listen(feature,
         goog.events.EventType.CHANGE,
@@ -126,33 +207,42 @@ ol.source.Vector.prototype.addFeatureInternal = function(feature) {
         ol.ObjectEventType.PROPERTYCHANGE,
         this.handleFeatureChange_, false, this)
   ];
-  var geometry = feature.getGeometry();
-  if (goog.isDefAndNotNull(geometry)) {
-    var extent = geometry.getExtent();
-    this.rBush_.insert(extent, feature);
-  } else {
-    this.nullGeometryFeatures_[featureKey] = feature;
-  }
+};
+
+
+/**
+ * @param {string} featureKey
+ * @param {ol.Feature} feature
+ * @return {boolean} `true` if the feature is "valid", in the sense that it is
+ *     also a candidate for insertion into the Rtree, otherwise `false`.
+ * @private
+ */
+ol.source.Vector.prototype.addToIndex_ = function(featureKey, feature) {
+  var valid = true;
   var id = feature.getId();
   if (goog.isDef(id)) {
-    this.idIndex_[id.toString()] = feature;
+    if (!(id.toString() in this.idIndex_)) {
+      this.idIndex_[id.toString()] = feature;
+    } else {
+      valid = false;
+    }
   } else {
     goog.asserts.assert(!(featureKey in this.undefIdIndex_),
         'Feature already added to the source');
     this.undefIdIndex_[featureKey] = feature;
   }
-  this.dispatchEvent(
-      new ol.source.VectorEvent(ol.source.VectorEventType.ADDFEATURE, feature));
+  return valid;
 };
 
 
 /**
- * @param {Array.<ol.Feature>} features Features.
+ * Add a batch of features to the source.
+ * @param {Array.<ol.Feature>} features Features to add.
  * @api stable
  */
 ol.source.Vector.prototype.addFeatures = function(features) {
   this.addFeaturesInternal(features);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -162,56 +252,118 @@ ol.source.Vector.prototype.addFeatures = function(features) {
  * @protected
  */
 ol.source.Vector.prototype.addFeaturesInternal = function(features) {
-  // FIXME use R-Bush bulk load when available
-  var i, ii;
-  for (i = 0, ii = features.length; i < ii; ++i) {
-    this.addFeatureInternal(features[i]);
+  var featureKey, i, length, feature;
+
+  var extents = [];
+  var newFeatures = [];
+  var geometryFeatures = [];
+
+  for (i = 0, length = features.length; i < length; i++) {
+    feature = features[i];
+    featureKey = goog.getUid(feature).toString();
+    if (this.addToIndex_(featureKey, feature)) {
+      newFeatures.push(feature);
+    }
+  }
+
+  for (i = 0, length = newFeatures.length; i < length; i++) {
+    feature = newFeatures[i];
+    featureKey = goog.getUid(feature).toString();
+    this.setupChangeEvents_(featureKey, feature);
+
+    var geometry = feature.getGeometry();
+    if (goog.isDefAndNotNull(geometry)) {
+      var extent = geometry.getExtent();
+      extents.push(extent);
+      geometryFeatures.push(feature);
+    } else {
+      this.nullGeometryFeatures_[featureKey] = feature;
+    }
+  }
+  this.featuresRtree_.load(extents, geometryFeatures);
+
+  for (i = 0, length = newFeatures.length; i < length; i++) {
+    this.dispatchEvent(new ol.source.VectorEvent(
+        ol.source.VectorEventType.ADDFEATURE, newFeatures[i]));
   }
 };
 
 
 /**
- * Remove all features.
+ * Remove all features from the source.
+ * @param {boolean=} opt_fast Skip dispatching of {@link removefeature} events.
  * @api stable
  */
-ol.source.Vector.prototype.clear = function() {
-  this.rBush_.forEach(this.removeFeatureInternal, this);
-  this.rBush_.clear();
-  goog.object.forEach(
-      this.nullGeometryFeatures_, this.removeFeatureInternal, this);
-  goog.object.clear(this.nullGeometryFeatures_);
-  goog.asserts.assert(goog.object.isEmpty(this.featureChangeKeys_));
-  this.dispatchChangeEvent();
+ol.source.Vector.prototype.clear = function(opt_fast) {
+  if (opt_fast) {
+    for (var featureId in this.featureChangeKeys_) {
+      var keys = this.featureChangeKeys_[featureId];
+      goog.array.forEach(keys, goog.events.unlistenByKey);
+    }
+    this.featureChangeKeys_ = {};
+    this.idIndex_ = {};
+    this.undefIdIndex_ = {};
+  } else {
+    var rmFeatureInternal = this.removeFeatureInternal;
+    this.featuresRtree_.forEach(rmFeatureInternal, this);
+    goog.object.forEach(this.nullGeometryFeatures_, rmFeatureInternal, this);
+    goog.asserts.assert(goog.object.isEmpty(this.featureChangeKeys_),
+        'featureChangeKeys is an empty object now');
+    goog.asserts.assert(goog.object.isEmpty(this.idIndex_),
+        'idIndex is an empty object now');
+    goog.asserts.assert(goog.object.isEmpty(this.undefIdIndex_),
+        'undefIdIndex is an empty object now');
+  }
+
+  this.featuresRtree_.clear();
+  this.loadedExtentsRtree_.clear();
+  this.nullGeometryFeatures_ = {};
+
+  var clearEvent = new ol.source.VectorEvent(ol.source.VectorEventType.CLEAR);
+  this.dispatchEvent(clearEvent);
+  this.changed();
 };
 
 
 /**
- * @param {function(this: T, ol.Feature): S} f Callback.
- * @param {T=} opt_this The object to use as `this` in `f`.
- * @return {S|undefined}
+ * Iterate through all features on the source, calling the provided callback
+ * with each one.  If the callback returns any "truthy" value, iteration will
+ * stop and the function will return the same value.
+ *
+ * @param {function(this: T, ol.Feature): S} callback Called with each feature
+ *     on the source.  Return a truthy value to stop iteration.
+ * @param {T=} opt_this The object to use as `this` in the callback.
+ * @return {S|undefined} The return value from the last call to the callback.
  * @template T,S
  * @api stable
  */
-ol.source.Vector.prototype.forEachFeature = function(f, opt_this) {
-  return this.rBush_.forEach(f, opt_this);
+ol.source.Vector.prototype.forEachFeature = function(callback, opt_this) {
+  return this.featuresRtree_.forEach(callback, opt_this);
 };
 
 
 /**
+ * Iterate through all features whose geometries contain the provided
+ * coordinate, calling the callback with each feature.  If the callback returns
+ * a "truthy" value, iteration will stop and the function will return the same
+ * value.
+ *
  * @param {ol.Coordinate} coordinate Coordinate.
- * @param {function(this: T, ol.Feature): S} f Callback.
- * @param {T=} opt_this The object to use as `this` in `f`.
- * @return {S|undefined}
+ * @param {function(this: T, ol.Feature): S} callback Called with each feature
+ *     whose goemetry contains the provided coordinate.
+ * @param {T=} opt_this The object to use as `this` in the callback.
+ * @return {S|undefined} The return value from the last call to the callback.
  * @template T,S
  */
-ol.source.Vector.prototype.forEachFeatureAtCoordinate =
-    function(coordinate, f, opt_this) {
+ol.source.Vector.prototype.forEachFeatureAtCoordinateDirect =
+    function(coordinate, callback, opt_this) {
   var extent = [coordinate[0], coordinate[1], coordinate[0], coordinate[1]];
   return this.forEachFeatureInExtent(extent, function(feature) {
     var geometry = feature.getGeometry();
-    goog.asserts.assert(goog.isDefAndNotNull(geometry));
+    goog.asserts.assert(goog.isDefAndNotNull(geometry),
+        'feature geometry is defined and not null');
     if (geometry.containsCoordinate(coordinate)) {
-      return f.call(opt_this, feature);
+      return callback.call(opt_this, feature);
     } else {
       return undefined;
     }
@@ -220,16 +372,26 @@ ol.source.Vector.prototype.forEachFeatureAtCoordinate =
 
 
 /**
+ * Iterate through all features whose bounding box intersects the provided
+ * extent (note that the feature's geometry may not intersect the extent),
+ * calling the callback with each feature.  If the callback returns a "truthy"
+ * value, iteration will stop and the function will return the same value.
+ *
+ * If you are interested in features whose geometry intersects an extent, call
+ * the {@link ol.source.Vector#forEachFeatureIntersectingExtent
+ * source.forEachFeatureIntersectingExtent()} method instead.
+ *
  * @param {ol.Extent} extent Extent.
- * @param {function(this: T, ol.Feature): S} f Callback.
- * @param {T=} opt_this The object to use as `this` in `f`.
- * @return {S|undefined}
+ * @param {function(this: T, ol.Feature): S} callback Called with each feature
+ *     whose bounding box intersects the provided extent.
+ * @param {T=} opt_this The object to use as `this` in the callback.
+ * @return {S|undefined} The return value from the last call to the callback.
  * @template T,S
  * @api
  */
 ol.source.Vector.prototype.forEachFeatureInExtent =
-    function(extent, f, opt_this) {
-  return this.rBush_.forEachInExtent(extent, f, opt_this);
+    function(extent, callback, opt_this) {
+  return this.featuresRtree_.forEachInExtent(extent, callback, opt_this);
 };
 
 
@@ -248,11 +410,51 @@ ol.source.Vector.prototype.forEachFeatureInExtentAtResolution =
 
 
 /**
+ * Iterate through all features whose geometry intersects the provided extent,
+ * calling the callback with each feature.  If the callback returns a "truthy"
+ * value, iteration will stop and the function will return the same value.
+ *
+ * If you only want to test for bounding box intersection, call the
+ * {@link ol.source.Vector#forEachFeatureInExtent
+ * source.forEachFeatureInExtent()} method instead.
+ *
+ * @param {ol.Extent} extent Extent.
+ * @param {function(this: T, ol.Feature): S} callback Called with each feature
+ *     whose geometry intersects the provided extent.
+ * @param {T=} opt_this The object to use as `this` in the callback.
+ * @return {S|undefined} The return value from the last call to the callback.
+ * @template T,S
+ * @api
+ */
+ol.source.Vector.prototype.forEachFeatureIntersectingExtent =
+    function(extent, callback, opt_this) {
+  return this.forEachFeatureInExtent(extent,
+      /**
+       * @param {ol.Feature} feature Feature.
+       * @return {S|undefined}
+       * @template S
+       */
+      function(feature) {
+        var geometry = feature.getGeometry();
+        goog.asserts.assert(goog.isDefAndNotNull(geometry),
+            'feature geometry is defined and not null');
+        if (geometry.intersectsExtent(extent)) {
+          var result = callback.call(opt_this, feature);
+          if (result) {
+            return result;
+          }
+        }
+      });
+};
+
+
+/**
+ * Get all features on the source.
  * @return {Array.<ol.Feature>} Features.
  * @api stable
  */
 ol.source.Vector.prototype.getFeatures = function() {
-  var features = this.rBush_.getAll();
+  var features = this.featuresRtree_.getAll();
   if (!goog.object.isEmpty(this.nullGeometryFeatures_)) {
     goog.array.extend(
         features, goog.object.getValues(this.nullGeometryFeatures_));
@@ -262,13 +464,14 @@ ol.source.Vector.prototype.getFeatures = function() {
 
 
 /**
+ * Get all features whose geometry intersects the provided coordinate.
  * @param {ol.Coordinate} coordinate Coordinate.
  * @return {Array.<ol.Feature>} Features.
  * @api stable
  */
 ol.source.Vector.prototype.getFeaturesAtCoordinate = function(coordinate) {
   var features = [];
-  this.forEachFeatureAtCoordinate(coordinate, function(feature) {
+  this.forEachFeatureAtCoordinateDirect(coordinate, function(feature) {
     features.push(feature);
   });
   return features;
@@ -276,15 +479,20 @@ ol.source.Vector.prototype.getFeaturesAtCoordinate = function(coordinate) {
 
 
 /**
+ * Get all features in the provided extent.  Note that this returns all features
+ * whose bounding boxes intersect the given extent (so it may include features
+ * whose geometries do not intersect the extent).
  * @param {ol.Extent} extent Extent.
  * @return {Array.<ol.Feature>} Features.
+ * @api
  */
 ol.source.Vector.prototype.getFeaturesInExtent = function(extent) {
-  return this.rBush_.getInExtent(extent);
+  return this.featuresRtree_.getInExtent(extent);
 };
 
 
 /**
+ * Get the closest feature to the provided coordinate.
  * @param {ol.Coordinate} coordinate Coordinate.
  * @return {ol.Feature} Closest feature.
  * @api stable
@@ -304,13 +512,14 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
   var closestPoint = [NaN, NaN];
   var minSquaredDistance = Infinity;
   var extent = [-Infinity, -Infinity, Infinity, Infinity];
-  this.rBush_.forEachInExtent(extent,
+  this.featuresRtree_.forEachInExtent(extent,
       /**
        * @param {ol.Feature} feature Feature.
        */
       function(feature) {
         var geometry = feature.getGeometry();
-        goog.asserts.assert(goog.isDefAndNotNull(geometry));
+        goog.asserts.assert(goog.isDefAndNotNull(geometry),
+            'feature geometry is defined and not null');
         var previousMinSquaredDistance = minSquaredDistance;
         minSquaredDistance = geometry.closestPointXY(
             x, y, closestPoint, minSquaredDistance);
@@ -337,7 +546,7 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
  * @api stable
  */
 ol.source.Vector.prototype.getExtent = function() {
-  return this.rBush_.getExtent();
+  return this.featuresRtree_.getExtent();
 };
 
 
@@ -366,16 +575,16 @@ ol.source.Vector.prototype.handleFeatureChange_ = function(event) {
   var geometry = feature.getGeometry();
   if (!goog.isDefAndNotNull(geometry)) {
     if (!(featureKey in this.nullGeometryFeatures_)) {
-      this.rBush_.remove(feature);
+      this.featuresRtree_.remove(feature);
       this.nullGeometryFeatures_[featureKey] = feature;
     }
   } else {
     var extent = geometry.getExtent();
     if (featureKey in this.nullGeometryFeatures_) {
       delete this.nullGeometryFeatures_[featureKey];
-      this.rBush_.insert(extent, feature);
+      this.featuresRtree_.insert(extent, feature);
     } else {
-      this.rBush_.update(extent, feature);
+      this.featuresRtree_.update(extent, feature);
     }
   }
   var id = feature.getId();
@@ -400,10 +609,13 @@ ol.source.Vector.prototype.handleFeatureChange_ = function(event) {
           'Expected feature to be removed from index');
       this.undefIdIndex_[featureKey] = feature;
     } else {
-      goog.asserts.assert(this.undefIdIndex_[featureKey] === feature);
+      goog.asserts.assert(this.undefIdIndex_[featureKey] === feature,
+          'feature keyed under %s in undefIdKeys', featureKey);
     }
   }
-  this.dispatchChangeEvent();
+  this.changed();
+  this.dispatchEvent(new ol.source.VectorEvent(
+      ol.source.VectorEventType.CHANGEFEATURE, feature));
 };
 
 
@@ -411,7 +623,7 @@ ol.source.Vector.prototype.handleFeatureChange_ = function(event) {
  * @return {boolean} Is empty.
  */
 ol.source.Vector.prototype.isEmpty = function() {
-  return this.rBush_.isEmpty() &&
+  return this.featuresRtree_.isEmpty() &&
       goog.object.isEmpty(this.nullGeometryFeatures_);
 };
 
@@ -421,11 +633,34 @@ ol.source.Vector.prototype.isEmpty = function() {
  * @param {number} resolution Resolution.
  * @param {ol.proj.Projection} projection Projection.
  */
-ol.source.Vector.prototype.loadFeatures = goog.nullFunction;
+ol.source.Vector.prototype.loadFeatures = function(
+    extent, resolution, projection) {
+  var loadedExtentsRtree = this.loadedExtentsRtree_;
+  var extentsToLoad = this.strategy_(extent, resolution);
+  var i, ii;
+  for (i = 0, ii = extentsToLoad.length; i < ii; ++i) {
+    var extentToLoad = extentsToLoad[i];
+    var alreadyLoaded = loadedExtentsRtree.forEachInExtent(extentToLoad,
+        /**
+         * @param {{extent: ol.Extent}} object Object.
+         * @return {boolean} Contains.
+         */
+        function(object) {
+          return ol.extent.containsExtent(object.extent, extentToLoad);
+        });
+    if (!alreadyLoaded) {
+      this.loader_.call(this, extentToLoad, resolution, projection);
+      loadedExtentsRtree.insert(extentToLoad, {extent: extentToLoad.slice()});
+    }
+  }
+};
 
 
 /**
- * @param {ol.Feature} feature Feature.
+ * Remove a single feature from the source.  If you want to remove all features
+ * at once, use the {@link ol.source.Vector#clear source.clear()} method
+ * instead.
+ * @param {ol.Feature} feature Feature to remove.
  * @api stable
  */
 ol.source.Vector.prototype.removeFeature = function(feature) {
@@ -433,10 +668,10 @@ ol.source.Vector.prototype.removeFeature = function(feature) {
   if (featureKey in this.nullGeometryFeatures_) {
     delete this.nullGeometryFeatures_[featureKey];
   } else {
-    this.rBush_.remove(feature);
+    this.featuresRtree_.remove(feature);
   }
   this.removeFeatureInternal(feature);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -447,7 +682,8 @@ ol.source.Vector.prototype.removeFeature = function(feature) {
  */
 ol.source.Vector.prototype.removeFeatureInternal = function(feature) {
   var featureKey = goog.getUid(feature).toString();
-  goog.asserts.assert(featureKey in this.featureChangeKeys_);
+  goog.asserts.assert(featureKey in this.featureChangeKeys_,
+      'featureKey exists in featureChangeKeys');
   goog.array.forEach(this.featureChangeKeys_[featureKey],
       goog.events.unlistenByKey);
   delete this.featureChangeKeys_[featureKey];

@@ -17,12 +17,6 @@ ol.ASSUME_TOUCH = false;
 
 
 /**
- * @define {boolean} Replace unused entries with NaNs.
- */
-ol.BUFFER_REPLACE_UNUSED_ENTRIES_WITH_NANS = goog.DEBUG;
-
-
-/**
  * TODO: rename this to something having to do with tile grids
  * see https://github.com/openlayers/ol3/issues/2076
  * @define {number} Default maximum zoom for default tile grids.
@@ -55,25 +49,7 @@ ol.DEFAULT_WMS_VERSION = '1.3.0';
 
 
 /**
- * @define {number} Drag-rotate-zoom animation duration.
- */
-ol.DRAGROTATEANDZOOM_ANIMATION_DURATION = 400;
-
-
-/**
- * @define {number} Drag-rotate animation duration.
- */
-ol.DRAGROTATE_ANIMATION_DURATION = 250;
-
-
-/**
- * @define {number} Drag-zoom animation duration.
- */
-ol.DRAGZOOM_ANIMATION_DURATION = 200;
-
-
-/**
- * @define {number} Hysterisis pixels.
+ * @define {number} Hysteresis pixels.
  */
 ol.DRAG_BOX_HYSTERESIS_PIXELS = 8;
 
@@ -146,16 +122,17 @@ ol.ENABLE_WEBGL = true;
 
 /**
  * @define {boolean} Support legacy IE (7-8).  Default is `false`.
+ *     If set to `true`, `goog.array.ASSUME_NATIVE_FUNCTIONS` must be set
+ *     to `false` because legacy IE do not support ECMAScript 5 array functions.
  */
 ol.LEGACY_IE_SUPPORT = false;
 
 
 /**
- * The page is loaded using HTTPS.
- * @const
- * @type {boolean}
+ * @define {number} The size in pixels of the first atlas image. Default is
+ * `256`.
  */
-ol.IS_HTTPS = goog.global.location.protocol === 'https:';
+ol.INITIAL_ATLAS_SIZE = 256;
 
 
 /**
@@ -168,9 +145,11 @@ ol.IS_LEGACY_IE = goog.userAgent.IE &&
 
 
 /**
- * @define {number} Keyboard pan duration.
+ * @define {number} The maximum size in pixels of atlas images. Default is
+ * `-1`, meaning it is not used (and `ol.WEBGL_MAX_TEXTURE_SIZE` is
+ * used instead).
  */
-ol.KEYBOARD_PAN_DURATION = 100;
+ol.MAX_ATLAS_SIZE = -1;
 
 
 /**
@@ -186,9 +165,17 @@ ol.MOUSEWHEELZOOM_TIMEOUT_DURATION = 80;
 
 
 /**
- * @define {number} Rotate animation duration.
+ * @define {number} Maximum width and/or height extent ratio that determines
+ * when the overview map should be zoomed out.
  */
-ol.ROTATE_ANIMATION_DURATION = 250;
+ol.OVERVIEWMAP_MAX_RATIO = 0.75;
+
+
+/**
+ * @define {number} Minimum width and/or height extent ratio that determines
+ * when the overview map should be zoomed in.
+ */
+ol.OVERVIEWMAP_MIN_RATIO = 0.1;
 
 
 /**
@@ -204,9 +191,20 @@ ol.WEBGL_TEXTURE_CACHE_HIGH_WATER_MARK = 1024;
 
 
 /**
- * @define {number} Zoom slider animation duration.
+ * The maximum supported WebGL texture size in pixels. If WebGL is not
+ * supported, the value is set to `undefined`.
+ * @const
+ * @type {number|undefined}
  */
-ol.ZOOMSLIDER_ANIMATION_DURATION = 200;
+ol.WEBGL_MAX_TEXTURE_SIZE; // value is set in `ol.has`
+
+
+/**
+ * List of supported WebGL extensions.
+ * @const
+ * @type {Array.<string>}
+ */
+ol.WEBGL_EXTENSIONS; // value is set in `ol.has`
 
 
 /**

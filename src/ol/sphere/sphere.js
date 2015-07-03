@@ -2,7 +2,7 @@
  * @license
  * Latitude/longitude spherical geodesy formulae taken from
  * http://www.movable-type.co.uk/scripts/latlong.html
- * Licenced under CC-BY-3.0.
+ * Licensed under CC-BY-3.0.
  */
 
 // FIXME add intersection of two paths given start points and bearings
@@ -15,8 +15,20 @@ goog.require('goog.math');
 
 
 /**
+ * @classdesc
+ * Class to create objects that can be used with {@link
+ * ol.geom.Polygon.circular}.
+ *
+ * For example to create a sphere whose radius is equal to the semi-major
+ * axis of the WGS84 ellipsoid:
+ *
+ * ```js
+ * var wgs84Sphere= new ol.Sphere(6378137);
+ * ```
+ *
  * @constructor
  * @param {number} radius Radius.
+ * @api
  */
 ol.Sphere = function(radius) {
 
@@ -42,6 +54,36 @@ ol.Sphere.prototype.cosineDistance = function(c1, c2) {
   return this.radius * Math.acos(
       Math.sin(lat1) * Math.sin(lat2) +
       Math.cos(lat1) * Math.cos(lat2) * Math.cos(deltaLon));
+};
+
+
+/**
+ * Returns the geodesic area for a list of coordinates.
+ *
+ * [Reference](http://trs-new.jpl.nasa.gov/dspace/handle/2014/40409)
+ * Robert. G. Chamberlain and William H. Duquette, "Some Algorithms for
+ * Polygons on a Sphere", JPL Publication 07-03, Jet Propulsion
+ * Laboratory, Pasadena, CA, June 2007
+ *
+ * @param {Array.<ol.Coordinate>} coordinates List of coordinates of a linear
+ * ring. If the ring is oriented clockwise, the area will be positive,
+ * otherwise it will be negative.
+ * @return {number} Area.
+ * @api
+ */
+ol.Sphere.prototype.geodesicArea = function(coordinates) {
+  var area = 0, len = coordinates.length;
+  var x1 = coordinates[len - 1][0];
+  var y1 = coordinates[len - 1][1];
+  for (var i = 0; i < len; i++) {
+    var x2 = coordinates[i][0], y2 = coordinates[i][1];
+    area += goog.math.toRadians(x2 - x1) *
+        (2 + Math.sin(goog.math.toRadians(y1)) +
+        Math.sin(goog.math.toRadians(y2)));
+    x1 = x2;
+    y1 = y2;
+  }
+  return area * this.radius * this.radius / 2.0;
 };
 
 
@@ -98,6 +140,7 @@ ol.Sphere.prototype.finalBearing = function(c1, c2) {
  * @param {ol.Coordinate} c1 Coordinate 1.
  * @param {ol.Coordinate} c2 Coordinate 2.
  * @return {number} Haversine distance.
+ * @api
  */
 ol.Sphere.prototype.haversineDistance = function(c1, c2) {
   var lat1 = goog.math.toRadians(c1[1]);
@@ -202,12 +245,13 @@ ol.Sphere.prototype.midpoint = function(c1, c2) {
 
 
 /**
- * Returns the coordinate at the given distance and bearing from c.
+ * Returns the coordinate at the given distance and bearing from `c1`.
  *
- * @param {ol.Coordinate} c1 Coordinate.
- * @param {number} distance Distance.
- * @param {number} bearing Bearing.
- * @return {ol.Coordinate} Coordinate.
+ * @param {ol.Coordinate} c1 The origin point (`[lon, lat]` in degrees).
+ * @param {number} distance The great-circle distance between the origin
+ *     point and the target point.
+ * @param {number} bearing The bearing (in radians).
+ * @return {ol.Coordinate} The target point.
  */
 ol.Sphere.prototype.offset = function(c1, distance, bearing) {
   var lat1 = goog.math.toRadians(c1[1]);

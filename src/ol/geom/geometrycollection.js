@@ -1,7 +1,6 @@
 goog.provide('ol.geom.GeometryCollection');
 
 goog.require('goog.array');
-goog.require('goog.asserts');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
 goog.require('goog.object');
@@ -61,7 +60,7 @@ ol.geom.GeometryCollection.prototype.unlistenGeometriesChange_ = function() {
   for (i = 0, ii = this.geometries_.length; i < ii; ++i) {
     goog.events.unlisten(
         this.geometries_[i], goog.events.EventType.CHANGE,
-        this.dispatchChangeEvent, false, this);
+        this.changed, false, this);
   }
 };
 
@@ -77,7 +76,7 @@ ol.geom.GeometryCollection.prototype.listenGeometriesChange_ = function() {
   for (i = 0, ii = this.geometries_.length; i < ii; ++i) {
     goog.events.listen(
         this.geometries_[i], goog.events.EventType.CHANGE,
-        this.dispatchChangeEvent, false, this);
+        this.changed, false, this);
   }
 };
 
@@ -130,25 +129,19 @@ ol.geom.GeometryCollection.prototype.containsXY = function(x, y) {
 
 /**
  * @inheritDoc
- * @api stable
  */
-ol.geom.GeometryCollection.prototype.getExtent = function(opt_extent) {
-  if (this.extentRevision != this.getRevision()) {
-    var extent = ol.extent.createOrUpdateEmpty(this.extent);
-    var geometries = this.geometries_;
-    var i, ii;
-    for (i = 0, ii = geometries.length; i < ii; ++i) {
-      ol.extent.extend(extent, geometries[i].getExtent());
-    }
-    this.extent = extent;
-    this.extentRevision = this.getRevision();
+ol.geom.GeometryCollection.prototype.computeExtent = function(extent) {
+  ol.extent.createOrUpdateEmpty(extent);
+  var geometries = this.geometries_;
+  for (var i = 0, ii = geometries.length; i < ii; ++i) {
+    ol.extent.extend(extent, geometries[i].getExtent());
   }
-  goog.asserts.assert(goog.isDef(this.extent));
-  return ol.extent.returnOrUpdate(this.extent, opt_extent);
+  return extent;
 };
 
 
 /**
+ * Return the geometries that make up this geometry collection.
  * @return {Array.<ol.geom.Geometry>} Geometries.
  * @api stable
  */
@@ -219,6 +212,22 @@ ol.geom.GeometryCollection.prototype.getType = function() {
 
 
 /**
+ * @inheritDoc
+ * @api stable
+ */
+ol.geom.GeometryCollection.prototype.intersectsExtent = function(extent) {
+  var geometries = this.geometries_;
+  var i, ii;
+  for (i = 0, ii = geometries.length; i < ii; ++i) {
+    if (geometries[i].intersectsExtent(extent)) {
+      return true;
+    }
+  }
+  return false;
+};
+
+
+/**
  * @return {boolean} Is empty.
  */
 ol.geom.GeometryCollection.prototype.isEmpty = function() {
@@ -227,6 +236,7 @@ ol.geom.GeometryCollection.prototype.isEmpty = function() {
 
 
 /**
+ * Set the geometries that make up this geometry collection.
  * @param {Array.<ol.geom.Geometry>} geometries Geometries.
  * @api stable
  */
@@ -243,12 +253,13 @@ ol.geom.GeometryCollection.prototype.setGeometriesArray = function(geometries) {
   this.unlistenGeometriesChange_();
   this.geometries_ = geometries;
   this.listenGeometriesChange_();
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
 /**
  * @inheritDoc
+ * @api stable
  */
 ol.geom.GeometryCollection.prototype.applyTransform = function(transformFn) {
   var geometries = this.geometries_;
@@ -256,7 +267,23 @@ ol.geom.GeometryCollection.prototype.applyTransform = function(transformFn) {
   for (i = 0, ii = geometries.length; i < ii; ++i) {
     geometries[i].applyTransform(transformFn);
   }
-  this.dispatchChangeEvent();
+  this.changed();
+};
+
+
+/**
+ * Translate the geometry.
+ * @param {number} deltaX Delta X.
+ * @param {number} deltaY Delta Y.
+ * @api
+ */
+ol.geom.GeometryCollection.prototype.translate = function(deltaX, deltaY) {
+  var geometries = this.geometries_;
+  var i, ii;
+  for (i = 0, ii = geometries.length; i < ii; ++i) {
+    geometries[i].translate(deltaX, deltaY);
+  }
+  this.changed();
 };
 
 

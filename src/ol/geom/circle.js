@@ -2,9 +2,11 @@ goog.provide('ol.geom.Circle');
 
 goog.require('goog.asserts');
 goog.require('ol.extent');
+goog.require('ol.geom.GeometryLayout');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.SimpleGeometry');
 goog.require('ol.geom.flat.deflate');
+goog.require('ol.proj');
 
 
 
@@ -83,6 +85,7 @@ ol.geom.Circle.prototype.containsXY = function(x, y) {
 
 
 /**
+ * Return the center of the circle as {@link ol.Coordinate coordinate}.
  * @return {ol.Coordinate} Center.
  * @api
  */
@@ -93,24 +96,19 @@ ol.geom.Circle.prototype.getCenter = function() {
 
 /**
  * @inheritDoc
- * @api
  */
-ol.geom.Circle.prototype.getExtent = function(opt_extent) {
-  if (this.extentRevision != this.getRevision()) {
-    var flatCoordinates = this.flatCoordinates;
-    var radius = flatCoordinates[this.stride] - flatCoordinates[0];
-    this.extent = ol.extent.createOrUpdate(
-        flatCoordinates[0] - radius, flatCoordinates[1] - radius,
-        flatCoordinates[0] + radius, flatCoordinates[1] + radius,
-        this.extent);
-    this.extentRevision = this.getRevision();
-  }
-  goog.asserts.assert(goog.isDef(this.extent));
-  return ol.extent.returnOrUpdate(this.extent, opt_extent);
+ol.geom.Circle.prototype.computeExtent = function(extent) {
+  var flatCoordinates = this.flatCoordinates;
+  var radius = flatCoordinates[this.stride] - flatCoordinates[0];
+  return ol.extent.createOrUpdate(
+      flatCoordinates[0] - radius, flatCoordinates[1] - radius,
+      flatCoordinates[0] + radius, flatCoordinates[1] + radius,
+      extent);
 };
 
 
 /**
+ * Return the radius of the circle.
  * @return {number} Radius.
  * @api
  */
@@ -140,12 +138,14 @@ ol.geom.Circle.prototype.getType = function() {
 
 
 /**
+ * Set the center of the circle as {@link ol.Coordinate coordinate}.
  * @param {ol.Coordinate} center Center.
  * @api
  */
 ol.geom.Circle.prototype.setCenter = function(center) {
   var stride = this.stride;
-  goog.asserts.assert(center.length == stride);
+  goog.asserts.assert(center.length == stride,
+      'center array length should match stride');
   var radius = this.flatCoordinates[stride] - this.flatCoordinates[0];
   var flatCoordinates = center.slice();
   flatCoordinates[stride] = flatCoordinates[0] + radius;
@@ -158,6 +158,8 @@ ol.geom.Circle.prototype.setCenter = function(center) {
 
 
 /**
+ * Set the center (as {@link ol.Coordinate coordinate}) and the radius (as
+ * number) of the circle.
  * @param {ol.Coordinate} center Center.
  * @param {number} radius Radius.
  * @param {ol.geom.GeometryLayout=} opt_layout Layout.
@@ -182,7 +184,7 @@ ol.geom.Circle.prototype.setCenterAndRadius =
       flatCoordinates[offset++] = flatCoordinates[i];
     }
     flatCoordinates.length = offset;
-    this.dispatchChangeEvent();
+    this.changed();
   }
 };
 
@@ -194,22 +196,43 @@ ol.geom.Circle.prototype.setCenterAndRadius =
 ol.geom.Circle.prototype.setFlatCoordinates =
     function(layout, flatCoordinates) {
   this.setFlatCoordinatesInternal(layout, flatCoordinates);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
 /**
+ * Set the radius of the circle. The radius is in the units of the projection.
  * @param {number} radius Radius.
  * @api
  */
 ol.geom.Circle.prototype.setRadius = function(radius) {
-  goog.asserts.assert(!goog.isNull(this.flatCoordinates));
+  goog.asserts.assert(!goog.isNull(this.flatCoordinates),
+      'this.flatCoordinates cannot be null');
   this.flatCoordinates[this.stride] = this.flatCoordinates[0] + radius;
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
 /**
- * @inheritDoc
+ * Transform each coordinate of the circle from one coordinate reference system
+ * to another. The geometry is modified in place.
+ * If you do not want the geometry modified in place, first clone() it and
+ * then use this function on the clone.
+ *
+ * Internally a circle is currently represented by two points: the center of
+ * the circle `[cx, cy]`, and the point to the right of the circle
+ * `[cx + r, cy]`. This `transform` function just transforms these two points.
+ * So the resulting geometry is also a circle, and that circle does not
+ * correspond to the shape that would be obtained by transforming every point
+ * of the original circle.
+ *
+ * @param {ol.proj.ProjectionLike} source The current projection.  Can be a
+ *     string identifier or a {@link ol.proj.Projection} object.
+ * @param {ol.proj.ProjectionLike} destination The desired projection.  Can be a
+ *     string identifier or a {@link ol.proj.Projection} object.
+ * @return {ol.geom.Circle} This geometry.  Note that original geometry is
+ *     modified in place.
+ * @function
+ * @api stable
  */
-ol.geom.Circle.prototype.applyTransform = goog.abstractMethod;
+ol.geom.Circle.prototype.transform;

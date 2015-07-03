@@ -4,7 +4,6 @@ goog.require('goog.Uri');
 goog.require('goog.array');
 goog.require('goog.asserts');
 goog.require('goog.net.Jsonp');
-goog.require('ol');
 goog.require('ol.Attribution');
 goog.require('ol.TileRange');
 goog.require('ol.TileUrlFunction');
@@ -33,7 +32,8 @@ ol.source.BingMaps = function(options) {
     opaque: true,
     projection: ol.proj.get('EPSG:3857'),
     state: ol.source.State.LOADING,
-    tileLoadFunction: options.tileLoadFunction
+    tileLoadFunction: options.tileLoadFunction,
+    wrapX: goog.isDef(options.wrapX) ? options.wrapX : true
   });
 
   /**
@@ -42,14 +42,20 @@ ol.source.BingMaps = function(options) {
    */
   this.culture_ = goog.isDef(options.culture) ? options.culture : 'en-us';
 
-  var protocol = ol.IS_HTTPS ? 'https:' : 'http:';
+  /**
+   * @private
+   * @type {number}
+   */
+  this.maxZoom_ = goog.isDef(options.maxZoom) ? options.maxZoom : -1;
+
   var uri = new goog.Uri(
-      protocol + '//dev.virtualearth.net/REST/v1/Imagery/Metadata/' +
+      'https://dev.virtualearth.net/REST/v1/Imagery/Metadata/' +
       options.imagerySet);
 
   var jsonp = new goog.net.Jsonp(uri, 'jsonp');
   jsonp.send({
     'include': 'ImageryProviders',
+    'uriScheme': 'https',
     'key': options.key
   }, goog.bind(this.handleImageryMetadataResponse, this));
 
@@ -58,12 +64,14 @@ goog.inherits(ol.source.BingMaps, ol.source.TileImage);
 
 
 /**
+ * The attribution containing a link to the Microsoft® Bing™ Maps Platform APIs’
+ * Terms Of Use.
  * @const
  * @type {ol.Attribution}
  * @api
  */
 ol.source.BingMaps.TOS_ATTRIBUTION = new ol.Attribution({
-  html: '<a class="ol-attribution-bing-tos" target="_blank" ' +
+  html: '<a class="ol-attribution-bing-tos" ' +
       'href="http://www.microsoft.com/maps/product/terms.html">' +
       'Terms of Use</a>'
 });
@@ -85,16 +93,22 @@ ol.source.BingMaps.prototype.handleImageryMetadataResponse =
   }
 
   var brandLogoUri = response.brandLogoUri;
+  if (brandLogoUri.indexOf('https') == -1) {
+    brandLogoUri = brandLogoUri.replace('http', 'https');
+  }
   //var copyright = response.copyright;  // FIXME do we need to display this?
   var resource = response.resourceSets[0].resources[0];
+  goog.asserts.assert(resource.imageWidth == resource.imageHeight,
+      'resource has imageWidth equal to imageHeight, i.e. is square');
+  var maxZoom = this.maxZoom_ == -1 ? resource.zoomMax : this.maxZoom_;
 
-  goog.asserts.assert(resource.imageWidth == resource.imageHeight);
   var sourceProjection = this.getProjection();
   var tileGrid = new ol.tilegrid.XYZ({
     extent: ol.tilegrid.extentFromProjection(sourceProjection),
     minZoom: resource.zoomMin,
-    maxZoom: resource.zoomMax,
-    tileSize: resource.imageWidth
+    maxZoom: maxZoom,
+    tileSize: resource.imageWidth == resource.imageHeight ?
+        resource.imageWidth : [resource.imageWidth, resource.imageHeight]
   });
   this.tileGrid = tileGrid;
 
@@ -117,7 +131,8 @@ ol.source.BingMaps.prototype.handleImageryMetadataResponse =
                      */
                     function(tileCoord, pixelRatio, projection) {
                       goog.asserts.assert(ol.proj.equivalent(
-                          projection, sourceProjection));
+                          projection, sourceProjection),
+                          'projections are equivalent');
                       if (goog.isNull(tileCoord)) {
                         return undefined;
                       } else {
@@ -141,7 +156,7 @@ ol.source.BingMaps.prototype.handleImageryMetadataResponse =
               imageryProvider.coverageAreas,
               function(coverageArea) {
                 var minZ = coverageArea.zoomMin;
-                var maxZ = coverageArea.zoomMax;
+                var maxZ = Math.min(coverageArea.zoomMax, maxZoom);
                 var bbox = coverageArea.bbox;
                 var epsg4326Extent = [bbox[1], bbox[0], bbox[3], bbox[2]];
                 var extent = ol.extent.applyTransform(

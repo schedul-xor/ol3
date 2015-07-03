@@ -15,10 +15,20 @@ goog.require('ol.layer.Layer');
  * @constructor
  * @extends {ol.layer.Layer}
  * @fires ol.render.Event
- * @param {olx.layer.LayerOptions} options Layer options.
+ * @param {olx.layer.ImageOptions=} opt_options Layer options.
  * @api stable
  */
-ol.layer.Image = function(options) {
-  goog.base(this, options);
+ol.layer.Image = function(opt_options) {
+  var options = goog.isDef(opt_options) ? opt_options : {};
+  goog.base(this,  /** @type {olx.layer.LayerOptions} */ (options));
 };
 goog.inherits(ol.layer.Image, ol.layer.Layer);
+
+
+/**
+ * Return the associated {@link ol.source.Image source} of the image layer.
+ * @function
+ * @return {ol.source.Image} Source.
+ * @api stable
+ */
+ol.layer.Image.prototype.getSource;

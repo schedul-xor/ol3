@@ -6,7 +6,6 @@ goog.require('goog.dom');
 goog.require('goog.dom.TagName');
 goog.require('goog.events');
 goog.require('goog.events.EventType');
-goog.require('goog.style');
 goog.require('ol.CoordinateFormatType');
 goog.require('ol.Object');
 goog.require('ol.Pixel');
@@ -46,12 +45,14 @@ ol.control.MousePosition = function(opt_options) {
   var className = goog.isDef(options.className) ?
       options.className : 'ol-mouse-position';
 
-  var element = goog.dom.createDom(goog.dom.TagName.DIV, {
-    'class': className
-  });
+  var element = goog.dom.createDom(goog.dom.TagName.DIV, className);
+
+  var render = goog.isDef(options.render) ?
+      options.render : ol.control.MousePosition.render;
 
   goog.base(this, {
     element: element,
+    render: render,
     target: options.target
   });
 
@@ -102,9 +103,12 @@ goog.inherits(ol.control.MousePosition, ol.control.Control);
 
 
 /**
- * @inheritDoc
+ * Update the mouseposition element.
+ * @param {ol.MapEvent} mapEvent Map event.
+ * @this {ol.control.MousePosition}
+ * @api
  */
-ol.control.MousePosition.prototype.handleMapPostrender = function(mapEvent) {
+ol.control.MousePosition.render = function(mapEvent) {
   var frameState = mapEvent.frameState;
   if (goog.isNull(frameState)) {
     this.mapProjection_ = null;
@@ -127,6 +131,8 @@ ol.control.MousePosition.prototype.handleProjectionChanged_ = function() {
 
 
 /**
+ * Return the coordinate format type used to render the current position or
+ * undefined.
  * @return {ol.CoordinateFormatType|undefined} The format to render the current
  *     position in.
  * @observable
@@ -136,13 +142,10 @@ ol.control.MousePosition.prototype.getCoordinateFormat = function() {
   return /** @type {ol.CoordinateFormatType|undefined} */ (
       this.get(ol.control.MousePositionProperty.COORDINATE_FORMAT));
 };
-goog.exportProperty(
-    ol.control.MousePosition.prototype,
-    'getCoordinateFormat',
-    ol.control.MousePosition.prototype.getCoordinateFormat);
 
 
 /**
+ * Return the projection that is used to report the mouse position.
  * @return {ol.proj.Projection|undefined} The projection to report mouse
  *     position in.
  * @observable
@@ -152,10 +155,6 @@ ol.control.MousePosition.prototype.getProjection = function() {
   return /** @type {ol.proj.Projection|undefined} */ (
       this.get(ol.control.MousePositionProperty.PROJECTION));
 };
-goog.exportProperty(
-    ol.control.MousePosition.prototype,
-    'getProjection',
-    ol.control.MousePosition.prototype.getProjection);
 
 
 /**
@@ -164,9 +163,7 @@ goog.exportProperty(
  */
 ol.control.MousePosition.prototype.handleMouseMove = function(browserEvent) {
   var map = this.getMap();
-  var eventPosition = goog.style.getRelativePosition(
-      browserEvent, map.getViewport());
-  this.lastMouseMovePixel_ = [eventPosition.x, eventPosition.y];
+  this.lastMouseMovePixel_ = map.getEventPixel(browserEvent.getBrowserEvent());
   this.updateHTML_(this.lastMouseMovePixel_);
 };
 
@@ -200,6 +197,7 @@ ol.control.MousePosition.prototype.setMap = function(map) {
 
 
 /**
+ * Set the coordinate format type used to render the current position.
  * @param {ol.CoordinateFormatType} format The format to render the current
  *     position in.
  * @observable
@@ -208,13 +206,10 @@ ol.control.MousePosition.prototype.setMap = function(map) {
 ol.control.MousePosition.prototype.setCoordinateFormat = function(format) {
   this.set(ol.control.MousePositionProperty.COORDINATE_FORMAT, format);
 };
-goog.exportProperty(
-    ol.control.MousePosition.prototype,
-    'setCoordinateFormat',
-    ol.control.MousePosition.prototype.setCoordinateFormat);
 
 
 /**
+ * Set the projection that is used to report the mouse position.
  * @param {ol.proj.Projection} projection The projection to report mouse
  *     position in.
  * @observable
@@ -223,10 +218,6 @@ goog.exportProperty(
 ol.control.MousePosition.prototype.setProjection = function(projection) {
   this.set(ol.control.MousePositionProperty.PROJECTION, projection);
 };
-goog.exportProperty(
-    ol.control.MousePosition.prototype,
-    'setProjection',
-    ol.control.MousePosition.prototype.setProjection);
 
 
 /**

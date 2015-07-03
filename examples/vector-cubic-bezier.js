@@ -87,11 +87,6 @@ var displaySnap = function(coordinate) {
   }
 };
 
-$(map.getViewport()).on('mousemove', function(evt) {
-  var coordinate = map.getEventCoordinate(evt.originalEvent);
-  displaySnap(coordinate);
-});
-
 var imageStyle = new ol.style.Circle({
   radius: 5,
   fill: null,

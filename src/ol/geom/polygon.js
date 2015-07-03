@@ -2,8 +2,8 @@ goog.provide('ol.geom.Polygon');
 
 goog.require('goog.array');
 goog.require('goog.asserts');
-goog.require('ol.array');
 goog.require('ol.extent');
+goog.require('ol.geom.GeometryLayout');
 goog.require('ol.geom.GeometryType');
 goog.require('ol.geom.LinearRing');
 goog.require('ol.geom.Point');
@@ -14,6 +14,7 @@ goog.require('ol.geom.flat.contains');
 goog.require('ol.geom.flat.deflate');
 goog.require('ol.geom.flat.inflate');
 goog.require('ol.geom.flat.interiorpoint');
+goog.require('ol.geom.flat.intersectsextent');
 goog.require('ol.geom.flat.orient');
 goog.require('ol.geom.flat.simplify');
 
@@ -83,18 +84,20 @@ goog.inherits(ol.geom.Polygon, ol.geom.SimpleGeometry);
 
 
 /**
+ * Append the passed linear ring to this polygon.
  * @param {ol.geom.LinearRing} linearRing Linear ring.
  * @api stable
  */
 ol.geom.Polygon.prototype.appendLinearRing = function(linearRing) {
-  goog.asserts.assert(linearRing.getLayout() == this.layout);
+  goog.asserts.assert(linearRing.getLayout() == this.layout,
+      'layout of linearRing should match layout');
   if (goog.isNull(this.flatCoordinates)) {
     this.flatCoordinates = linearRing.getFlatCoordinates().slice();
   } else {
-    ol.array.safeExtend(this.flatCoordinates, linearRing.getFlatCoordinates());
+    goog.array.extend(this.flatCoordinates, linearRing.getFlatCoordinates());
   }
   this.ends_.push(this.flatCoordinates.length);
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
@@ -141,6 +144,7 @@ ol.geom.Polygon.prototype.containsXY = function(x, y) {
 
 
 /**
+ * Return the area of the polygon on projected plane.
  * @return {number} Area (on projected plane).
  * @api stable
  */
@@ -151,12 +155,30 @@ ol.geom.Polygon.prototype.getArea = function() {
 
 
 /**
+ * Get the coordinate array for this geometry.  This array has the structure
+ * of a GeoJSON coordinate array for polygons.
+ *
+ * @param {boolean=} opt_right Orient coordinates according to the right-hand
+ *     rule (counter-clockwise for exterior and clockwise for interior rings).
+ *     If `false`, coordinates will be oriented according to the left-hand rule
+ *     (clockwise for exterior and counter-clockwise for interior rings).
+ *     By default, coordinate orientation will depend on how the geometry was
+ *     constructed.
  * @return {Array.<Array.<ol.Coordinate>>} Coordinates.
  * @api stable
  */
-ol.geom.Polygon.prototype.getCoordinates = function() {
+ol.geom.Polygon.prototype.getCoordinates = function(opt_right) {
+  var flatCoordinates;
+  if (goog.isDef(opt_right)) {
+    flatCoordinates = this.getOrientedFlatCoordinates().slice();
+    ol.geom.flat.orient.orientLinearRings(
+        flatCoordinates, 0, this.ends_, this.stride, opt_right);
+  } else {
+    flatCoordinates = this.flatCoordinates;
+  }
+
   return ol.geom.flat.inflate.coordinatess(
-      this.flatCoordinates, 0, this.ends_, this.stride);
+      flatCoordinates, 0, this.ends_, this.stride);
 };
 
 
@@ -184,6 +206,7 @@ ol.geom.Polygon.prototype.getFlatInteriorPoint = function() {
 
 
 /**
+ * Return an interior point of the polygon.
  * @return {ol.geom.Point} Interior point.
  * @api stable
  */
@@ -193,12 +216,30 @@ ol.geom.Polygon.prototype.getInteriorPoint = function() {
 
 
 /**
+ * Return the number of rings of the polygon,  this includes the exterior
+ * ring and any interior rings.
+ *
+ * @return {number} Number of rings.
+ * @api
+ */
+ol.geom.Polygon.prototype.getLinearRingCount = function() {
+  return this.ends_.length;
+};
+
+
+/**
+ * Return the Nth linear ring of the polygon geometry. Return `null` if the
+ * given index is out of range.
+ * The exterior linear ring is available at index `0` and the interior rings
+ * at index `1` and beyond.
+ *
  * @param {number} index Index.
  * @return {ol.geom.LinearRing} Linear ring.
  * @api stable
  */
 ol.geom.Polygon.prototype.getLinearRing = function(index) {
-  goog.asserts.assert(0 <= index && index < this.ends_.length);
+  goog.asserts.assert(0 <= index && index < this.ends_.length,
+      'index should be in between 0 and and length of this.ends_');
   if (index < 0 || this.ends_.length <= index) {
     return null;
   }
@@ -210,6 +251,7 @@ ol.geom.Polygon.prototype.getLinearRing = function(index) {
 
 
 /**
+ * Return the linear rings of the polygon.
  * @return {Array.<ol.geom.LinearRing>} Linear rings.
  * @api stable
  */
@@ -280,6 +322,17 @@ ol.geom.Polygon.prototype.getType = function() {
 
 
 /**
+ * @inheritDoc
+ * @api stable
+ */
+ol.geom.Polygon.prototype.intersectsExtent = function(extent) {
+  return ol.geom.flat.intersectsextent.linearRings(
+      this.getOrientedFlatCoordinates(), 0, this.ends_, this.stride, extent);
+};
+
+
+/**
+ * Set the coordinates of the polygon.
  * @param {Array.<Array.<ol.Coordinate>>} coordinates Coordinates.
  * @param {ol.geom.GeometryLayout=} opt_layout Layout.
  * @api stable
@@ -295,7 +348,7 @@ ol.geom.Polygon.prototype.setCoordinates = function(coordinates, opt_layout) {
     var ends = ol.geom.flat.deflate.coordinatess(
         this.flatCoordinates, 0, coordinates, this.stride, this.ends_);
     this.flatCoordinates.length = ends.length === 0 ? 0 : ends[ends.length - 1];
-    this.dispatchChangeEvent();
+    this.changed();
   }
 };
 
@@ -308,25 +361,30 @@ ol.geom.Polygon.prototype.setCoordinates = function(coordinates, opt_layout) {
 ol.geom.Polygon.prototype.setFlatCoordinates =
     function(layout, flatCoordinates, ends) {
   if (goog.isNull(flatCoordinates)) {
-    goog.asserts.assert(!goog.isNull(ends) && ends.length === 0);
+    goog.asserts.assert(!goog.isNull(ends) && ends.length === 0,
+        'ends cannot be null and should be an empty array');
   } else if (ends.length === 0) {
-    goog.asserts.assert(flatCoordinates.length === 0);
+    goog.asserts.assert(flatCoordinates.length === 0,
+        'flatCoordinates should be an empty array');
   } else {
-    goog.asserts.assert(flatCoordinates.length == ends[ends.length - 1]);
+    goog.asserts.assert(flatCoordinates.length == ends[ends.length - 1],
+        'the length of flatCoordinates should be the last entry of ends');
   }
   this.setFlatCoordinatesInternal(layout, flatCoordinates);
   this.ends_ = ends;
-  this.dispatchChangeEvent();
+  this.changed();
 };
 
 
 /**
  * Create an approximation of a circle on the surface of a sphere.
  * @param {ol.Sphere} sphere The sphere.
- * @param {ol.Coordinate} center Center.
- * @param {number} radius Radius.
- * @param {number=} opt_n Optional number of points.  Default is `32`.
- * @return {ol.geom.Polygon} Circle geometry.
+ * @param {ol.Coordinate} center Center (`[lon, lat]` in degrees).
+ * @param {number} radius The great-circle distance from the center to
+ *     the polygon vertices.
+ * @param {number=} opt_n Optional number of vertices for the resulting
+ *     polygon. Default is `32`.
+ * @return {ol.geom.Polygon} The "circular" polygon.
  * @api stable
  */
 ol.geom.Polygon.circular = function(sphere, center, radius, opt_n) {
@@ -339,6 +397,26 @@ ol.geom.Polygon.circular = function(sphere, center, radius, opt_n) {
         flatCoordinates, sphere.offset(center, radius, 2 * Math.PI * i / n));
   }
   flatCoordinates.push(flatCoordinates[0], flatCoordinates[1]);
+  var polygon = new ol.geom.Polygon(null);
+  polygon.setFlatCoordinates(
+      ol.geom.GeometryLayout.XY, flatCoordinates, [flatCoordinates.length]);
+  return polygon;
+};
+
+
+/**
+ * Create a polygon from an extent. The layout used is `XY`.
+ * @param {ol.Extent} extent The extent.
+ * @return {ol.geom.Polygon} The polygon.
+ * @api
+ */
+ol.geom.Polygon.fromExtent = function(extent) {
+  var minX = extent[0];
+  var minY = extent[1];
+  var maxX = extent[2];
+  var maxY = extent[3];
+  var flatCoordinates =
+      [minX, minY, minX, maxY, maxX, maxY, maxX, minY, minX, minY];
   var polygon = new ol.geom.Polygon(null);
   polygon.setFlatCoordinates(
       ol.geom.GeometryLayout.XY, flatCoordinates, [flatCoordinates.length]);
