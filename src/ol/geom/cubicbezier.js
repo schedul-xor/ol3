@@ -363,8 +363,8 @@ ol.geom.CubicBezier.prototype.setFlatCoordinates =
 ol.geom.CubicBezier.prototype.preparePolyCache_ =
     function(dimension, polyCache) {
   var bernstein = [this.flatCoordinates[dimension],
-                   this.flatCoordinates[dimension + 2],
-                   this.flatCoordinates[dimension + 4],
+                   this.flatCoordinates[dimension + 2] * 3,
+                   this.flatCoordinates[dimension + 4] * 3,
                    this.flatCoordinates[dimension + 6]];
   schedul.math.Algebra.bernstein2poly(bernstein, polyCache);
 };
