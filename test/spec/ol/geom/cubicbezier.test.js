@@ -51,9 +51,9 @@ describe('#dRoots()', function() {
 
 describe('nearest', function() {
   it('', function() {
-    var cb = new ol.geom.CubicBezier([[1, 1], [0, 2], [2, 1], [3, 4]]);
-    var t = cb.getClosestTFromPoint(2, 3);
-    expect(t).to.be(0.8793325013936245);
+    var cb = new ol.geom.CubicBezier([[1, 1], [1.2, 4], [2, 4], [6, 4]]);
+    var t = cb.getClosestTFromPoint(1.5, 5);
+    expect(t).to.roughlyEqual(0.51363927,1e-7);
   });
 });
 
