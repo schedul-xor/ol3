@@ -94,6 +94,33 @@ describe('ol.interaction.Draw', function() {
     });
   });
 
+  describe('specifying a clickTolerance', function() {
+    beforeEach(function() {
+      var draw = new ol.interaction.Draw({
+        source: source,
+        type: ol.geom.GeometryType.POINT,
+        clickTolerance: 6
+      });
+      map.addInteraction(draw);
+    });
+
+    it('adds a point when below the tolerance', function() {
+      var features;
+
+      simulateEvent('pointermove', 10, 20);
+      simulateEvent('pointerdown', 10, 20);
+      simulateEvent('pointerup', 15, 25);
+      features = source.getFeatures();
+      expect(features).to.length(0);
+
+      simulateEvent('pointermove', 10, 20);
+      simulateEvent('pointerdown', 10, 20);
+      simulateEvent('pointerup', 14, 24);
+      features = source.getFeatures();
+      expect(features).to.length(1);
+    });
+  });
+
   describe('drawing points', function() {
     var draw;
 
@@ -119,8 +146,8 @@ describe('ol.interaction.Draw', function() {
     it('does not draw a point with a significant drag', function() {
       simulateEvent('pointermove', 10, 20);
       simulateEvent('pointerdown', 10, 20);
-      simulateEvent('pointermove', 15, 20);
-      simulateEvent('pointerup', 15, 20);
+      simulateEvent('pointermove', 18, 20);
+      simulateEvent('pointerup', 18, 20);
       var features = source.getFeatures();
       expect(features).to.have.length(0);
     });
@@ -258,8 +285,8 @@ describe('ol.interaction.Draw', function() {
       // drag map
       simulateEvent('pointermove', 15, 20);
       simulateEvent('pointerdown', 15, 20);
-      simulateEvent('pointermove', 20, 20);
-      simulateEvent('pointerup', 20, 20);
+      simulateEvent('pointermove', 23, 20);
+      simulateEvent('pointerup', 23, 20);
 
       // second point
       simulateEvent('pointermove', 30, 20);
@@ -619,17 +646,19 @@ describe('ol.interaction.Draw', function() {
 
     describe('#setActive(false)', function() {
       it('unsets the map from the feature overlay', function() {
+        var spy = sinon.spy(interaction.overlay_, 'setMap');
         interaction.setActive(false);
-        expect(interaction.overlay_.map_).to.be(null);
+        expect(spy.getCall(0).args[0]).to.be(null);
       });
       it('aborts the drawing', function() {
         interaction.setActive(false);
         expect(interaction.sketchFeature_).to.be(null);
       });
       it('fires change:active', function() {
+        var spy = sinon.spy(interaction.overlay_, 'setMap');
         var listenerSpy = sinon.spy(function() {
           // test that the interaction's change:active listener is called first
-          expect(interaction.overlay_.map_).to.be(null);
+          expect(spy.getCall(0).args[0]).to.be(null);
         });
         interaction.on('change:active', listenerSpy);
         interaction.setActive(false);
@@ -642,13 +671,15 @@ describe('ol.interaction.Draw', function() {
         interaction.setActive(false);
       });
       it('sets the map into the feature overlay', function() {
+        var spy = sinon.spy(interaction.overlay_, 'setMap');
         interaction.setActive(true);
-        expect(interaction.overlay_.map_).to.be(map);
+        expect(spy.getCall(0).args[0]).to.be(map);
       });
       it('fires change:active', function() {
+        var spy = sinon.spy(interaction.overlay_, 'setMap');
         var listenerSpy = sinon.spy(function() {
           // test that the interaction's change:active listener is called first
-          expect(interaction.overlay_.map_).not.to.be(null);
+          expect(spy.getCall(0).args[0]).to.be(map);
         });
         interaction.on('change:active', listenerSpy);
         interaction.setActive(true);
@@ -682,8 +713,9 @@ describe('ol.interaction.Draw', function() {
       });
       describe('#setMap(null) when interaction is active', function() {
         it('unsets the map from the feature overlay', function() {
+          var spy = sinon.spy(interaction.overlay_, 'setMap');
           interaction.setMap(null);
-          expect(interaction.overlay_.map_).to.be(null);
+          expect(spy.getCall(0).args[0]).to.be(null);
         });
         it('aborts the drawing', function() {
           interaction.setMap(null);
@@ -695,15 +727,17 @@ describe('ol.interaction.Draw', function() {
     describe('#setMap(map)', function() {
       describe('#setMap(map) when interaction is active', function() {
         it('sets the map into the feature overlay', function() {
+          var spy = sinon.spy(interaction.overlay_, 'setMap');
           interaction.setMap(map);
-          expect(interaction.overlay_.map_).to.be(map);
+          expect(spy.getCall(0).args[0]).to.be(map);
         });
       });
       describe('#setMap(map) when interaction is not active', function() {
         it('does not set the map into the feature overlay', function() {
           interaction.setActive(false);
+          var spy = sinon.spy(interaction.overlay_, 'setMap');
           interaction.setMap(map);
-          expect(interaction.overlay_.map_).to.be(null);
+          expect(spy.getCall(0).args[0]).to.be(null);
         });
       });
 

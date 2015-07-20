@@ -159,7 +159,7 @@ ol.source.WMTS = function(options) {
             var localContext = {
               'TileMatrix': tileGrid.getMatrixId(tileCoord[0]),
               'TileCol': tileCoord[1],
-              'TileRow': tileCoord[2]
+              'TileRow': -tileCoord[2] - 1
             };
             goog.object.extend(localContext, dimensions);
             var url = template;
@@ -179,10 +179,6 @@ ol.source.WMTS = function(options) {
       ol.TileUrlFunction.createFromTileUrlFunctions(
           goog.array.map(this.urls_, createFromWMTSTemplate)) :
       ol.TileUrlFunction.nullTileUrlFunction;
-
-  tileUrlFunction = ol.TileUrlFunction.withTileCoordTransform(
-      ol.tilegrid.createOriginTopLeftTileCoordTransform(tileGrid),
-      tileUrlFunction);
 
   goog.base(this, {
     attributions: options.attributions,
