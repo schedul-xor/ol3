@@ -53,7 +53,7 @@ describe('nearest', function() {
   it('', function() {
     var cb = new ol.geom.CubicBezier([[1, 1], [1.2, 4], [2, 4], [6, 4]]);
     var t = cb.getClosestTFromPoint(1.5, 5);
-    expect(t).to.roughlyEqual(0.51363927,1e-7);
+    expect(t).to.roughlyEqual(0.51363927, 1e-7);
   });
 });
 
