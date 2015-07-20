@@ -226,7 +226,10 @@ olx.MapOptions.prototype.keyboardEventTarget;
 
 
 /**
- * Layers. If this is not defined, a map with no layers will be rendered.
+ * Layers. If this is not defined, a map with no layers will be rendered. Note
+ * that layers are rendered in the order supplied, so if you want, for example,
+ * a vector layer to appear on top of a tile layer, it must come after the tile
+ * layer.
  * @type {Array.<ol.layer.Base>|ol.Collection.<ol.layer.Base>|undefined}
  * @api stable
  */
@@ -2357,8 +2360,10 @@ olx.interaction.DragZoomOptions.prototype.style;
  *     source: (ol.source.Vector|undefined),
  *     snapTolerance: (number|undefined),
  *     type: ol.geom.GeometryType,
- *     minPointsPerRing: (number|undefined),
+ *     maxPoints: (number|undefined),
+ *     minPoints: (number|undefined),
  *     style: (ol.style.Style|Array.<ol.style.Style>|ol.style.StyleFunction|undefined),
+ *     geometryFunction: (ol.interaction.DrawGeometryFunctionType|undefined),
  *     geometryName: (string|undefined),
  *     condition: (ol.events.ConditionType|undefined),
  *     freehandCondition: (ol.events.ConditionType|undefined)}}
@@ -2393,7 +2398,7 @@ olx.interaction.DrawOptions.prototype.snapTolerance;
 
 /**
  * Drawing type ('Point', 'LineString', 'Polygon', 'MultiPoint',
- * 'MultiLineString', or 'MultiPolygon').
+ * 'MultiLineString', 'MultiPolygon' or 'Circle').
  * @type {ol.geom.GeometryType}
  * @api
  */
@@ -2401,12 +2406,21 @@ olx.interaction.DrawOptions.prototype.type;
 
 
 /**
- * The number of points that must be drawn before a polygon ring can be finished.
- * Default is `3`.
+ * The number of points that can be drawn before a polygon ring or line string
+ * is finished. The default is no restriction.
  * @type {number|undefined}
  * @api
  */
-olx.interaction.DrawOptions.prototype.minPointsPerRing;
+olx.interaction.DrawOptions.prototype.maxPoints;
+
+
+/**
+ * The number of points that must be drawn before a polygon ring or line string
+ * can be finished. Default is `3` for polygon rings and `2` for line strings.
+ * @type {number|undefined}
+ * @api
+ */
+olx.interaction.DrawOptions.prototype.minPoints;
 
 
 /**
@@ -2415,6 +2429,14 @@ olx.interaction.DrawOptions.prototype.minPointsPerRing;
  * @api
  */
 olx.interaction.DrawOptions.prototype.style;
+
+
+/**
+ * Function that is called when a geometry's coordinates are updated.
+ * @type {ol.interaction.DrawGeometryFunctionType|undefined}
+ * @api
+ */
+olx.interaction.DrawOptions.prototype.geometryFunction;
 
 
 /**
@@ -2542,7 +2564,7 @@ olx.interaction.ModifyOptions.prototype.deleteCondition;
 
 /**
  * Pixel tolerance for considering the pointer close enough to a segment or
- * vertex for editing.
+ * vertex for editing. Default is `10`.
  * @type {number|undefined}
  * @api
  */
@@ -6014,7 +6036,8 @@ olx.tilegrid;
 
 
 /**
- * @typedef {{extent: (ol.Extent|undefined),
+ * @typedef {{createTileCoordTransform: (undefined|function({extent: (ol.Extent|undefined)}):function(ol.TileCoord, ol.proj.Projection, ol.TileCoord=):ol.TileCoord),
+ *     extent: (ol.Extent|undefined),
  *     minZoom: (number|undefined),
  *     origin: (ol.Coordinate|undefined),
  *     origins: (Array.<ol.Coordinate>|undefined),
