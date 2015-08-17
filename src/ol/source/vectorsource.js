@@ -617,11 +617,14 @@ ol.source.Vector.prototype.getFeaturesInExtent = function(extent) {
  * This method is not available when the source is configured with
  * `useSpatialIndex` set to `false`.
  * @param {ol.Coordinate} coordinate Coordinate.
+ * @param {function(!ol.Feature):!boolean=} opt_checkIfIsAcceptable
+ * @param {T=} opt_checkIfIsAcceptableThis
  * @return {ol.Feature} Closest feature.
+ * @template T
  * @api stable
  */
 ol.source.Vector.prototype.getClosestFeatureToCoordinate =
-    function(coordinate) {
+    function(coordinate, opt_checkIfIsAcceptable, opt_checkIfIsAcceptableThis) {
   // Find the closest feature using branch and bound.  We start searching an
   // infinite extent, and find the distance from the first feature found.  This
   // becomes the closest feature.  We then compute a smaller extent which any
@@ -635,6 +638,8 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
   var closestPoint = [NaN, NaN];
   var minSquaredDistance = Infinity;
   var extent = [-Infinity, -Infinity, Infinity, Infinity];
+  var checkIfIsAcceptable = goog.isDef(opt_checkIfIsAcceptable) ?
+      checkIfIsAcceptable : goog.TRUE;
   goog.asserts.assert(!goog.isNull(this.featuresRtree_),
       'getClosestFeatureToCoordinate does not work with useSpatialIndex set ' +
       'to false');
@@ -649,7 +654,8 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
         var previousMinSquaredDistance = minSquaredDistance;
         minSquaredDistance = geometry.closestPointXY(
             x, y, closestPoint, minSquaredDistance);
-        if (minSquaredDistance < previousMinSquaredDistance) {
+        if (minSquaredDistance < previousMinSquaredDistance &&
+            checkIfIsAcceptable.call(opt_checkIfIsAcceptableThis, feature)) {
           closestFeature = feature;
           // This is sneaky.  Reduce the extent that it is currently being
           // searched while the R-Tree traversal using this same extent object
