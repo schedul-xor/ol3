@@ -639,7 +639,7 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
   var minSquaredDistance = Infinity;
   var extent = [-Infinity, -Infinity, Infinity, Infinity];
   var checkIfIsAcceptable = goog.isDef(opt_checkIfIsAcceptable) ?
-      checkIfIsAcceptable : goog.TRUE;
+      opt_checkIfIsAcceptable : goog.TRUE;
   goog.asserts.assert(!goog.isNull(this.featuresRtree_),
       'getClosestFeatureToCoordinate does not work with useSpatialIndex set ' +
       'to false');
