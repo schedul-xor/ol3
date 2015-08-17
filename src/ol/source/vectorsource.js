@@ -654,8 +654,10 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
         var previousMinSquaredDistance = minSquaredDistance;
         minSquaredDistance = geometry.closestPointXY(
             x, y, closestPoint, minSquaredDistance);
+        var optThis = goog.isDef(opt_checkIfIsAcceptableThis) ?
+            opt_checkIfIsAcceptableThis : this;
         if (minSquaredDistance < previousMinSquaredDistance &&
-            checkIfIsAcceptable.call(opt_checkIfIsAcceptableThis, feature)) {
+            checkIfIsAcceptable.call(optThis, feature)) {
           closestFeature = feature;
           // This is sneaky.  Reduce the extent that it is currently being
           // searched while the R-Tree traversal using this same extent object
