@@ -53,20 +53,31 @@ ol.geom.CubicBezier.prototype.clone = function() {
  */
 ol.geom.CubicBezier.prototype.closestPointXY = function(x,
     y, closestPoint, minSquaredDistance) {
-  var extentDistance = ol.extent.closestSquaredDistanceXY(this.extent_, x, y);
-  if (extentDistance > 0) {return extentDistance;}
+  var squaredDistance;
+  var nearestT = null;
+  var extentSquaredDistance = ol.extent.closestSquaredDistanceXY(
+      this.extent_, x, y);
+  if (extentSquaredDistance > 0) {
+    squaredDistance = extentSquaredDistance;
+  }else {
+    nearestT = this.getClosestTFromPoint(x, y);
+    squaredDistance = this.getSquaredDistanceFromXYToT(x, y, nearestT);
+  }
 
-  var nearestT = this.getClosestTFromPoint(x, y);
-  var squaredDistance = this.getSquaredDistanceFromXYToT(x, y, nearestT);
-  if (minSquaredDistance < squaredDistance) {
+  if (squaredDistance < minSquaredDistance) {
+    var distance = Math.sqrt(squaredDistance);
+    if (goog.isNull(nearestT)) {
+      // TODO
+    }else {
+      var nearestX = this.getXAtT_(nearestT);
+      var nearestY = this.getYAtT_(nearestT);
+      closestPoint[0] = nearestX;
+      closestPoint[1] = nearestY;
+    }
+    return distance;
+  }else {
     return minSquaredDistance;
   }
-  var distance = Math.sqrt(squaredDistance);
-  var nearestX = this.getXAtT_(nearestT);
-  var nearestY = this.getYAtT_(nearestT);
-  closestPoint[0] = nearestX;
-  closestPoint[1] = nearestY;
-  return distance;
 };
 
 
