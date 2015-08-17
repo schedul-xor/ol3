@@ -10,6 +10,7 @@ goog.require('goog.asserts');
 goog.require('goog.events');
 goog.require('goog.events.Event');
 goog.require('goog.events.EventType');
+goog.require('goog.functions');
 goog.require('goog.object');
 goog.require('ol.Collection');
 goog.require('ol.CollectionEventType');
@@ -639,7 +640,7 @@ ol.source.Vector.prototype.getClosestFeatureToCoordinate =
   var minSquaredDistance = Infinity;
   var extent = [-Infinity, -Infinity, Infinity, Infinity];
   var checkIfIsAcceptable = goog.isDef(opt_checkIfIsAcceptable) ?
-      opt_checkIfIsAcceptable : goog.TRUE;
+      opt_checkIfIsAcceptable : goog.functions.TRUE;
   goog.asserts.assert(!goog.isNull(this.featuresRtree_),
       'getClosestFeatureToCoordinate does not work with useSpatialIndex set ' +
       'to false');
